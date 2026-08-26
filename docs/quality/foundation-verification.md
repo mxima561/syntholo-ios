@@ -2,7 +2,7 @@
 
 Date: 2026-08-26
 
-Status: done with concerns; the normal foundation suite, configuration, scans, and generation checks pass, but the reproducible XCTest accessibility audit is blocked by the local Xcode/CoreSimulator harness.
+Status: blocked. The normal foundation suite, configuration, scans, and generation checks pass, but the canonical verification script cannot complete because the enforced XCTest accessibility gate stalls in the local Xcode/CoreSimulator harness.
 
 ## Environment
 
@@ -32,7 +32,7 @@ The settings check returned `IPHONEOS_DEPLOYMENT_TARGET = 17.0` and `TARGETED_DE
 
 ## Reproducible suite and generated drift
 
-The audit class is compiled but excluded from the normal script because invoking `performAccessibilityAudit` stalls the local test harness as documented below.
+The canonical `scripts/test.sh` first runs the 7 unit and 2 shell UI tests, then enforces all 28 accessibility audits by default. Each named audit runs in its own `test-without-building` process and has a 60-second watchdog. `SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1` is an explicit diagnostic-only opt-out; it is not an acceptance path.
 
 ```sh
 ./scripts/test.sh
@@ -43,7 +43,7 @@ git status --short
 shasum -a 256 Syntholo.xcodeproj/project.pbxproj
 ```
 
-Results:
+Historical baseline/drift results recorded before the audit-gate correction:
 
 | Pass | Result | Unit | Shell UI | Generated project SHA-256 |
 | --- | --- | ---: | ---: | --- |
@@ -59,11 +59,23 @@ Both status checks reported only the intentional Task 10 edits then in progress;
 
 The UI checks prove that Learn is initially selected, all four tab labels exist, and Learn, Practice, Social, and Profile each open their navigation destination on the current simulator.
 
+Fix Round 1 canonical-script results:
+
+```sh
+SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1 ./scripts/test.sh
+./scripts/test.sh
+```
+
+- Explicit diagnostic opt-out: exit 0; 7 unit and 2 shell UI tests passed, then the script printed that accessibility audits were skipped. Result: `DerivedData/Logs/Test/Test-Syntholo-2026.08.26_01-07-03--0400.xcresult`.
+- Canonical default: the same 9 baseline tests passed, then the corrected `AccessibilityAuditUITests/testLearnContrastAudit` hit the 60-second watchdog. Xcode did not complete interrupt cleanup after 10 seconds, so the watchdog terminated that exact xcodebuild PID; the script exited 143. Baseline result: `DerivedData/Logs/Test/Test-Syntholo-2026.08.26_01-07-38--0400.xcresult`. The interrupted audit result at `Test-Syntholo-2026.08.26_01-08-01--0400.xcresult` is incomplete and cannot be read by `xcresulttool`.
+
+The historical passes establish deterministic generation and a healthy baseline, but the default full verification does not pass. Task 10 therefore remains blocked.
+
 ## Accessibility evidence and blocker
 
 `SyntholoUITests/AppShellUITests.swift` contains an iOS 17 XCTest audit matrix for every primary tab and every Swift-exposed audit category: contrast, element detection, hit region, sufficient element description, Dynamic Type, clipped text, and traits. Each category/tab pair is a separate method so the harness is not asked to run a combined `.all` audit.
 
-Final bounded reproduction after shutting down the simulator and restarting only the identified CoreSimulator service stack:
+Corrected-selector reproduction after a clean simulator shutdown, boot, and `bootstatus` completion:
 
 ```sh
 xcodebuild -quiet test-without-building \
@@ -73,24 +85,14 @@ xcodebuild -quiet test-without-building \
   -derivedDataPath DerivedData \
   -parallel-testing-enabled NO \
   CODE_SIGNING_ALLOWED=NO \
-  -only-testing:SyntholoUITests/AppShellUITests/testLaunchesOnLearnAndShowsEveryPrimaryTab
-
-xcodebuild -quiet test-without-building \
-  -project Syntholo.xcodeproj \
-  -scheme Syntholo \
-  -destination 'platform=iOS Simulator,id=69F87C12-6D54-4B06-85DC-B40F68282677' \
-  -derivedDataPath DerivedData \
-  -parallel-testing-enabled NO \
-  CODE_SIGNING_ALLOWED=NO \
-  -only-testing:SyntholoUITests/AppShellUITests/testLearnContrastAudit
+  -only-testing:SyntholoUITests/AccessibilityAuditUITests/testLearnContrastAudit
 ```
 
-The control UI test passed 1/1 in 11.767 seconds. The immediately following single-tab/single-category audit stalled until it was interrupted at 47.539 seconds. Xcode reported `waiting for workers to materialize` and `Waiting for -runningDidFinish call`; the result bundle records one canceled test and no accessibility finding:
+The corrected single-tab/single-category audit stalled and was boundedly interrupted. Xcode reported 43.754 seconds of test-operation time and `waiting for workers to materialize` plus `Waiting for -runningDidFinish call`. The result bundle records one canceled `AccessibilityAuditUITests/testLearnContrastAudit()` and no accessibility finding:
 
-- Control: `DerivedData/Logs/Test/Test-Syntholo-2026.08.26_00-51-57--0400.xcresult`
-- Audit: `DerivedData/Logs/Test/Test-Syntholo-2026.08.26_00-52-17--0400.xcresult`
+- Corrected audit: `DerivedData/Logs/Test/Test-Syntholo-2026.08.26_01-05-04--0400.xcresult`
 
-Earlier exploratory `.all`, multi-category, and isolated-category attempts also became nonresponsive or were killed by the harness. The behavior reproduced on the installed 26.5 and 26.4 runtimes. Because the audit did not complete, no automated accessibility pass is claimed and this remains a foundation exit blocker. The audit class is excluded from `scripts/test.sh` so it does not make the otherwise passing normal suite hang.
+Earlier exploratory `.all`, multi-category, and isolated-category attempts also became nonresponsive or were killed by the harness. An exploratory iOS 26.4 attempt appeared to show the same symptom, but its exact result evidence was not retained; the documented reproducible evidence is therefore limited to iOS 26.5. Because the corrected audit did not complete, no automated accessibility pass is claimed and this remains a foundation exit blocker. The default script exposes and enforces the audit matrix; it fails boundedly on the first stalled audit instead of silently omitting the gate.
 
 A manual largest-Dynamic-Type plus Reduce Motion review is also not claimed. Local `simctl ui ... --help` can set the content-size category but exposes no Reduce Motion control, and Accessibility Inspector GUI automation was not available in this run. The tab-label, scrolling, and clipping review must be completed with appropriate simulator UI tooling after the XCTest harness issue is resolved.
 
@@ -136,8 +138,8 @@ This is foundation-level evidence, not a claim that later MVP requirements are i
 | 16 — Technical architecture | Native SwiftUI app, Observation router, typed routes, and feature directory boundaries; no premature service SDKs | Covered at foundation scope |
 | 22 — Accessibility | Minimum target-size unit test plus comprehensive iOS 17 audit matrix | Not verified: automated audit harness and manual combined review remain blocked |
 | 28 — Acceptance criteria | No later P0 product flow is claimed; privacy/accessibility release criterion is explicitly held open | Traceable, not yet satisfied by foundation |
-| 29 — Testing strategy | Reproducible unit/UI script, two clean runs, shell UI automation, and accessibility audit code | Automated normal suite covered; accessibility/manual device review open |
+| 29 — Testing strategy | Reproducible unit/UI baseline, shell UI automation, comprehensive accessibility audit code, and a bounded default audit runner | Baseline covered; canonical full verification blocked at accessibility gate |
 
 ## Exit assessment
 
-The generated SwiftUI foundation is reproducible, current-runtime launch/navigation passes twice, product scope remains local and credential-free, the iPhone-only orientation warning is fixed, and generated artifacts remain ignored. The foundation is **done with concerns**, not fully cleared: the automated accessibility audit and manual largest-text/Reduce-Motion review are unverified, an actual iOS 17 runtime launch was unavailable, and the Xcode App Intents tooling warning remains visible rather than suppressed.
+The generated SwiftUI foundation is reproducible, current-runtime launch/navigation passes, product scope remains local and credential-free, the iPhone-only orientation warning is fixed, and generated artifacts remain ignored. The foundation is **blocked**: the default script correctly enforces the accessibility gate but cannot complete it on this Xcode/CoreSimulator environment. The manual largest-text/Reduce-Motion review is also unverified, an actual iOS 17 runtime launch was unavailable, and the Xcode App Intents tooling warning remains visible rather than suppressed.
