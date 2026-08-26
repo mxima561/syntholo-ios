@@ -2,11 +2,11 @@ import SwiftUI
 
 @main
 struct SyntholoApp: App {
+    @State private var router = AppRouter()
+
     var body: some Scene {
         WindowGroup {
-            Color.clear
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
+            RootView(router: router)
         }
     }
 }
