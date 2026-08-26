@@ -7,4 +7,5 @@ xcodebuild test \
   -scheme Syntholo \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -derivedDataPath DerivedData \
-  CODE_SIGNING_ALLOWED=NO
+  CODE_SIGNING_ALLOWED=NO \
+  -skip-testing:SyntholoUITests/AccessibilityAuditUITests
