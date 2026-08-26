@@ -1,2 +1,5 @@
 .superpowers/
 .worktrees/
+Syntholo.xcodeproj/
+DerivedData/
+Config/Secrets.xcconfig
