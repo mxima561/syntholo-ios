@@ -33,6 +33,7 @@ targets:
     scheme:
       testTargets:
         - SyntholoTests
+        - SyntholoUITests
   SyntholoTests:
     type: bundle.unit-test
     platform: iOS
