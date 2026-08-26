@@ -1,6 +1,6 @@
 # Syntholo iOS MVP Product Requirements Document
 
-**Status:** Approved design, pending final written review  
+**Status:** Approved product contract
 **Date:** August 25, 2026  
 **Product:** Syntholo for iPhone  
 **Release target:** App Store-ready MVP, quality-gated without a fixed deadline  
