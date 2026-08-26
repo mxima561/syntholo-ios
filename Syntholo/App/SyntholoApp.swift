@@ -4,7 +4,9 @@ import SwiftUI
 struct SyntholoApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("Syntholo")
+            Color.clear
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
         }
     }
 }
