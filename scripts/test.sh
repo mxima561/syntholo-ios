@@ -50,46 +50,13 @@ run_with_timeout() {
   return "$command_status"
 }
 
-audit_tests=(
-  testLearnContrastAudit
-  testLearnElementDetectionAudit
-  testLearnHitRegionAudit
-  testLearnSufficientElementDescriptionAudit
-  testLearnDynamicTypeAudit
-  testLearnTextClippedAudit
-  testLearnTraitAudit
-  testPracticeContrastAudit
-  testPracticeElementDetectionAudit
-  testPracticeHitRegionAudit
-  testPracticeSufficientElementDescriptionAudit
-  testPracticeDynamicTypeAudit
-  testPracticeTextClippedAudit
-  testPracticeTraitAudit
-  testSocialContrastAudit
-  testSocialElementDetectionAudit
-  testSocialHitRegionAudit
-  testSocialSufficientElementDescriptionAudit
-  testSocialDynamicTypeAudit
-  testSocialTextClippedAudit
-  testSocialTraitAudit
-  testProfileContrastAudit
-  testProfileElementDetectionAudit
-  testProfileHitRegionAudit
-  testProfileSufficientElementDescriptionAudit
-  testProfileDynamicTypeAudit
-  testProfileTextClippedAudit
-  testProfileTraitAudit
-)
-
-for audit_test in "${audit_tests[@]}"; do
-  echo "Running accessibility audit: $audit_test"
-  run_with_timeout 60 \
-    xcodebuild -quiet test-without-building \
-      -project Syntholo.xcodeproj \
-      -scheme Syntholo \
-      -destination "$destination" \
-      -derivedDataPath DerivedData \
-      -parallel-testing-enabled NO \
-      CODE_SIGNING_ALLOWED=NO \
-      -only-testing:"SyntholoUITests/AccessibilityAuditUITests/$audit_test"
-done
+echo "Running accessibility audit suite."
+run_with_timeout 600 \
+  xcodebuild -quiet test-without-building \
+    -project Syntholo.xcodeproj \
+    -scheme Syntholo \
+    -destination "$destination" \
+    -derivedDataPath DerivedData \
+    -parallel-testing-enabled NO \
+    CODE_SIGNING_ALLOWED=NO \
+    -only-testing:SyntholoUITests/AccessibilityAuditUITests

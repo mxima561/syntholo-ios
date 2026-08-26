@@ -20,7 +20,7 @@ enum Layout {
 
 enum SyntholoColor {
     static let ink = Color.primary
-    static let secondaryInk = Color.secondary
+    static let secondaryInk = Color(uiColor: .label)
     static let canvas = Color(uiColor: .systemGroupedBackground)
     static let surface = Color(uiColor: .secondarySystemGroupedBackground)
     static let accent = Color.accentColor
