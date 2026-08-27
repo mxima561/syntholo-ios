@@ -1,19 +1,4 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "publicProfiles",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "handle",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isDiscoverable",
-          "order": "ASCENDING"
-        }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

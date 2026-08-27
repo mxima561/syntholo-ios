@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { after, before, beforeEach, test } from "node:test";
 
@@ -10,9 +11,9 @@ import {
 import {
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
-  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -61,92 +62,110 @@ after(async () => {
   await testEnvironment.cleanup();
 });
 
-test("unauthenticated clients cannot read or create profile documents", async () => {
+test("unauthenticated clients cannot access any profile surface", async () => {
   const database = testEnvironment.unauthenticatedContext().firestore();
+  const handle = handleFor("teen-user");
 
   await assertFails(getDoc(doc(database, "users", "teen-user")));
+  await assertFails(getDoc(doc(database, "preferences", "teen-user")));
+  await assertFails(getDoc(doc(database, "publicProfiles", "teen-user")));
+  await assertFails(getDoc(doc(database, "profileHandleClaims", handle)));
+  await assertFails(getDoc(doc(database, "publicProfileDirectory", handle)));
   await assertFails(
-    setDoc(doc(database, "users", "teen-user"), userDocument("teen-user", "13-17")),
+    createProfileBatch(database, "teen-user", "13-17", "school"),
+  );
+});
+
+test("an owner creates the authoritative five-document set in one batch", async () => {
+  const database = authenticatedDatabase("teen-user");
+  const handle = handleFor("teen-user");
+
+  await assertSucceeds(
+    createProfileBatch(database, "teen-user", "13-17", "school"),
+  );
+  await assertSucceeds(getDoc(doc(database, "users", "teen-user")));
+  await assertSucceeds(getDoc(doc(database, "preferences", "teen-user")));
+  await assertSucceeds(getDoc(doc(database, "publicProfiles", "teen-user")));
+  await assertSucceeds(getDoc(doc(database, "profileHandleClaims", handle)));
+  await assertSucceeds(getDoc(doc(database, "publicProfileDirectory", handle)));
+});
+
+test("initial creation rejects every incomplete subset of the authoritative set", async () => {
+  const requiredDocuments = [
+    "user",
+    "preferences",
+    "publicProfile",
+    "claim",
+    "directory",
+  ];
+
+  for (const [index, omitted] of requiredDocuments.entries()) {
+    const userID = `incomplete-${index}`;
+    await assertFails(
+      createProfileBatch(databaseFor(userID), userID, "18+", "work", {
+        omit: omitted,
+      }),
+    );
+  }
+});
+
+test("private age is mandatory and valid in an otherwise-complete atomic batch", async () => {
+  const missingID = "missing-age";
+  const invalidID = "invalid-age";
+
+  await assertFails(
+    createProfileBatch(databaseFor(missingID), missingID, "13-17", "school", {
+      omitAge: true,
+    }),
   );
   await assertFails(
-    setDoc(
-      doc(database, "preferences", "teen-user"),
-      preferencesDocument("teen-user", "school"),
-    ),
+    createProfileBatch(databaseFor(invalidID), invalidID, "fabricated-adult", "school"),
+  );
+});
+
+test("program validation fails for its intended field in complete atomic batches", async () => {
+  const missingID = "missing-foundations";
+  const mismatchID = "mismatched-program";
+
+  await assertFails(
+    createProfileBatch(databaseFor(missingID), missingID, "18+", "work", {
+      preferencesOverrides: { enrolledProgramIDs: ["ai-work"] },
+    }),
   );
   await assertFails(
-    setDoc(doc(database, "publicProfiles", "teen-user"), {
-      handle: "learner-11111111111111111111",
-      isDiscoverable: false,
+    createProfileBatch(databaseFor(mismatchID), mismatchID, "18+", "work", {
+      preferencesOverrides: {
+        enrolledProgramIDs: ["ai-foundations", "ai-school"],
+      },
     }),
   );
 });
 
-test("an authenticated learner can atomically create and read only their private profile", async () => {
-  const database = authenticatedDatabase("teen-user");
-
-  await assertSucceeds(createProfileBatch(database, "teen-user", "13-17", "school"));
-  await assertSucceeds(getDoc(doc(database, "users", "teen-user")));
-  await assertSucceeds(getDoc(doc(database, "preferences", "teen-user")));
-  await assertSucceeds(getDoc(doc(database, "publicProfiles", "teen-user")));
-});
-
-test("profile creation cannot omit either mandatory private document", async () => {
-  const userDatabase = authenticatedDatabase("user-only");
-  const preferencesDatabase = authenticatedDatabase("preferences-only");
-
-  await assertFails(
-    setDoc(
-      doc(userDatabase, "users", "user-only"),
-      userDocument("user-only", "18+"),
-    ),
-  );
-  await assertFails(
-    setDoc(
-      doc(preferencesDatabase, "preferences", "preferences-only"),
-      preferencesDocument("preferences-only", "work"),
-    ),
-  );
-});
-
-test("cross-user private reads and writes are denied", async () => {
+test("cross-user private profile and UID-stub reads and writes are denied", async () => {
   await seedProfile("teen-user", "13-17", "school");
-  const attackerDatabase = authenticatedDatabase("other-user");
+  const attacker = authenticatedDatabase("other-user");
 
-  await assertFails(getDoc(doc(attackerDatabase, "users", "teen-user")));
-  await assertFails(getDoc(doc(attackerDatabase, "preferences", "teen-user")));
+  await assertFails(getDoc(doc(attacker, "users", "teen-user")));
+  await assertFails(getDoc(doc(attacker, "preferences", "teen-user")));
+  await assertFails(getDoc(doc(attacker, "publicProfiles", "teen-user")));
   await assertFails(
-    updateDoc(doc(attackerDatabase, "preferences", "teen-user"), {
+    updateDoc(doc(attacker, "preferences", "teen-user"), {
       coachMode: "funny",
       updatedAt: serverTimestamp(),
     }),
   );
 });
 
-test("a private age band is mandatory on first profile creation", async () => {
-  const database = authenticatedDatabase("teen-user");
-  const invalidUser = userDocument("teen-user", "13-17");
-  delete invalidUser.ageBand;
-
-  await assertFails(setDoc(doc(database, "users", "teen-user"), invalidUser));
-});
-
-test("a learner cannot mutate the private age band after creation", async () => {
-  await seedProfile("teen-user", "13-17", "school");
-  const database = authenticatedDatabase("teen-user");
-
-  await assertFails(
-    updateDoc(doc(database, "users", "teen-user"), {
-      ageBand: "18+",
-      updatedAt: serverTimestamp(),
-    }),
-  );
-});
-
-test("stable UID schema and created timestamp cannot be rewritten", async () => {
+test("age UID schema and created timestamps are immutable", async () => {
   await seedProfile("adult-user", "18+", "work");
   const database = authenticatedDatabase("adult-user");
 
+  await assertFails(
+    updateDoc(doc(database, "users", "adult-user"), {
+      ageBand: "13-17",
+      updatedAt: serverTimestamp(),
+    }),
+  );
   await assertFails(
     updateDoc(doc(database, "users", "adult-user"), {
       userID: "fabricated-user",
@@ -167,78 +186,163 @@ test("stable UID schema and created timestamp cannot be rewritten", async () => 
   );
 });
 
-test("initial public discoverability is false for both teen and adult profiles", async () => {
-  const teenDatabase = authenticatedDatabase("teen-user");
-  const adultDatabase = authenticatedDatabase("adult-user");
-
+test("initial discoverability true is denied for teen and adult complete batches", async () => {
   await assertFails(
-    createProfileBatch(teenDatabase, "teen-user", "13-17", "school", true),
+    createProfileBatch(databaseFor("teen-user"), "teen-user", "13-17", "school", {
+      isDiscoverable: true,
+    }),
   );
   await assertFails(
-    createProfileBatch(adultDatabase, "adult-user", "18+", "work", true),
+    createProfileBatch(databaseFor("adult-user"), "adult-user", "18+", "work", {
+      isDiscoverable: true,
+    }),
   );
 });
 
-test("teen discoverability cannot become true using mutable public age data", async () => {
+test("teen discovery true is denied from stable private age in a valid paired update", async () => {
   await seedProfile("teen-user", "13-17", "school");
   const database = authenticatedDatabase("teen-user");
 
   await assertFails(
-    updateDoc(doc(database, "publicProfiles", "teen-user"), {
-      ageBand: "18+",
-      isDiscoverable: true,
-    }),
-  );
-  await assertFails(
-    updateDoc(doc(database, "publicProfiles", "teen-user"), {
-      isDiscoverable: true,
-    }),
+    updateDiscoverability(
+      database,
+      "teen-user",
+      handleFor("teen-user"),
+      true,
+    ),
   );
 });
 
-test("adult discoverability can become true only after a stable private profile exists", async () => {
+test("adult discovery requires an atomic consistent UID-stub and directory update", async () => {
   await seedProfile("adult-user", "18+", "work");
   const database = authenticatedDatabase("adult-user");
+  const handle = handleFor("adult-user");
 
+  await assertFails(
+    updateDiscoverability(database, "adult-user", handle, true, {
+      omit: "directory",
+    }),
+  );
+  await assertFails(
+    updateDiscoverability(database, "adult-user", handle, true, {
+      omit: "publicProfile",
+    }),
+  );
   await assertSucceeds(
-    updateDoc(doc(database, "publicProfiles", "adult-user"), {
-      isDiscoverable: true,
+    updateDiscoverability(database, "adult-user", handle, true),
+  );
+});
+
+test("a second account cannot claim an existing exact handle", async () => {
+  const sharedHandle = handleFor("shared-handle");
+  await assertSucceeds(
+    createProfileBatch(databaseFor("adult-a"), "adult-a", "18+", "work", {
+      handle: sharedHandle,
+    }),
+  );
+
+  await assertFails(
+    createProfileBatch(databaseFor("adult-b"), "adult-b", "18+", "work", {
+      handle: sharedHandle,
+    }),
+  );
+
+  const privateB = await getDocumentWithoutRules("users", "adult-b");
+  assert.equal(privateB, undefined);
+});
+
+test("exact-key public directory get is the only cross-user lookup and exposes no UID", async () => {
+  await seedProfile("adult-user", "18+", "work");
+  const handle = handleFor("adult-user");
+  await assertSucceeds(
+    updateDiscoverability(
+      authenticatedDatabase("adult-user"),
+      "adult-user",
+      handle,
+      true,
+    ),
+  );
+
+  const searcher = authenticatedDatabase("searcher-user");
+  const result = await assertSucceeds(
+    getDoc(doc(searcher, "publicProfileDirectory", handle)),
+  );
+  assert.deepEqual(Object.keys(result.data()).sort(), ["handle", "isDiscoverable"]);
+  assert.equal(result.data().handle, handle);
+  assert.equal(result.data().isDiscoverable, true);
+  assert.equal("userID" in result.data(), false);
+  await assertFails(getDoc(doc(searcher, "publicProfiles", "adult-user")));
+});
+
+test("directory lists equality queries and multi-handle queries are always denied", async () => {
+  await seedProfile("adult-a", "18+", "work");
+  await seedProfile("adult-b", "18+", "work");
+  const database = authenticatedDatabase("searcher-user");
+  const handles = [handleFor("adult-a"), handleFor("adult-b")];
+
+  await assertFails(getDocs(collection(database, "publicProfileDirectory")));
+  await assertFails(
+    getDocs(
+      query(
+        collection(database, "publicProfileDirectory"),
+        where(documentId(), "==", handles[0]),
+      ),
+    ),
+  );
+  await assertFails(
+    getDocs(
+      query(
+        collection(database, "publicProfileDirectory"),
+        where(documentId(), "in", handles),
+      ),
+    ),
+  );
+  await assertFails(getDocs(collection(database, "publicProfiles")));
+});
+
+test("handle claims are owner-bound private and cannot transfer", async () => {
+  await seedProfile("adult-user", "18+", "work");
+  const handle = handleFor("adult-user");
+  const owner = authenticatedDatabase("adult-user");
+  const other = authenticatedDatabase("other-user");
+
+  const ownClaim = await assertSucceeds(
+    getDoc(doc(owner, "profileHandleClaims", handle)),
+  );
+  assert.deepEqual(Object.keys(ownClaim.data()).sort(), ["handle", "ownerUID"]);
+  await assertFails(getDoc(doc(other, "profileHandleClaims", handle)));
+  await assertFails(getDocs(collection(owner, "profileHandleClaims")));
+  await assertFails(
+    updateDoc(doc(owner, "profileHandleClaims", handle), {
+      ownerUID: "other-user",
     }),
   );
 });
 
-test("public profiles reject email age and handle changes", async () => {
+test("public documents reject UID email age and handle changes", async () => {
   await seedProfile("adult-user", "18+", "work");
   const database = authenticatedDatabase("adult-user");
+  const handle = handleFor("adult-user");
 
   await assertFails(
     updateDoc(doc(database, "publicProfiles", "adult-user"), {
+      userID: "adult-user",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(database, "publicProfileDirectory", handle), {
       email: "private@example.com",
+      ageBand: "18+",
     }),
   );
   await assertFails(
     updateDoc(doc(database, "publicProfiles", "adult-user"), {
-      handle: "learner-ffffffffffffffffffff",
+      handle: handleFor("another-handle"),
     }),
   );
 });
 
-test("preferences require Foundations plus the selected specialization", async () => {
-  const database = authenticatedDatabase("adult-user");
-  const missingFoundations = preferencesDocument("adult-user", "work");
-  missingFoundations.enrolledProgramIDs = ["ai-work"];
-  const mismatchedPath = preferencesDocument("adult-user", "work");
-  mismatchedPath.enrolledProgramIDs = ["ai-foundations", "ai-school"];
-
-  await assertFails(
-    setDoc(doc(database, "preferences", "adult-user"), missingFoundations),
-  );
-  await assertFails(
-    setDoc(doc(database, "preferences", "adult-user"), mismatchedPath),
-  );
-});
-
-test("clients cannot add XP streak or subscription state to profile documents", async () => {
+test("XP streak subscription and entitlement writes remain server-owned", async () => {
   await seedProfile("adult-user", "18+", "work");
   const database = authenticatedDatabase("adult-user");
 
@@ -260,81 +364,57 @@ test("clients cannot add XP streak or subscription state to profile documents", 
       updatedAt: serverTimestamp(),
     }),
   );
-});
-
-test("client writes to server-owned reward and entitlement collections are denied", async () => {
-  const database = authenticatedDatabase("adult-user");
-
   await assertFails(setDoc(doc(database, "progress", "adult-user"), { xp: 100 }));
-  await assertFails(
-    setDoc(doc(database, "streaks", "adult-user"), { current: 30 }),
-  );
+  await assertFails(setDoc(doc(database, "streaks", "adult-user"), { current: 30 }));
   await assertFails(
     setDoc(doc(database, "subscriptions", "adult-user"), { tier: "pro" }),
   );
 });
 
-test("an exact discoverable-handle query returns only the allowed public fields", async () => {
-  await seedProfile("adult-user", "18+", "work");
-  const ownerDatabase = authenticatedDatabase("adult-user");
-  await assertSucceeds(
-    updateDoc(doc(ownerDatabase, "publicProfiles", "adult-user"), {
-      isDiscoverable: true,
-    }),
-  );
-
-  const searchDatabase = authenticatedDatabase("searcher-user");
-  const exactHandleQuery = query(
-    collection(searchDatabase, "publicProfiles"),
-    where("handle", "==", "learner-22222222222222222222"),
-    where("isDiscoverable", "==", true),
-    limit(1),
-  );
-  const result = await assertSucceeds(getDocs(exactHandleQuery));
-
-  assert.equal(result.size, 1);
-  assert.deepEqual(
-    Object.keys(result.docs[0].data()).sort(),
-    ["handle", "isDiscoverable"],
-  );
-});
-
-test("broad public-profile reads fail when they could include undiscoverable profiles", async () => {
-  await seedProfile("teen-user", "13-17", "school");
-  await seedProfile("adult-user", "18+", "work");
-  const database = authenticatedDatabase("searcher-user");
-
-  await assertFails(getDocs(collection(database, "publicProfiles")));
-});
-
-test("retrying the same UID remains one record per collection and preserves creation time", async () => {
+test("full adapter-shaped retry remains five records and preserves creation time", async () => {
   const database = authenticatedDatabase("adult-user");
-  await assertSucceeds(createProfileBatch(database, "adult-user", "18+", "work"));
-
-  const first = await getDocumentWithoutRules("users", "adult-user");
+  const handle = handleFor("adult-user");
   await assertSucceeds(
-    setDoc(
-      doc(database, "users", "adult-user"),
-      {
-        email: "updated@example.com",
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    ),
+    createProfileBatch(database, "adult-user", "18+", "work"),
   );
-  const second = await getDocumentWithoutRules("users", "adult-user");
+  const firstUser = await getDocumentWithoutRules("users", "adult-user");
+  const firstPreferences = await getDocumentWithoutRules("preferences", "adult-user");
 
-  assert.equal(first.createdAt.toMillis(), second.createdAt.toMillis());
+  await assertSucceeds(
+    retryProfileBatch(database, "adult-user", handle, "work"),
+  );
+
+  const secondUser = await getDocumentWithoutRules("users", "adult-user");
+  const secondPreferences = await getDocumentWithoutRules("preferences", "adult-user");
+  assert.equal(firstUser.createdAt.toMillis(), secondUser.createdAt.toMillis());
+  assert.equal(
+    firstPreferences.createdAt.toMillis(),
+    secondPreferences.createdAt.toMillis(),
+  );
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
-    const adminDatabase = context.firestore();
-    assert.equal((await getDocs(collection(adminDatabase, "users"))).size, 1);
-    assert.equal((await getDocs(collection(adminDatabase, "preferences"))).size, 1);
-    assert.equal((await getDocs(collection(adminDatabase, "publicProfiles"))).size, 1);
+    const admin = context.firestore();
+    for (const collectionName of [
+      "users",
+      "preferences",
+      "publicProfiles",
+      "profileHandleClaims",
+      "publicProfileDirectory",
+    ]) {
+      assert.equal((await getDocs(collection(admin, collectionName))).size, 1);
+    }
   });
 });
 
 function authenticatedDatabase(userID) {
   return testEnvironment.authenticatedContext(userID).firestore();
+}
+
+function databaseFor(userID) {
+  return authenticatedDatabase(userID);
+}
+
+function handleFor(seed) {
+  return `learner-${createHash("sha256").update(seed).digest("hex").slice(0, 20)}`;
 }
 
 function userDocument(userID, ageBand) {
@@ -368,46 +448,118 @@ function createProfileBatch(
   userID,
   ageBand,
   selectedPath,
-  isDiscoverable = false,
+  options = {},
 ) {
+  const handle = options.handle ?? handleFor(userID);
+  const user = { ...userDocument(userID, ageBand), ...options.userOverrides };
+  const preferences = {
+    ...preferencesDocument(userID, selectedPath),
+    ...options.preferencesOverrides,
+  };
+  if (options.omitAge) {
+    delete user.ageBand;
+  }
+  const publicProfile = {
+    handle,
+    isDiscoverable: options.isDiscoverable ?? false,
+  };
+  const claim = { handle, ownerUID: userID };
+  const directory = {
+    handle,
+    isDiscoverable: options.isDiscoverable ?? false,
+  };
   const batch = writeBatch(database);
-  batch.set(doc(database, "users", userID), userDocument(userID, ageBand), {
-    merge: true,
-  });
+  if (options.omit !== "user") {
+    batch.set(doc(database, "users", userID), user, { merge: true });
+  }
+  if (options.omit !== "preferences") {
+    batch.set(doc(database, "preferences", userID), preferences, { merge: true });
+  }
+  if (options.omit !== "publicProfile") {
+    batch.set(doc(database, "publicProfiles", userID), publicProfile, { merge: true });
+  }
+  if (options.omit !== "claim") {
+    batch.set(doc(database, "profileHandleClaims", handle), claim, { merge: true });
+  }
+  if (options.omit !== "directory") {
+    batch.set(doc(database, "publicProfileDirectory", handle), directory, {
+      merge: true,
+    });
+  }
+  return batch.commit();
+}
+
+function retryProfileBatch(database, userID, handle, selectedPath) {
+  const batch = writeBatch(database);
   batch.set(
-    doc(database, "preferences", userID),
-    preferencesDocument(userID, selectedPath),
+    doc(database, "users", userID),
+    {
+      userID,
+      email: "updated@example.com",
+      displayName: "Private Learner",
+      schemaVersion: 1,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+  const preferences = preferencesDocument(userID, selectedPath);
+  delete preferences.createdAt;
+  batch.set(doc(database, "preferences", userID), preferences, { merge: true });
+  batch.set(
+    doc(database, "publicProfiles", userID),
+    { handle, isDiscoverable: false },
     { merge: true },
   );
   batch.set(
-    doc(database, "publicProfiles", userID),
-    {
-      handle:
-        userID === "adult-user"
-          ? "learner-22222222222222222222"
-          : "learner-11111111111111111111",
-      isDiscoverable,
-    },
+    doc(database, "profileHandleClaims", handle),
+    { handle, ownerUID: userID },
+    { merge: true },
+  );
+  batch.set(
+    doc(database, "publicProfileDirectory", handle),
+    { handle, isDiscoverable: false },
     { merge: true },
   );
   return batch.commit();
 }
 
+function updateDiscoverability(
+  database,
+  userID,
+  handle,
+  isDiscoverable,
+  options = {},
+) {
+  const batch = writeBatch(database);
+  if (options.omit !== "publicProfile") {
+    batch.set(
+      doc(database, "publicProfiles", userID),
+      { handle, isDiscoverable },
+      { merge: true },
+    );
+  }
+  if (options.omit !== "directory") {
+    batch.set(
+      doc(database, "publicProfileDirectory", handle),
+      { handle, isDiscoverable },
+      { merge: true },
+    );
+  }
+  return batch.commit();
+}
+
 async function seedProfile(userID, ageBand, selectedPath) {
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
-    await createProfileBatch(
-      context.firestore(),
-      userID,
-      ageBand,
-      selectedPath,
-    );
+    await createProfileBatch(context.firestore(), userID, ageBand, selectedPath);
   });
 }
 
-async function getDocumentWithoutRules(collectionName, userID) {
+async function getDocumentWithoutRules(collectionName, documentID) {
   let data;
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
-    const snapshot = await getDoc(doc(context.firestore(), collectionName, userID));
+    const snapshot = await getDoc(
+      doc(context.firestore(), collectionName, documentID),
+    );
     data = snapshot.data();
   });
   return data;
