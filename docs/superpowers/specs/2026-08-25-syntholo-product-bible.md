@@ -584,7 +584,7 @@ Phase 7 in the historical roadmap mentioned leagues. **This bible removes league
 
 ## Book VIII — Change control
 
-After this bible is accepted, it is the release source of truth.
+Founder acceptance is recorded for this bible. It is the current binding release source of truth.
 
 1. Scope additions require a dated amendment in this file.  
 2. Every addition names a **removed** requirement, a **changed gate**, or an **accepted delay**.  
@@ -640,11 +640,11 @@ Foundation slice reminder (Phase 0): reproducible XcodeGen project, design token
 
 ## Acceptance for this bible
 
-This document is accepted when the founder agrees that:
+Founder acceptance of this document is recorded with agreement that:
 
 - Agents must refuse STAR work during 1.0  
 - Book III is the App Store contract  
 - Book I laws are non-negotiable  
 - Old PRD and roadmap yield on conflict  
 
-Until that agreement, treat this file as the proposed constitution.
+This document is accepted and binding now. The change-control rules above govern all future amendments.

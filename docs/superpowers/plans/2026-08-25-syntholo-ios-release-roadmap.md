@@ -30,7 +30,7 @@
 
 | Phase | Executable plan | Primary outcome | Depends on | Exit gate |
 |---|---|---|---|---|
-| 0 | `2026-08-25-syntholo-ios-foundation.md` | Reproducible project, design system, app shell, CI | Approved PRD | Clean build and test on iOS 17 simulator |
+| 0 | `2026-08-25-syntholo-ios-foundation.md` | Reproducible project, design system, app shell, CI | Product Bible LAW/SHIP requirements | Clean build and test on iOS 17 simulator |
 | 1 | `2026-08-25-syntholo-identity-onboarding.md` | Age gate, authentication, goals, path and coach selection | Phase 0 | New learner reaches Learn home with persisted profile |
 | 2 | `2026-08-25-syntholo-curriculum-platform.md` | Versioned content schema, admin publishing, curriculum sync | Phases 0–1 | Published fixture course renders and updates safely |
 | 3 | `2026-08-25-syntholo-learning-engine.md` | Lesson player, exercise types, progress, limits, offline queue | Phases 1–2 | A full module works online and through interruption/recovery |
@@ -39,7 +39,7 @@
 | 6 | `2026-08-25-syntholo-subscriptions.md` | StoreKit products, paywall, entitlements, restore, limits | Phases 1–5 | Sandbox purchase matrix and server reconciliation pass |
 | 7 | `2026-08-25-syntholo-social.md` | Profiles, friends, reactions, report/block (no leagues) | Phases 1, 3, 5 | Abuse-resistant preset-only social flow passes safety review |
 | 8 | `2026-08-25-syntholo-profile-operations.md` | Settings, downloads, notifications, privacy, support, analytics | Phases 1–7 | Account controls and operational telemetry are complete |
-| 9 | `2026-08-25-syntholo-app-store-hardening.md` | Accessibility, privacy manifests, performance, TestFlight, release | All phases | Every PRD release gate and App Store checklist item passes |
+| 9 | `2026-08-25-syntholo-app-store-hardening.md` | Accessibility, privacy manifests, performance, TestFlight, release | All phases | Product Bible GATE-STORE and SHIP requirements pass |
 
 ## Dependency Flow
 
@@ -91,7 +91,7 @@ All product slices ── Profile & operations ── App Store hardening
 
 ## Quality Gates Applied to Every Phase
 
-- [ ] Requirements are traced to PRD sections and acceptance criteria.
+- [ ] Requirements are traced to Product Bible LAW/DEC/SHIP IDs and acceptance criteria.
 - [ ] New behavior begins with a failing automated test where technically feasible.
 - [ ] Error, empty, loading, offline, retry, and accessibility states are implemented with the happy path.
 - [ ] Analytics events contain no lesson answer, learner submission, prompt, or sensitive profile text.
