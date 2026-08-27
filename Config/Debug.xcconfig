@@ -1,0 +1,2 @@
+#include "Shared.xcconfig"
+SYNTHOLO_ENV = development

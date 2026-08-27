@@ -1,0 +1,3 @@
+#include "Shared.xcconfig"
+SYNTHOLO_ENV = production
+SWIFT_COMPILATION_MODE = wholemodule

@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Learn" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Learn"
+          }
+        }
+      }
+    },
+    "Practice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice"
+          }
+        }
+      }
+    },
+    "Practice activities are coming in the next product slice." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice activities are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Practice is coming soon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Practice is coming soon"
+          }
+        }
+      }
+    },
+    "Profile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile"
+          }
+        }
+      }
+    },
+    "Profile is coming soon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile is coming soon"
+          }
+        }
+      }
+    },
+    "Profile tools are coming in the next product slice." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile tools are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Social" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social"
+          }
+        }
+      }
+    },
+    "Social is coming soon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social is coming soon"
+          }
+        }
+      }
+    },
+    "Social learning features are coming in the next product slice." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Social learning features are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Your learning campus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your learning campus"
+          }
+        }
+      }
+    },
+    "Your next lesson and path progress will appear here." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your next lesson and path progress will appear here."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
