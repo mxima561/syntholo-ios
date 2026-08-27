@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ./scripts/bootstrap.sh
+./scripts/test_environment_configuration.sh
 destination=${SYNTHOLO_DESTINATION:-}
 if [[ -z "$destination" ]]; then
   destination='platform=iOS Simulator,name=iPhone 17 Pro'
