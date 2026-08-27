@@ -32,7 +32,7 @@ The settings check returned `IPHONEOS_DEPLOYMENT_TARGET = 17.0` and `TARGETED_DE
 
 ## Reproducible suite and generated drift
 
-The canonical `scripts/test.sh` bootstraps the generated project, runs 7 unit tests and 2 shell UI tests, then runs all 28 methods in `AccessibilityAuditUITests` sequentially in one dedicated `test-without-building` process under a 600-second watchdog. The script accepts `SYNTHOLO_DESTINATION` so CI can exercise a precise compatibility runtime; its default remains the iPhone 17 Pro current-runtime destination. There is no audit opt-out.
+The canonical `scripts/test.sh` bootstraps the generated project, runs 7 unit tests and 2 shell UI tests, then runs all 28 methods in `AccessibilityAuditUITests` sequentially in one dedicated `test-without-building` process under a 600-second watchdog. The script accepts `SYNTHOLO_DESTINATION` so CI can exercise a precise compatibility runtime; its default remains the iPhone 17 Pro current-runtime destination. `SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1` is an explicit, announced diagnostic-only path that exits successfully after the 9 baseline tests; it is not an acceptance path, and the default/CI path continues to enforce the audit gate.
 
 Required two-pass sequence:
 
