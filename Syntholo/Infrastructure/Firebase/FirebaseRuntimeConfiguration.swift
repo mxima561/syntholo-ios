@@ -14,11 +14,14 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
         options: FirebaseOptions?,
         useEmulators: Bool
     ) {
+        let validatedOptions = options.flatMap { option in
+            Self.hasRequiredFirebaseValues(option) ? option : nil
+        }
         self.environment = environment
-        self.projectID = options?.projectID
+        self.projectID = validatedOptions?.projectID
         self.useEmulators = useEmulators
-        self.isConfigured = options != nil
-        self.options = options
+        self.isConfigured = validatedOptions != nil
+        self.options = validatedOptions
     }
 
     private init(
@@ -43,17 +46,32 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
 
     static var current: FirebaseRuntimeConfiguration {
         let processInfo = ProcessInfo.processInfo
-        if processInfo.arguments.contains("--ui-testing")
-            || processInfo.environment["XCTestConfigurationFilePath"] != nil {
+        return resolve(
+            environment: AppEnvironment.current,
+            arguments: processInfo.arguments,
+            isRunningTests: processInfo.environment["XCTestConfigurationFilePath"] != nil,
+            optionsPath: { environment in
+                Bundle.main.path(
+                    forResource: "\(environment.rawValue).firebase",
+                    ofType: "plist"
+                )
+            }
+        )
+    }
+
+    static func resolve(
+        environment: AppEnvironment,
+        arguments: [String],
+        isRunningTests: Bool,
+        optionsPath: (AppEnvironment) -> String?
+    ) -> FirebaseRuntimeConfiguration {
+        if environment == .development
+            || isRunningTests
+            || arguments.contains("--ui-testing") {
             return .emulator
         }
 
-        let environment = AppEnvironment.current
-        let resourceName = "\(environment.rawValue).firebase"
-        guard let path = Bundle.main.path(
-            forResource: resourceName,
-            ofType: "plist"
-        ) else {
+        guard let path = optionsPath(environment) else {
             return FirebaseRuntimeConfiguration(
                 environment: environment,
                 options: nil,
@@ -80,5 +98,45 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
 
     var firebaseOptions: FirebaseOptions? {
         options
+    }
+
+    private static func hasRequiredFirebaseValues(
+        _ options: FirebaseOptions
+    ) -> Bool {
+        guard let apiKey = options.apiKey,
+              let projectID = options.projectID,
+              !projectID.isEmpty else {
+            return false
+        }
+        let googleAppID = options.googleAppID
+        let gcmSenderID = options.gcmSenderID
+        guard !googleAppID.isEmpty, !gcmSenderID.isEmpty else {
+            return false
+        }
+
+        let apiKeyCharacters = CharacterSet.alphanumerics.union(
+            CharacterSet(charactersIn: "-_")
+        )
+        guard apiKey.count == 39,
+              apiKey.first == "A",
+              apiKey.unicodeScalars.allSatisfy(apiKeyCharacters.contains) else {
+            return false
+        }
+
+        let appIDComponents = googleAppID.split(
+            separator: ":",
+            omittingEmptySubsequences: false
+        )
+        let hexadecimalCharacters = CharacterSet(
+            charactersIn: "0123456789abcdefABCDEF"
+        )
+        return appIDComponents.count == 4
+            && Int(appIDComponents[0]) != nil
+            && UInt64(appIDComponents[1]) != nil
+            && appIDComponents[2] == "ios"
+            && !appIDComponents[3].isEmpty
+            && appIDComponents[3].unicodeScalars.allSatisfy(
+                hexadecimalCharacters.contains
+            )
     }
 }

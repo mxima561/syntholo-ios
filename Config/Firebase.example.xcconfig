@@ -1,3 +1,2 @@
-// Copy to Firebase.local.xcconfig and supply environment-specific values locally.
-FIREBASE_PLIST_BASENAME = $(SYNTHOLO_ENV).firebase
+// Copy to Firebase.local.xcconfig for the Task 6 Google sign-in URL scheme.
 GOOGLE_REVERSED_CLIENT_SCHEME =

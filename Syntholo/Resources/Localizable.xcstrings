@@ -1,6 +1,26 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "firebase_setup_required_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firebase configuration is missing. See docs/setup/firebase.md."
+          }
+        }
+      }
+    },
+    "firebase_setup_required_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup required"
+          }
+        }
+      }
+    },
     "Learn" : {
       "localizations" : {
         "en" : {

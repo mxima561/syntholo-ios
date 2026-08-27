@@ -1,25 +1,35 @@
 import SwiftUI
 
+enum SyntholoRootPresentation: Equatable {
+    case application
+    case configurationRequired
+
+    init(isFirebaseConfigured: Bool) {
+        self = isFirebaseConfigured ? .application : .configurationRequired
+    }
+}
+
 @main
 struct SyntholoApp: App {
     @State private var router = AppRouter()
-    private let isFirebaseConfigured: Bool
+    private let rootPresentation: SyntholoRootPresentation
 
     init() {
-        isFirebaseConfigured = FirebaseBootstrap.configure(.current)
+        rootPresentation = SyntholoRootPresentation(
+            isFirebaseConfigured: FirebaseBootstrap.configure(.current)
+        )
     }
 
     var body: some Scene {
         WindowGroup {
-            if isFirebaseConfigured {
+            switch rootPresentation {
+            case .application:
                 RootView(router: router)
-            } else {
+            case .configurationRequired:
                 ContentUnavailableView(
-                    "Setup required",
+                    "firebase_setup_required_title",
                     systemImage: "wrench.and.screwdriver",
-                    description: Text(
-                        "Firebase configuration is missing. See docs/setup/firebase.md."
-                    )
+                    description: Text("firebase_setup_required_message")
                 )
             }
         }
