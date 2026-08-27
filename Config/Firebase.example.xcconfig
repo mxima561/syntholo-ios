@@ -1,0 +1,3 @@
+// Copy to Firebase.local.xcconfig and supply environment-specific values locally.
+FIREBASE_PLIST_BASENAME = $(SYNTHOLO_ENV).firebase
+GOOGLE_REVERSED_CLIENT_SCHEME =
