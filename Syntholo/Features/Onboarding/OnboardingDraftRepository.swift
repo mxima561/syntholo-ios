@@ -10,6 +10,7 @@ struct OnboardingDraftRepository: Sendable {
 
     private static let envelopeVersion = 1
 
+    private let operationLock: OperationLock
     private let readData: @Sendable () -> Data?
     private let writeData: @Sendable (Data?) -> Void
 
@@ -17,17 +18,20 @@ struct OnboardingDraftRepository: Sendable {
         readData: @escaping @Sendable () -> Data?,
         writeData: @escaping @Sendable (Data?) -> Void
     ) {
+        operationLock = OperationLock()
         self.readData = readData
         self.writeData = writeData
     }
 
     func save(step: OnboardingStep, draft: OnboardingDraft) throws {
-        let envelope = Envelope(
-            version: Self.envelopeVersion,
-            step: step,
-            draft: draft
-        )
-        writeData(try JSONEncoder().encode(envelope))
+        try operationLock.withLock {
+            let envelope = Envelope(
+                version: Self.envelopeVersion,
+                step: step,
+                draft: draft
+            )
+            writeData(try JSONEncoder().encode(envelope))
+        }
     }
 
     func save(_ state: State) throws {
@@ -35,25 +39,41 @@ struct OnboardingDraftRepository: Sendable {
     }
 
     func save(_ draft: OnboardingDraft) throws {
-        try save(step: Self.resumeStep(for: draft), draft: draft)
+        var resumableDraft = draft
+        if resumableDraft.path == nil,
+           let goal = resumableDraft.goal,
+           let experience = resumableDraft.experience {
+            resumableDraft.path = PathRecommender.recommend(
+                goal: goal,
+                experience: experience
+            )
+        }
+        try save(
+            step: Self.resumeStep(for: resumableDraft),
+            draft: resumableDraft
+        )
     }
 
     func load() throws -> State? {
-        guard let data = readData() else {
-            return nil
-        }
+        operationLock.withLock {
+            guard let data = readData() else {
+                return nil
+            }
 
-        guard let envelope = try? JSONDecoder().decode(Envelope.self, from: data),
-              envelope.version == Self.envelopeVersion else {
-            writeData(nil)
-            return nil
-        }
+            guard let envelope = try? JSONDecoder().decode(Envelope.self, from: data),
+                  envelope.version == Self.envelopeVersion else {
+                writeData(nil)
+                return nil
+            }
 
-        return State(step: envelope.step, draft: envelope.draft)
+            return State(step: envelope.step, draft: envelope.draft)
+        }
     }
 
     func clear() throws {
-        writeData(nil)
+        operationLock.withLock {
+            writeData(nil)
+        }
     }
 
     static func memory() -> OnboardingDraftRepository {
@@ -94,6 +114,18 @@ private extension OnboardingDraftRepository {
         let version: Int
         let step: OnboardingStep
         let draft: OnboardingDraft
+    }
+
+    final class OperationLock: @unchecked Sendable {
+        private let lock = NSLock()
+
+        func withLock<Result>(
+            _ operation: () throws -> Result
+        ) rethrows -> Result {
+            lock.lock()
+            defer { lock.unlock() }
+            return try operation()
+        }
     }
 
     final class MemoryStorage: @unchecked Sendable {

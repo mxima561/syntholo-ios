@@ -18,43 +18,38 @@ final class OnboardingStoreTests: XCTestCase {
         store.advance()
         XCTAssertEqual(store.step, .age)
 
-        store.advance()
-        XCTAssertEqual(store.step, .age)
         store.selectAgeBand(.teen)
-        store.advance()
         XCTAssertEqual(store.step, .goal)
 
-        store.advance()
-        XCTAssertEqual(store.step, .goal)
         store.selectGoal(.createContent)
-        store.advance()
         XCTAssertEqual(store.step, .experience)
 
-        store.advance()
-        XCTAssertEqual(store.step, .experience)
         store.selectExperience(.intermediate)
-        store.advance()
         XCTAssertEqual(store.step, .pathRecommendation)
         XCTAssertEqual(store.draft.path, .creation)
 
-        store.advance()
+        store.selectPath(.creation)
         XCTAssertEqual(store.step, .coach)
         store.selectCoachMode(.funny)
-        store.advance()
 
         XCTAssertEqual(store.step, .account)
         XCTAssertTrue(store.draft.isReadyForAccount)
         XCTAssertEqual(store.draft.coachMode, .funny)
     }
 
-    func testPathRecommendationCanBeChangedBeforeAdvancing() async throws {
+    func testPathRecommendationCanBeChangedBeforeContinuing() async throws {
+        let recommendedDraft = OnboardingDraft(
+            ageBand: .adult,
+            goal: .buildWithAI,
+            experience: .advanced,
+            path: .build
+        )
         let repository = OnboardingDraftRepository.memory()
-        try repository.save(step: .pathRecommendation, draft: completeDraft)
+        try repository.save(step: .pathRecommendation, draft: recommendedDraft)
         let store = OnboardingStore(repository: repository)
 
         await store.restore()
         store.selectPath(.work)
-        store.advance()
 
         XCTAssertEqual(store.step, .coach)
         XCTAssertEqual(store.draft.path, .work)
@@ -87,26 +82,71 @@ final class OnboardingStoreTests: XCTestCase {
     }
 
     func testBackNavigationIsDeterministicBeforeAccount() async throws {
-        let expectedPreviousSteps: [(OnboardingStep, OnboardingStep)] = [
-            (.age, .welcome),
-            (.ageRestricted, .age),
-            (.goal, .age),
-            (.experience, .goal),
-            (.pathRecommendation, .experience),
-            (.coach, .pathRecommendation),
+        let expectedPreviousSteps: [(
+            current: OnboardingStep,
+            draft: OnboardingDraft,
+            previous: OnboardingStep,
+            previousDraft: OnboardingDraft
+        )] = [
+            (.age, OnboardingDraft(), .welcome, OnboardingDraft()),
+            (.ageRestricted, OnboardingDraft(), .age, OnboardingDraft()),
+            (
+                .goal,
+                OnboardingDraft(ageBand: .adult),
+                .age,
+                OnboardingDraft()
+            ),
+            (
+                .experience,
+                OnboardingDraft(ageBand: .adult, goal: .buildWithAI),
+                .goal,
+                OnboardingDraft(ageBand: .adult)
+            ),
+            (
+                .pathRecommendation,
+                OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced,
+                    path: .build
+                ),
+                .experience,
+                OnboardingDraft(ageBand: .adult, goal: .buildWithAI)
+            ),
+            (
+                .coach,
+                OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced,
+                    path: .build
+                ),
+                .pathRecommendation,
+                OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced,
+                    path: .build
+                )
+            ),
         ]
 
-        for (current, expected) in expectedPreviousSteps {
+        for item in expectedPreviousSteps {
             let repository = OnboardingDraftRepository.memory()
-            let draft = current == .ageRestricted ? OnboardingDraft() : completeDraft
-            try repository.save(step: current, draft: draft)
+            try repository.save(step: item.current, draft: item.draft)
             let store = OnboardingStore(repository: repository)
             await store.restore()
 
             store.goBack()
 
-            XCTAssertEqual(store.step, expected, "Wrong predecessor for \(current)")
-            XCTAssertEqual(try repository.load()?.step, expected)
+            XCTAssertEqual(
+                store.step,
+                item.previous,
+                "Wrong predecessor for \(item.current)"
+            )
+            XCTAssertEqual(store.draft, item.previousDraft)
+            XCTAssertEqual(try repository.load()?.step, item.previous)
+            XCTAssertEqual(try repository.load()?.draft, item.previousDraft)
         }
     }
 
@@ -134,31 +174,18 @@ final class OnboardingStoreTests: XCTestCase {
         store.selectAgeBand(.adult)
         await assertRestored(
             repository,
-            step: .age,
+            step: .goal,
             draft: OnboardingDraft(ageBand: .adult)
         )
 
-        store.advance()
         store.selectGoal(.studySmarter)
         await assertRestored(
             repository,
-            step: .goal,
+            step: .experience,
             draft: OnboardingDraft(ageBand: .adult, goal: .studySmarter)
         )
 
-        store.advance()
         store.selectExperience(.beginner)
-        await assertRestored(
-            repository,
-            step: .experience,
-            draft: OnboardingDraft(
-                ageBand: .adult,
-                goal: .studySmarter,
-                experience: .beginner
-            )
-        )
-
-        store.advance()
         await assertRestored(
             repository,
             step: .pathRecommendation,
@@ -173,7 +200,7 @@ final class OnboardingStoreTests: XCTestCase {
         store.selectPath(.creation)
         await assertRestored(
             repository,
-            step: .pathRecommendation,
+            step: .coach,
             draft: OnboardingDraft(
                 ageBand: .adult,
                 goal: .studySmarter,
@@ -182,21 +209,7 @@ final class OnboardingStoreTests: XCTestCase {
             )
         )
 
-        store.advance()
         store.selectCoachMode(.chill)
-        await assertRestored(
-            repository,
-            step: .coach,
-            draft: OnboardingDraft(
-                ageBand: .adult,
-                goal: .studySmarter,
-                experience: .beginner,
-                path: .creation,
-                coachMode: .chill
-            )
-        )
-
-        store.advance()
         await assertRestored(
             repository,
             step: .account,
@@ -211,19 +224,31 @@ final class OnboardingStoreTests: XCTestCase {
     }
 
     func testResumeRestoresDraftAndExactStep() async throws {
+        let recommendedDraft = OnboardingDraft(
+            ageBand: .adult,
+            goal: .buildWithAI,
+            experience: .advanced,
+            path: .build
+        )
         let repository = OnboardingDraftRepository.memory()
-        try repository.save(step: .pathRecommendation, draft: completeDraft)
+        try repository.save(step: .pathRecommendation, draft: recommendedDraft)
         let store = OnboardingStore(repository: repository)
 
         await store.restore()
 
         XCTAssertEqual(store.step, .pathRecommendation)
-        XCTAssertEqual(store.draft, completeDraft)
+        XCTAssertEqual(store.draft, recommendedDraft)
     }
 
     func testResetClearsPersistedProgress() async throws {
+        let coachDraft = OnboardingDraft(
+            ageBand: .adult,
+            goal: .buildWithAI,
+            experience: .advanced,
+            path: .build
+        )
         let repository = OnboardingDraftRepository.memory()
-        try repository.save(step: .coach, draft: completeDraft)
+        try repository.save(step: .coach, draft: coachDraft)
         let store = OnboardingStore(repository: repository)
         await store.restore()
 
@@ -273,6 +298,108 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertEqual(store.step, .firstLessonHandoff)
         XCTAssertEqual(store.draft, completeDraft)
         XCTAssertNil(try repository.load())
+    }
+
+    func testImpossibleCanonicalSnapshotsFailClosedToWelcome() async throws {
+        let impossibleStates: [OnboardingDraftRepository.State] = [
+            .init(step: .welcome, draft: OnboardingDraft(ageBand: .adult)),
+            .init(step: .age, draft: OnboardingDraft(ageBand: .adult)),
+            .init(step: .ageRestricted, draft: OnboardingDraft(goal: .buildWithAI)),
+            .init(
+                step: .goal,
+                draft: OnboardingDraft(ageBand: .adult, goal: .buildWithAI)
+            ),
+            .init(
+                step: .experience,
+                draft: OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced
+                )
+            ),
+            .init(
+                step: .pathRecommendation,
+                draft: OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced
+                )
+            ),
+            .init(
+                step: .pathRecommendation,
+                draft: OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced,
+                    path: .build,
+                    coachMode: .strict
+                )
+            ),
+            .init(
+                step: .coach,
+                draft: OnboardingDraft(
+                    ageBand: .adult,
+                    goal: .buildWithAI,
+                    experience: .advanced,
+                    path: .build,
+                    coachMode: .strict
+                )
+            ),
+        ]
+
+        for impossible in impossibleStates {
+            let repository = OnboardingDraftRepository.memory()
+            try repository.save(impossible)
+            let store = OnboardingStore(repository: repository)
+
+            await store.restore()
+
+            XCTAssertEqual(store.step, .welcome, "Accepted \(impossible)")
+            XCTAssertEqual(store.draft, OnboardingDraft())
+            XCTAssertNil(try repository.load())
+        }
+    }
+
+    func testEveryCanonicalReachableStateRestoresExactly() async throws {
+        let age = OnboardingDraft(ageBand: .teen)
+        let goal = OnboardingDraft(ageBand: .teen, goal: .createContent)
+        let recommended = OnboardingDraft(
+            ageBand: .teen,
+            goal: .createContent,
+            experience: .intermediate,
+            path: .creation
+        )
+        let selectedCoach = OnboardingDraft(
+            ageBand: .teen,
+            goal: .createContent,
+            experience: .intermediate,
+            path: .creation,
+            coachMode: .socratic
+        )
+        let validStates: [OnboardingDraftRepository.State] = [
+            .init(step: .welcome, draft: OnboardingDraft()),
+            .init(step: .age, draft: OnboardingDraft()),
+            .init(step: .ageRestricted, draft: OnboardingDraft()),
+            .init(step: .goal, draft: age),
+            .init(step: .experience, draft: goal),
+            .init(step: .pathRecommendation, draft: recommended),
+            .init(step: .coach, draft: recommended),
+            .init(step: .account, draft: recommended),
+            .init(step: .account, draft: selectedCoach),
+            .init(step: .savingProfile, draft: selectedCoach),
+            .init(step: .firstLessonHandoff, draft: selectedCoach),
+        ]
+
+        for valid in validStates {
+            let repository = OnboardingDraftRepository.memory()
+            try repository.save(valid)
+            let store = OnboardingStore(repository: repository)
+
+            await store.restore()
+
+            XCTAssertEqual(store.step, valid.step)
+            XCTAssertEqual(store.draft, valid.draft)
+        }
     }
 
     private func assertRestored(

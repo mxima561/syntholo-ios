@@ -1,3 +1,4 @@
+import Dispatch
 import Foundation
 import XCTest
 @testable import Syntholo
@@ -45,7 +46,15 @@ final class OnboardingDraftRepositoryTests: XCTestCase {
 
         let saved = try XCTUnwrap(repository.load())
         XCTAssertEqual(saved.step, .pathRecommendation)
-        XCTAssertEqual(saved.draft, draftThroughExperience)
+        XCTAssertEqual(
+            saved.draft,
+            OnboardingDraft(
+                ageBand: .adult,
+                goal: .studySmarter,
+                experience: .beginner,
+                path: .school
+            )
+        )
     }
 
     func testUserDefaultsRepositoryMatchesMemoryContract() throws {
@@ -114,6 +123,49 @@ final class OnboardingDraftRepositoryTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: "unsupported"))
     }
 
+    func testRepositoryCopiesSerializeMalformedRemovalAgainstSave() async throws {
+        let defaults = CoordinatedUserDefaults()
+        defaults.seed(Data("{".utf8), forKey: "coordinated")
+        let repository = OnboardingDraftRepository.userDefaults(
+            defaults,
+            key: "coordinated"
+        )
+        let repositoryCopy = repository
+        let savedState = OnboardingDraftRepository.State(
+            step: .goal,
+            draft: OnboardingDraft(ageBand: .adult)
+        )
+
+        let loadTask = Task.detached {
+            try repository.load()
+        }
+        XCTAssertEqual(
+            defaults.removeEntered.wait(timeout: .now() + 2),
+            .success
+        )
+
+        let saveAttempted = DispatchSemaphore(value: 0)
+        let saveTask = Task.detached {
+            saveAttempted.signal()
+            try repositoryCopy.save(savedState)
+        }
+        XCTAssertEqual(
+            saveAttempted.wait(timeout: .now() + 2),
+            .success
+        )
+        XCTAssertEqual(
+            defaults.setEntered.wait(timeout: .now() + 0.5),
+            .timedOut,
+            "A copied repository saved while malformed cleanup was in flight"
+        )
+
+        defaults.allowRemoval.signal()
+        _ = try await loadTask.value
+        try await saveTask.value
+
+        XCTAssertEqual(try repository.load(), savedState)
+    }
+
     @MainActor
     func testStoreRestoresFreshWelcomeFromMalformedEnvelope() async throws {
         let defaults = try makeUserDefaults()
@@ -150,5 +202,39 @@ final class OnboardingDraftRepositoryTests: XCTestCase {
     private func makeUserDefaults() throws -> UserDefaults {
         let suiteName = "OnboardingDraftRepositoryTests.\(UUID().uuidString)"
         return try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    }
+}
+
+private final class CoordinatedUserDefaults: UserDefaults, @unchecked Sendable {
+    let removeEntered = DispatchSemaphore(value: 0)
+    let allowRemoval = DispatchSemaphore(value: 0)
+    let setEntered = DispatchSemaphore(value: 0)
+
+    private let storageLock = NSLock()
+    private var storage: [String: Any] = [:]
+
+    override func object(forKey defaultName: String) -> Any? {
+        storageLock.withLock { storage[defaultName] }
+    }
+
+    override func set(_ value: Any?, forKey defaultName: String) {
+        setEntered.signal()
+        storageLock.withLock {
+            storage[defaultName] = value
+        }
+    }
+
+    override func removeObject(forKey defaultName: String) {
+        removeEntered.signal()
+        allowRemoval.wait()
+        _ = storageLock.withLock {
+            storage.removeValue(forKey: defaultName)
+        }
+    }
+
+    func seed(_ value: Any, forKey key: String) {
+        storageLock.withLock {
+            storage[key] = value
+        }
     }
 }

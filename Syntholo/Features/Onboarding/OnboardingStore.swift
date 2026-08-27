@@ -18,22 +18,7 @@ final class OnboardingStore {
     }
 
     var canAdvance: Bool {
-        switch step {
-        case .welcome:
-            true
-        case .age:
-            draft.ageBand != nil
-        case .goal:
-            draft.goal != nil
-        case .experience:
-            draft.experience != nil
-        case .pathRecommendation:
-            draft.path != nil
-        case .coach:
-            draft.isReadyForAccount
-        case .ageRestricted, .account, .savingProfile, .firstLessonHandoff:
-            false
-        }
+        step == .welcome
     }
 
     var canGoBack: Bool {
@@ -54,38 +39,10 @@ final class OnboardingStore {
     }
 
     func advance() {
-        let nextStep: OnboardingStep?
-        switch step {
-        case .welcome:
-            nextStep = .age
-        case .age where draft.ageBand != nil:
-            nextStep = .goal
-        case .goal where draft.goal != nil:
-            nextStep = .experience
-        case .experience:
-            guard let goal = draft.goal,
-                  let experience = draft.experience,
-                  draft.ageBand != nil else {
-                return
-            }
-            draft.path = PathRecommender.recommend(
-                goal: goal,
-                experience: experience
-            )
-            nextStep = .pathRecommendation
-        case .pathRecommendation where draft.path != nil:
-            nextStep = .coach
-        case .coach where draft.isReadyForAccount:
-            nextStep = .account
-        case .ageRestricted, .account, .savingProfile, .firstLessonHandoff,
-             .age, .goal, .pathRecommendation, .coach:
-            nextStep = nil
-        }
-
-        guard let nextStep else {
+        guard step == .welcome else {
             return
         }
-        step = nextStep
+        step = .age
         error = nil
         persist()
     }
@@ -96,10 +53,16 @@ final class OnboardingStore {
         case .age:
             previousStep = .welcome
         case .ageRestricted, .goal:
+            draft = OnboardingDraft()
             previousStep = .age
         case .experience:
+            draft.goal = nil
+            draft.experience = nil
+            draft.path = nil
             previousStep = .goal
         case .pathRecommendation:
+            draft.experience = nil
+            draft.path = nil
             previousStep = .experience
         case .coach:
             previousStep = .pathRecommendation
@@ -123,6 +86,7 @@ final class OnboardingStore {
         draft.goal = nil
         draft.experience = nil
         draft.path = nil
+        step = .goal
         error = nil
         persist()
     }
@@ -144,6 +108,7 @@ final class OnboardingStore {
         draft.goal = goal
         draft.experience = nil
         draft.path = nil
+        step = .experience
         error = nil
         persist()
     }
@@ -152,8 +117,15 @@ final class OnboardingStore {
         guard step == .experience else {
             return
         }
+        guard let goal = draft.goal, draft.ageBand != nil else {
+            return
+        }
         draft.experience = experience
-        draft.path = nil
+        draft.path = PathRecommender.recommend(
+            goal: goal,
+            experience: experience
+        )
+        step = .pathRecommendation
         error = nil
         persist()
     }
@@ -163,15 +135,17 @@ final class OnboardingStore {
             return
         }
         draft.path = path
+        step = .coach
         error = nil
         persist()
     }
 
     func selectCoachMode(_ coachMode: CoachMode) {
-        guard step == .coach else {
+        guard step == .coach, draft.isReadyForAccount else {
             return
         }
         draft.coachMode = coachMode
+        step = .account
         error = nil
         persist()
     }
@@ -237,17 +211,25 @@ final class OnboardingStore {
     private static func isValid(_ state: OnboardingDraftRepository.State) -> Bool {
         let draft = state.draft
         return switch state.step {
-        case .welcome, .age:
-            true
-        case .ageRestricted:
-            draft.ageBand == nil
+        case .welcome, .age, .ageRestricted:
+            draft == OnboardingDraft()
         case .goal:
             draft.ageBand != nil
+                && draft.goal == nil
+                && draft.experience == nil
+                && draft.path == nil
+                && draft.coachMode == .supportive
         case .experience:
-            draft.ageBand != nil && draft.goal != nil
+            draft.ageBand != nil
+                && draft.goal != nil
+                && draft.experience == nil
+                && draft.path == nil
+                && draft.coachMode == .supportive
         case .pathRecommendation:
-            draft.ageBand != nil && draft.goal != nil && draft.experience != nil
-        case .coach, .account, .savingProfile, .firstLessonHandoff:
+            draft.isReadyForAccount && draft.coachMode == .supportive
+        case .coach:
+            draft.isReadyForAccount && draft.coachMode == .supportive
+        case .account, .savingProfile, .firstLessonHandoff:
             draft.isReadyForAccount
         }
     }
