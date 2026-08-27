@@ -618,7 +618,7 @@ Localized prices are not a product decision. StoreKit displays them.
 | Practice vs daily limit unspecified | Metering table in III.C |
 | “Verified certificates” sounded like accreditation | STAR-6: Syntholo-issued completion only |
 | Roadmap Phase 7 included leagues in Closed TestFlight | Leagues are STAR. Phase 7 is friends/reactions/block |
-| Status “approved, pending review” | This bible is the binding document once accepted |
+| Status “approved, pending review” | Founder acceptance recorded; this bible is already accepted and binding |
 
 ---
 
