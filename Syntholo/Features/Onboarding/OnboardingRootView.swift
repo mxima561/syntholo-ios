@@ -2,10 +2,14 @@ import SwiftUI
 
 struct OnboardingRootView: View {
     @Bindable var store: OnboardingStore
-    let authClient: any AuthClient
-    let onAuthenticated: @MainActor (AuthenticatedUser) -> Void
-    let onContinueWithEmail: () -> Void
-    let onStartFirstLesson: () -> Void
+    let coordinator: OnboardingCoordinator
+
+    @State private var isEmailAuthPresented = false
+
+    init(coordinator: OnboardingCoordinator) {
+        self.coordinator = coordinator
+        store = coordinator.onboardingStore
+    }
 
     var body: some View {
         NavigationStack {
@@ -26,8 +30,14 @@ struct OnboardingRootView: View {
         }
         .tint(OnboardingPalette.lectureBlue)
         .preferredColorScheme(.light)
-        .task {
-            await store.restore()
+        .sheet(isPresented: $isEmailAuthPresented) {
+            EmailAuthView(
+                authClient: coordinator.authClient,
+                onAuthenticated: { user in
+                    isEmailAuthPresented = false
+                    finishAuthentication(user, provider: .password)
+                }
+            )
         }
     }
 
@@ -35,11 +45,11 @@ struct OnboardingRootView: View {
     private var currentStep: some View {
         switch store.step {
         case .welcome:
-            WelcomeView(onStart: store.advance)
+            WelcomeView(onStart: coordinator.startOnboarding)
         case .age:
             AgeConfirmationView(
                 selectedAgeBand: store.draft.ageBand,
-                onSelectAgeBand: store.selectAgeBand,
+                onSelectAgeBand: coordinator.confirmAge,
                 onUnderThirteen: store.rejectUnderThirteen
             )
         case .ageRestricted:
@@ -52,23 +62,35 @@ struct OnboardingRootView: View {
             PathRecommendationView(
                 recommendedPath: store.recommendedPath ?? .school,
                 selectedPath: store.draft.path,
-                onSelectPath: store.selectPath
+                onSelectPath: coordinator.selectPath
             )
         case .coach:
             CoachModeView(
                 selectedMode: store.draft.coachMode,
-                onSelectMode: store.selectCoachMode
+                onSelectMode: coordinator.selectCoachMode
             )
         case .account:
-            AccountCreationView(
-                authClient: authClient,
-                onAuthenticated: onAuthenticated,
-                onContinueWithEmail: onContinueWithEmail
-            )
+            if store.canRetryProfileSave {
+                ProfileSaveRetryView {
+                    Task { @MainActor in
+                        await coordinator.retryProfileSave()
+                    }
+                }
+            } else {
+                AccountCreationView(
+                    authClient: coordinator.authClient,
+                    onAuthenticated: finishAuthentication,
+                    onContinueWithEmail: {
+                        isEmailAuthPresented = true
+                    }
+                )
+            }
         case .savingProfile:
             savingProfileView
         case .firstLessonHandoff:
-            FirstLessonHandoffView(onStartFirstLesson: onStartFirstLesson)
+            FirstLessonHandoffView(
+                onStartFirstLesson: coordinator.completeFirstLessonHandoff
+            )
         }
     }
 
@@ -108,7 +130,7 @@ struct OnboardingRootView: View {
                     )
                 ],
                 selectedID: store.draft.goal,
-                onSelect: store.selectGoal
+                onSelect: coordinator.selectGoal
             )
         }
     }
@@ -143,7 +165,7 @@ struct OnboardingRootView: View {
                     )
                 ],
                 selectedID: store.draft.experience,
-                onSelect: store.selectExperience
+                onSelect: coordinator.selectExperience
             )
         }
     }
@@ -160,6 +182,43 @@ struct OnboardingRootView: View {
                 .font(.body)
                 .frame(maxWidth: .infinity, minHeight: 88)
                 .accessibilityIdentifier("onboarding.profile-saving")
+        }
+    }
+
+    private func finishAuthentication(
+        _ user: AuthenticatedUser,
+        provider: AuthenticationProvider
+    ) {
+        Task { @MainActor in
+            await coordinator.authenticated(user, provider: provider)
+        }
+    }
+}
+
+private struct ProfileSaveRetryView: View {
+    let onRetry: () -> Void
+
+    var body: some View {
+        OnboardingPage(
+            eyebrow: "Account saved",
+            progress: 6,
+            title: "Finish saving your route",
+            introduction: "Your account is ready, but your learning route didn’t save.",
+            accessibilityIdentifier: "onboarding.profile-retry"
+        ) {
+            Label(
+                "Your choices are safe on this device.",
+                systemImage: "arrow.clockwise.circle"
+            )
+            .font(.body)
+            .foregroundStyle(OnboardingPalette.academicInk)
+            .fixedSize(horizontal: false, vertical: true)
+
+            PrimaryButton(
+                title: "Retry saving profile",
+                action: onRetry
+            )
+            .accessibilityIdentifier("onboarding.profile-retry-button")
         }
     }
 }

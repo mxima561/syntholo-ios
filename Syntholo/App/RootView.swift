@@ -1,32 +1,59 @@
+import Foundation
 import SwiftUI
 
 struct RootView: View {
     @Bindable var router: AppRouter
-    @State private var onboardingStore = OnboardingStore(
-        repository: .memory()
-    )
+    @State private var coordinator: OnboardingCoordinator
+
+    init(
+        router: AppRouter,
+        isFirebaseConfigured: Bool,
+        arguments: [String] = ProcessInfo.processInfo.arguments
+    ) {
+        self.router = router
+        _coordinator = State(
+            initialValue: RootRuntime.makeCoordinator(
+                isFirebaseConfigured: isFirebaseConfigured,
+                arguments: arguments
+            )
+        )
+    }
 
     var body: some View {
         Group {
-            if showsOnboardingFixture {
-                OnboardingRootView(
-                    store: onboardingStore,
-                    authClient: FirebaseAuthClient(),
-                    onAuthenticated: { _ in },
-                    onContinueWithEmail: {},
-                    onStartFirstLesson: {}
-                )
-            } else {
+            switch coordinator.session.state {
+            case .loading:
+                loadingView
+            case .signedOut,
+                    .onboarding,
+                    .accountPendingProfile,
+                    .firstLessonHandoff:
+                OnboardingRootView(coordinator: coordinator)
+            case .signedIn:
                 applicationShell
+            case .configurationRequired:
+                configurationRequiredView
             }
         }
         .tint(SyntholoColor.accent)
+        .task {
+            await coordinator.restore()
+        }
     }
 
-    private var showsOnboardingFixture: Bool {
-        let arguments = ProcessInfo.processInfo.arguments
-        return arguments.contains("--ui-testing")
-            && arguments.contains("--onboarding-reset")
+    private var loadingView: some View {
+        ProgressView("Loading Syntholo…")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SyntholoColor.canvas)
+            .accessibilityIdentifier("session.loading")
+    }
+
+    private var configurationRequiredView: some View {
+        ContentUnavailableView(
+            "firebase_setup_required_title",
+            systemImage: "wrench.and.screwdriver",
+            description: Text("firebase_setup_required_message")
+        )
     }
 
     private var applicationShell: some View {
@@ -49,5 +76,210 @@ struct RootView: View {
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(AppRoute.profile)
         }
+    }
+}
+
+@MainActor
+private enum RootRuntime {
+    static func makeCoordinator(
+        isFirebaseConfigured: Bool,
+        arguments: [String]
+    ) -> OnboardingCoordinator {
+        let session = AppSession(
+            configurationAvailable: isFirebaseConfigured
+        )
+        guard isFirebaseConfigured else {
+            return OnboardingCoordinator(
+                session: session,
+                onboardingStore: OnboardingStore(repository: .memory()),
+                authClient: UnavailableAuthClient(),
+                profileRepository: UnavailableProfileRepository(),
+                analytics: NoOpAnalyticsClient()
+            )
+        }
+
+        if arguments.contains("--ui-testing") {
+            return makeUITestCoordinator(
+                session: session,
+                arguments: arguments
+            )
+        }
+
+        return OnboardingCoordinator(
+            session: session,
+            onboardingStore: OnboardingStore(repository: .userDefaults()),
+            authClient: FirebaseAuthClient(),
+            profileRepository: FirestoreProfileRepository(),
+            analytics: FirebaseAnalyticsClient()
+        )
+    }
+
+    private static func makeUITestCoordinator(
+        session: AppSession,
+        arguments: [String]
+    ) -> OnboardingCoordinator {
+        let user = AuthenticatedUser(
+            id: "ui-test-user",
+            email: nil,
+            displayName: nil
+        )
+        let completeDraft = OnboardingDraft(
+            ageBand: .adult,
+            goal: .studySmarter,
+            experience: .beginner,
+            path: .school,
+            coachMode: .supportive
+        )
+        let isOnboardingReset = arguments.contains("--onboarding-reset")
+        let hasDelayedSignedOutSession = arguments.contains(
+            "--session-fixture=delayed-signed-out"
+        )
+        let restoredUser = isOnboardingReset || hasDelayedSignedOutSession
+            ? nil
+            : user
+        let loadedProfile = restoredUser.map { restoredUser in
+            LearnerProfile.make(
+                user: restoredUser,
+                draft: completeDraft,
+                now: Date(timeIntervalSince1970: 1_800_000_000)
+            )
+        }
+        let profileFailures = arguments.contains("--profile-fixture=fail-once")
+            ? 1
+            : 0
+
+        if !isOnboardingReset && !hasDelayedSignedOutSession {
+            session.transition(to: .signedIn)
+        }
+
+        return OnboardingCoordinator(
+            session: session,
+            onboardingStore: OnboardingStore(repository: .memory()),
+            authClient: UITestAuthClient(
+                authenticatedUser: user,
+                restoredUser: restoredUser,
+                restoreDelayNanoseconds: hasDelayedSignedOutSession
+                    ? 3_000_000_000
+                    : 0
+            ),
+            profileRepository: UITestProfileRepository(
+                loadedProfile: loadedProfile,
+                saveFailuresRemaining: profileFailures
+            ),
+            analytics: NoOpAnalyticsClient(),
+            now: { Date(timeIntervalSince1970: 1_800_000_000) }
+        )
+    }
+}
+
+private struct UnavailableAuthClient: AuthClient {
+    func createEmailAccount(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        throw AuthError.providerNotConfigured
+    }
+
+    func signInWithApple(
+        idToken: String,
+        rawNonce: String,
+        fullName: PersonNameComponents?
+    ) async throws -> AuthenticatedUser {
+        throw AuthError.providerNotConfigured
+    }
+
+    func signInWithGoogle(
+        idToken: String,
+        accessToken: String
+    ) async throws -> AuthenticatedUser {
+        throw AuthError.providerNotConfigured
+    }
+
+    func restoreSession() async -> AuthenticatedUser? { nil }
+    func signOut() async throws {}
+}
+
+private struct UnavailableProfileRepository: ProfileRepository {
+    func save(_: LearnerProfile) async throws {
+        throw ProfileRepositoryError.backendFailure
+    }
+
+    func load(userID _: String) async throws -> LearnerProfile? { nil }
+}
+
+private actor UITestAuthClient: AuthClient {
+    private let authenticatedUser: AuthenticatedUser
+    private var restoredUser: AuthenticatedUser?
+    private let restoreDelayNanoseconds: UInt64
+
+    init(
+        authenticatedUser: AuthenticatedUser,
+        restoredUser: AuthenticatedUser?,
+        restoreDelayNanoseconds: UInt64
+    ) {
+        self.authenticatedUser = authenticatedUser
+        self.restoredUser = restoredUser
+        self.restoreDelayNanoseconds = restoreDelayNanoseconds
+    }
+
+    func createEmailAccount(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        authenticatedUser
+    }
+
+    func signInWithApple(
+        idToken: String,
+        rawNonce: String,
+        fullName: PersonNameComponents?
+    ) async throws -> AuthenticatedUser {
+        authenticatedUser
+    }
+
+    func signInWithGoogle(
+        idToken: String,
+        accessToken: String
+    ) async throws -> AuthenticatedUser {
+        authenticatedUser
+    }
+
+    func restoreSession() async -> AuthenticatedUser? {
+        if restoreDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: restoreDelayNanoseconds)
+        }
+        return restoredUser
+    }
+
+    func signOut() async throws {
+        restoredUser = nil
+    }
+}
+
+private actor UITestProfileRepository: ProfileRepository {
+    private var loadedProfile: LearnerProfile?
+    private var saveFailuresRemaining: Int
+
+    init(
+        loadedProfile: LearnerProfile?,
+        saveFailuresRemaining: Int
+    ) {
+        self.loadedProfile = loadedProfile
+        self.saveFailuresRemaining = saveFailuresRemaining
+    }
+
+    func save(_ profile: LearnerProfile) async throws {
+        if saveFailuresRemaining > 0 {
+            saveFailuresRemaining -= 1
+            throw ProfileRepositoryError.backendFailure
+        }
+        loadedProfile = profile
+    }
+
+    func load(userID: String) async throws -> LearnerProfile? {
+        guard loadedProfile?.userID == userID else {
+            return nil
+        }
+        return loadedProfile
     }
 }

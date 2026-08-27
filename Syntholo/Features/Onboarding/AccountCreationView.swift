@@ -2,7 +2,10 @@ import SwiftUI
 import UIKit
 
 struct AccountCreationView: View {
-    let onAuthenticated: @MainActor (AuthenticatedUser) -> Void
+    let onAuthenticated: @MainActor (
+        AuthenticatedUser,
+        AuthenticationProvider
+    ) -> Void
     let onContinueWithEmail: () -> Void
 
     @State private var appleCoordinator: AppleSignInCoordinator
@@ -13,7 +16,10 @@ struct AccountCreationView: View {
     init(
         authClient: any AuthClient,
         googleConfiguration: GoogleSignInConfiguration = .current,
-        onAuthenticated: @escaping @MainActor (AuthenticatedUser) -> Void,
+        onAuthenticated: @escaping @MainActor (
+            AuthenticatedUser,
+            AuthenticationProvider
+        ) -> Void,
         onContinueWithEmail: @escaping () -> Void
     ) {
         self.onAuthenticated = onAuthenticated
@@ -40,7 +46,9 @@ struct AccountCreationView: View {
             VStack(spacing: Space.sm) {
                 AppleAuthenticationButton(
                     coordinator: appleCoordinator,
-                    onCompletion: handleProviderCompletion
+                    onCompletion: { result in
+                        handleProviderCompletion(result, provider: .apple)
+                    }
                 )
                 .accessibilityLabel("Continue with Apple")
                 .accessibilityIdentifier("onboarding.auth.apple")
@@ -140,20 +148,24 @@ struct AccountCreationView: View {
                 let user = try await googleCoordinator.signIn(
                     presenting: viewController
                 )
-                handleProviderCompletion(.success(user))
+                handleProviderCompletion(.success(user), provider: .google)
             } catch {
-                handleProviderCompletion(.failure(AuthError.map(error)))
+                handleProviderCompletion(
+                    .failure(AuthError.map(error)),
+                    provider: .google
+                )
             }
         }
     }
 
     private func handleProviderCompletion(
-        _ result: Result<AuthenticatedUser, AuthError>
+        _ result: Result<AuthenticatedUser, AuthError>,
+        provider: AuthenticationProvider
     ) {
         switch result {
         case let .success(user):
             providerError = nil
-            onAuthenticated(user)
+            onAuthenticated(user, provider)
         case let .failure(error):
             providerError = error.shouldPresentMessage ? error : nil
         }

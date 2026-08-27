@@ -12,14 +12,16 @@ final class OnboardingUITests: XCTestCase {
         .trait
     ]
 
-    private func launchOnboarding() -> XCUIApplication {
+    private func launchOnboarding(
+        extraArguments: [String] = []
+    ) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = [
             "--ui-testing",
             "--onboarding-reset",
             "--auth-fixture=success"
-        ]
+        ] + extraArguments
         app.launch()
         return app
     }
@@ -119,6 +121,87 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(alternate.waitForExistence(timeout: 2))
         XCTAssertTrue(alternate.isSelected)
         attachScreenshot(named: "Task5-Path-Alternate-Selected", of: app)
+    }
+
+    func testEmailFormIsWiredAndCancellationReturnsWithoutError() {
+        let app = launchOnboarding()
+        reachAccountCreation(in: app)
+
+        app.buttons["Continue with email"].tap()
+
+        XCTAssertTrue(app.navigationBars["Email account"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.textFields["Email address"].exists)
+        XCTAssertTrue(app.secureTextFields["Password"].exists)
+        app.buttons["Cancel"].tap()
+
+        XCTAssertTrue(app.buttons["Continue with Apple"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.staticTexts["onboarding.auth.error"].exists)
+    }
+
+    func testProfileFailureShowsRetryThenHandoffWithoutRepeatingAuth() {
+        let app = launchOnboarding(
+            extraArguments: ["--profile-fixture=fail-once"]
+        )
+        reachAccountCreation(in: app)
+        app.buttons["Continue with email"].tap()
+        let email = app.textFields["Email address"]
+        XCTAssertTrue(email.waitForExistence(timeout: 2))
+        email.tap()
+        email.typeText("learner@example.com")
+        let password = app.secureTextFields["Password"]
+        password.tap()
+        password.typeText("password123")
+        app.buttons["Create account"].tap()
+
+        XCTAssertTrue(
+            app.buttons["Retry saving profile"].waitForExistence(timeout: 3)
+        )
+        XCTAssertFalse(app.buttons["Continue with Apple"].exists)
+        XCTAssertFalse(app.buttons["Continue with Google"].exists)
+        XCTAssertFalse(app.buttons["Continue with email"].exists)
+
+        app.buttons["Retry saving profile"].tap()
+
+        XCTAssertTrue(
+            app.buttons["Start the first lesson"].waitForExistence(timeout: 3)
+        )
+    }
+
+    func testLoadingSessionNeverFlashesLearnBeforeSignedOutRoute() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--session-fixture=delayed-signed-out"
+        ]
+        app.launch()
+
+        XCTAssertTrue(
+            app.staticTexts["Loading Syntholo…"].waitForExistence(timeout: 2)
+        )
+        XCTAssertFalse(app.tabBars.buttons["Learn"].exists)
+        XCTAssertTrue(app.buttons["Start learning"].waitForExistence(timeout: 5))
+    }
+
+    func testProfileRetryPassesAccessibilityAudit() throws {
+        let app = launchOnboarding(
+            extraArguments: ["--profile-fixture=fail-once"]
+        )
+        reachAccountCreation(in: app)
+        app.buttons["Continue with email"].tap()
+        let email = app.textFields["Email address"]
+        XCTAssertTrue(email.waitForExistence(timeout: 2))
+        email.tap()
+        email.typeText("learner@example.com")
+        let password = app.secureTextFields["Password"]
+        password.tap()
+        password.typeText("password123")
+        app.buttons["Create account"].tap()
+        XCTAssertTrue(
+            app.buttons["Retry saving profile"].waitForExistence(timeout: 3)
+        )
+
+        try app.performAccessibilityAudit(for: onboardingAuditTypes)
     }
 
     private func reachAccountCreation(

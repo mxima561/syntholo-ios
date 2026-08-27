@@ -22,18 +22,10 @@ struct SyntholoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                switch rootPresentation {
-                case .application:
-                    RootView(router: router)
-                case .configurationRequired:
-                    ContentUnavailableView(
-                        "firebase_setup_required_title",
-                        systemImage: "wrench.and.screwdriver",
-                        description: Text("firebase_setup_required_message")
-                    )
-                }
-            }
+            RootView(
+                router: router,
+                isFirebaseConfigured: rootPresentation == .application
+            )
             .onOpenURL { url in
                 _ = GoogleSignInCoordinator.handle(url)
             }
