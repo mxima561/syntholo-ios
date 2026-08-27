@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PathRecommendationView: View {
     let recommendedPath: LearningPath
+    let selectedPath: LearningPath?
     let onSelectPath: (LearningPath) -> Void
 
     @State private var showsOtherPaths = false
@@ -44,7 +45,7 @@ struct PathRecommendationView: View {
             DisclosureGroup("Other paths", isExpanded: $showsOtherPaths) {
                 ChoiceListView(
                     items: otherPaths,
-                    selectedID: Optional<LearningPath>.none,
+                    selectedID: selectedPath,
                     onSelect: onSelectPath
                 )
                 .padding(.top, Space.sm)

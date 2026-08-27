@@ -50,7 +50,8 @@ struct OnboardingRootView: View {
             experienceView
         case .pathRecommendation:
             PathRecommendationView(
-                recommendedPath: store.draft.path ?? .school,
+                recommendedPath: store.recommendedPath ?? .school,
+                selectedPath: store.draft.path,
                 onSelectPath: store.selectPath
             )
         case .coach:

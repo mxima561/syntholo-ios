@@ -17,31 +17,31 @@ struct CoachModeView: View {
                     ChoiceListItem(
                         id: CoachMode.supportive,
                         title: "Supportive",
-                        detail: "Explains the next step and points out progress.",
+                        detail: "Warm and positive.",
                         systemImage: "heart"
                     ),
                     ChoiceListItem(
                         id: CoachMode.funny,
                         title: "Funny",
-                        detail: "Uses light humor while keeping feedback clear.",
+                        detail: "Playful, with light humor.",
                         systemImage: "face.smiling"
                     ),
                     ChoiceListItem(
                         id: CoachMode.strict,
                         title: "Strict",
-                        detail: "Names mistakes directly and asks you to revise.",
+                        detail: "Direct and no-nonsense.",
                         systemImage: "checkmark.seal"
                     ),
                     ChoiceListItem(
                         id: CoachMode.chill,
                         title: "Chill",
-                        detail: "Keeps feedback brief and low-pressure.",
+                        detail: "Calm and low-pressure.",
                         systemImage: "waveform"
                     ),
                     ChoiceListItem(
                         id: CoachMode.socratic,
                         title: "Socratic",
-                        detail: "Uses questions to help you test your reasoning.",
+                        detail: "Curious and reflective.",
                         systemImage: "questionmark.bubble"
                     )
                 ],

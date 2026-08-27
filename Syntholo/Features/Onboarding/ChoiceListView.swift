@@ -131,7 +131,6 @@ struct OnboardingPage<Content: View>: View {
                         Text(eyebrow)
                             .font(.system(.caption, design: .monospaced, weight: .semibold))
                             .textCase(.uppercase)
-                            .tracking(0.7)
                             .foregroundStyle(OnboardingPalette.lectureBlue)
                             .fixedSize(horizontal: false, vertical: true)
 

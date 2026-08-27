@@ -81,6 +81,21 @@ final class OnboardingStoreTests: XCTestCase {
         XCTAssertNil(restoredStore.draft.ageBand)
     }
 
+    func testAgeRestrictedStateIsTerminal() async throws {
+        let repository = OnboardingDraftRepository.memory()
+        try repository.save(step: .ageRestricted, draft: OnboardingDraft())
+        let store = OnboardingStore(repository: repository)
+        await store.restore()
+
+        XCTAssertFalse(store.canGoBack)
+        store.goBack()
+
+        XCTAssertEqual(store.step, .ageRestricted)
+        XCTAssertEqual(store.draft, OnboardingDraft())
+        XCTAssertEqual(try repository.load()?.step, .ageRestricted)
+        XCTAssertEqual(try repository.load()?.draft, OnboardingDraft())
+    }
+
     func testBackNavigationIsDeterministicBeforeAccount() async throws {
         let expectedPreviousSteps: [(
             current: OnboardingStep,
@@ -89,7 +104,6 @@ final class OnboardingStoreTests: XCTestCase {
             previousDraft: OnboardingDraft
         )] = [
             (.age, OnboardingDraft(), .welcome, OnboardingDraft()),
-            (.ageRestricted, OnboardingDraft(), .age, OnboardingDraft()),
             (
                 .goal,
                 OnboardingDraft(ageBand: .adult),

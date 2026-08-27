@@ -23,11 +23,18 @@ final class OnboardingStore {
 
     var canGoBack: Bool {
         switch step {
-        case .age, .ageRestricted, .goal, .experience, .pathRecommendation, .coach:
+        case .age, .goal, .experience, .pathRecommendation, .coach:
             true
-        case .welcome, .account, .savingProfile, .firstLessonHandoff:
+        case .welcome, .ageRestricted, .account, .savingProfile, .firstLessonHandoff:
             false
         }
+    }
+
+    var recommendedPath: LearningPath? {
+        guard let goal = draft.goal, let experience = draft.experience else {
+            return nil
+        }
+        return PathRecommender.recommend(goal: goal, experience: experience)
     }
 
     var canRetryProfileSave: Bool {
@@ -52,7 +59,7 @@ final class OnboardingStore {
         switch step {
         case .age:
             previousStep = .welcome
-        case .ageRestricted, .goal:
+        case .goal:
             draft = OnboardingDraft()
             previousStep = .age
         case .experience:
@@ -66,7 +73,7 @@ final class OnboardingStore {
             previousStep = .experience
         case .coach:
             previousStep = .pathRecommendation
-        case .welcome, .account, .savingProfile, .firstLessonHandoff:
+        case .welcome, .ageRestricted, .account, .savingProfile, .firstLessonHandoff:
             previousStep = nil
         }
 
