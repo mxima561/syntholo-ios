@@ -21,7 +21,9 @@ In Firebase Console → Authentication → Sign-in method, enable:
 
 For Apple, add the **Sign in with Apple** capability to the `Syntholo` target and complete the Apple/Firebase key and redirect-domain configuration. Do not place the Apple private key in this repository.
 
-For Google, copy `Config/Firebase.example.xcconfig` to the ignored `Config/Firebase.local.xcconfig`. `Config/Shared.xcconfig` includes that file when present. Set `GOOGLE_REVERSED_CLIENT_SCHEME` to the `REVERSED_CLIENT_ID` value from the environment plist; Task 6 exposes the build setting as the app's URL scheme when Google sign-in is added. Never commit the live reversed client ID.
+For Google, copy `Config/Firebase.example.xcconfig` to the ignored `Config/Firebase.local.xcconfig`. `Config/Shared.xcconfig` includes that file when present. Set `GOOGLE_CLIENT_ID` to `CLIENT_ID` and `GOOGLE_REVERSED_CLIENT_SCHEME` to `REVERSED_CLIENT_ID` from the environment plist. The app exposes those values as `GIDClientID` and its callback URL scheme. Never commit either deployment value.
+
+Without the local file, checked-in placeholders keep unsigned builds valid. The Google button remains visible, and selecting it returns a setup message instead of starting the SDK with incomplete configuration. Staging and production deployments must replace both placeholders with a matching client ID and reversed scheme.
 
 ## Run local emulators
 

@@ -1,2 +1,3 @@
-// Copy to Firebase.local.xcconfig for the Task 6 Google sign-in URL scheme.
+// Copy to the ignored Firebase.local.xcconfig for Google sign-in.
+GOOGLE_CLIENT_ID =
 GOOGLE_REVERSED_CLIENT_SCHEME =
