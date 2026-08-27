@@ -1,6 +1,13 @@
 import Foundation
 import Observation
 
+enum ProfileRecoveryKind: Equatable {
+    case checkingProfile
+    case profileCheckFailed
+    case savingProfile
+    case profileSaveFailed
+}
+
 @MainActor
 @Observable
 final class OnboardingCoordinator {
@@ -8,6 +15,7 @@ final class OnboardingCoordinator {
     let onboardingStore: OnboardingStore
     let authClient: any AuthClient
     private(set) var authenticationError: AuthError?
+    private(set) var profileRecoveryKind: ProfileRecoveryKind?
 
     @ObservationIgnored
     private let profileRepository: any ProfileRepository
@@ -19,6 +27,8 @@ final class OnboardingCoordinator {
     private var pendingUser: AuthenticatedUser?
     @ObservationIgnored
     private var isSavingProfile = false
+    @ObservationIgnored
+    private var restorationTask: Task<Void, Never>?
 
     init(
         session: AppSession,
@@ -35,13 +45,30 @@ final class OnboardingCoordinator {
         self.analytics = analytics
         self.now = now
         authenticationError = nil
+        profileRecoveryKind = nil
     }
 
     func restore() async {
+        if let restorationTask {
+            await restorationTask.value
+            return
+        }
+
         guard session.state == .loading else {
             return
         }
 
+        let task = Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+            await performRestore()
+        }
+        restorationTask = task
+        await task.value
+    }
+
+    private func performRestore() async {
         await onboardingStore.restore()
         guard let user = await authClient.restoreSession() else {
             session.transition(
@@ -52,33 +79,7 @@ final class OnboardingCoordinator {
             return
         }
 
-        do {
-            if try await profileRepository.load(userID: user.id) != nil {
-                analytics.log(.loginCompleted(restoredSession: true))
-                session.transition(to: .signedIn)
-                return
-            }
-        } catch {
-            guard onboardingStore.draft.isReadyForAccount,
-                  onboardingStore.step == .account
-                    || onboardingStore.step == .savingProfile else {
-                await abandonUnrecoverableProfile(user: user)
-                return
-            }
-            pendingUser = user
-            await savePendingProfile()
-            return
-        }
-
-        guard onboardingStore.draft.isReadyForAccount,
-              onboardingStore.step == .account
-                || onboardingStore.step == .savingProfile else {
-            await abandonUnrecoverableProfile(user: user)
-            return
-        }
-
-        pendingUser = user
-        await savePendingProfile()
+        await resolveRestoredProfile(for: user)
     }
 
     func authenticated(
@@ -151,12 +152,30 @@ final class OnboardingCoordinator {
         guard case let .accountPendingProfile(userID) = session.state,
               let pendingUser,
               pendingUser.id == userID,
+              profileRecoveryKind == .profileSaveFailed,
               onboardingStore.canRetryProfileSave else {
             return
         }
 
         onboardingStore.retryProfileSave()
         await savePendingProfile()
+    }
+
+    func retryProfileRecovery() async {
+        guard case let .accountPendingProfile(userID) = session.state,
+              let pendingUser,
+              pendingUser.id == userID else {
+            return
+        }
+
+        switch profileRecoveryKind {
+        case .profileCheckFailed:
+            await resolveRestoredProfile(for: pendingUser)
+        case .profileSaveFailed:
+            await retryProfileSave()
+        case .checkingProfile, .savingProfile, nil:
+            return
+        }
     }
 
     func authenticationFailed(_ error: AuthError) {
@@ -186,6 +205,7 @@ final class OnboardingCoordinator {
 
         isSavingProfile = true
         defer { isSavingProfile = false }
+        profileRecoveryKind = .savingProfile
         session.transition(
             to: .accountPendingProfile(userID: pendingUser.id)
         )
@@ -199,16 +219,52 @@ final class OnboardingCoordinator {
             try await profileRepository.save(profile)
             onboardingStore.profileSaveSucceeded()
             analytics.log(.onboardingCompleted)
+            profileRecoveryKind = nil
             session.transition(to: .firstLessonHandoff)
         } catch {
             onboardingStore.profileSaveFailed()
+            profileRecoveryKind = .profileSaveFailed
         }
+    }
+
+    private func resolveRestoredProfile(
+        for user: AuthenticatedUser
+    ) async {
+        pendingUser = user
+        profileRecoveryKind = .checkingProfile
+
+        do {
+            if try await profileRepository.load(userID: user.id) != nil {
+                pendingUser = nil
+                profileRecoveryKind = nil
+                analytics.log(.loginCompleted(restoredSession: true))
+                session.transition(to: .signedIn)
+                return
+            }
+        } catch {
+            profileRecoveryKind = .profileCheckFailed
+            session.transition(
+                to: .accountPendingProfile(userID: user.id)
+            )
+            return
+        }
+
+        guard onboardingStore.draft.isReadyForAccount,
+              onboardingStore.step == .account
+                || onboardingStore.step == .savingProfile else {
+            profileRecoveryKind = nil
+            await abandonUnrecoverableProfile(user: user)
+            return
+        }
+
+        await savePendingProfile()
     }
 
     private func abandonUnrecoverableProfile(
         user _: AuthenticatedUser
     ) async {
         pendingUser = nil
+        profileRecoveryKind = nil
         onboardingStore.reset()
         try? await authClient.signOut()
         session.transition(to: .signedOut)

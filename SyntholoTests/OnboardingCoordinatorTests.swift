@@ -135,6 +135,73 @@ final class OnboardingCoordinatorTests: XCTestCase {
         )
     }
 
+    func testConcurrentCompleteProfileRestorationRunsOneFlight() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            restoreDelayNanoseconds: 50_000_000
+        )
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: profile
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository
+        )
+
+        async let first: Void = fixture.coordinator.restore()
+        async let second: Void = fixture.coordinator.restore()
+        _ = await (first, second)
+
+        let authSnapshot = await authClient.snapshot()
+        let profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+    }
+
+    func testConcurrentMissingProfileRestorationCannotOverwriteSuccessfulSave() async throws {
+        let draftRepository = try repositoryAtAccount()
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            restoreDelayNanoseconds: 50_000_000
+        )
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: nil,
+            loadDelayAfterFirstNanoseconds: 150_000_000
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+
+        async let first: Void = fixture.coordinator.restore()
+        async let second: Void = fixture.coordinator.restore()
+        _ = await (first, second)
+
+        let authSnapshot = await authClient.snapshot()
+        let profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(authSnapshot.signOutCount, 0)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(profileSnapshot.attemptedUserIDs, [user.id])
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.onboardingCompleted]
+        )
+        XCTAssertNil(try draftRepository.load())
+    }
+
     func testRestoredAuthenticatedUserMissingProfileResumesCanonicalDraftSave() async throws {
         let draftRepository = try repositoryAtAccount()
         let profileRepository = CoordinatorProfileRepository(
@@ -180,11 +247,10 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertTrue(profileSnapshot.attemptedProfiles.isEmpty)
     }
 
-    func testRestoredProfileLoadFailureRetainsCanonicalDraftForRetry() async throws {
+    func testRestoredProfileLoadFailureDoesNotSaveOrClearCanonicalDraft() async throws {
         let draftRepository = try repositoryAtAccount()
         let profileRepository = CoordinatorProfileRepository(
             loadedProfile: nil,
-            saveFailuresRemaining: 1,
             loadFails: true
         )
         let fixture = makeCoordinator(
@@ -199,9 +265,83 @@ final class OnboardingCoordinatorTests: XCTestCase {
             fixture.session.state,
             .accountPendingProfile(userID: user.id)
         )
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
         XCTAssertEqual(fixture.store.draft, completeDraft)
-        XCTAssertTrue(fixture.store.canRetryProfileSave)
+        XCTAssertFalse(fixture.store.canRetryProfileSave)
         XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        let snapshot = await profileRepository.snapshot()
+        XCTAssertEqual(snapshot.loadCount, 1)
+        XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
+    }
+
+    func testProfileCheckRetryFindsExistingProfileWithoutSavingDraft() async throws {
+        let draftRepository = try repositoryAtAccount()
+        let existingProfile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: nil,
+            loadResults: [
+                .failure,
+                .profile(existingProfile),
+            ]
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+
+        await fixture.coordinator.restore()
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertNil(fixture.coordinator.profileRecoveryKind)
+        let snapshot = await profileRepository.snapshot()
+        XCTAssertEqual(snapshot.loadCount, 2)
+        XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
+        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+    }
+
+    func testProfileCheckRetrySavesOnlyAfterSuccessfulMissingProfileResult() async throws {
+        let draftRepository = try repositoryAtAccount()
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: nil,
+            loadResults: [
+                .failure,
+                .profile(nil),
+            ]
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+
+        await fixture.coordinator.restore()
+
+        var snapshot = await profileRepository.snapshot()
+        XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
+        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertNil(fixture.coordinator.profileRecoveryKind)
+        snapshot = await profileRepository.snapshot()
+        XCTAssertEqual(snapshot.loadCount, 2)
+        XCTAssertEqual(snapshot.attemptedUserIDs, [user.id])
+        XCTAssertNil(try draftRepository.load())
+        XCTAssertEqual(fixture.analytics.events, [.onboardingCompleted])
     }
 
     func testCancellationKeepsAccountScreenWithoutAnError() async throws {
@@ -290,12 +430,28 @@ private enum CoordinatorTestError: Error {
     case profileSaveFailed
 }
 
+private enum CoordinatorProfileLoadResult: Sendable {
+    case profile(LearnerProfile?)
+    case failure
+}
+
 private actor CoordinatorAuthClient: AuthClient {
+    struct Snapshot: Sendable {
+        let restoreCount: Int
+        let signOutCount: Int
+    }
+
     let restoredUser: AuthenticatedUser?
+    private let restoreDelayNanoseconds: UInt64
+    private(set) var restoreCount = 0
     private(set) var signOutCount = 0
 
-    init(restoredUser: AuthenticatedUser?) {
+    init(
+        restoredUser: AuthenticatedUser?,
+        restoreDelayNanoseconds: UInt64 = 0
+    ) {
         self.restoredUser = restoredUser
+        self.restoreDelayNanoseconds = restoreDelayNanoseconds
     }
 
     func createEmailAccount(
@@ -321,7 +477,11 @@ private actor CoordinatorAuthClient: AuthClient {
     }
 
     func restoreSession() async -> AuthenticatedUser? {
-        restoredUser
+        restoreCount += 1
+        if restoreDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: restoreDelayNanoseconds)
+        }
+        return restoredUser
     }
 
     func signOut() async throws {
@@ -331,12 +491,20 @@ private actor CoordinatorAuthClient: AuthClient {
     func currentSignOutCount() -> Int {
         signOutCount
     }
+
+    func snapshot() -> Snapshot {
+        Snapshot(
+            restoreCount: restoreCount,
+            signOutCount: signOutCount
+        )
+    }
 }
 
 private actor CoordinatorProfileRepository: ProfileRepository {
     struct Snapshot: Sendable {
         let attemptedProfiles: [LearnerProfile]
         let savedProfiles: [String: LearnerProfile]
+        let loadCount: Int
 
         var attemptedUserIDs: [String] {
             attemptedProfiles.map(\.userID)
@@ -345,18 +513,25 @@ private actor CoordinatorProfileRepository: ProfileRepository {
 
     private let loadedProfile: LearnerProfile?
     private let loadFails: Bool
+    private let loadDelayAfterFirstNanoseconds: UInt64
+    private var loadResults: [CoordinatorProfileLoadResult]
     private var saveFailuresRemaining: Int
+    private var loadCount = 0
     private var attemptedProfiles: [LearnerProfile] = []
     private var savedProfiles: [String: LearnerProfile] = [:]
 
     init(
         loadedProfile: LearnerProfile?,
         saveFailuresRemaining: Int = 0,
-        loadFails: Bool = false
+        loadFails: Bool = false,
+        loadDelayAfterFirstNanoseconds: UInt64 = 0,
+        loadResults: [CoordinatorProfileLoadResult] = []
     ) {
         self.loadedProfile = loadedProfile
         self.saveFailuresRemaining = saveFailuresRemaining
         self.loadFails = loadFails
+        self.loadDelayAfterFirstNanoseconds = loadDelayAfterFirstNanoseconds
+        self.loadResults = loadResults
     }
 
     func save(_ profile: LearnerProfile) async throws {
@@ -369,6 +544,20 @@ private actor CoordinatorProfileRepository: ProfileRepository {
     }
 
     func load(userID: String) async throws -> LearnerProfile? {
+        loadCount += 1
+        if loadCount > 1, loadDelayAfterFirstNanoseconds > 0 {
+            try? await Task.sleep(
+                nanoseconds: loadDelayAfterFirstNanoseconds
+            )
+        }
+        if !loadResults.isEmpty {
+            switch loadResults.removeFirst() {
+            case let .profile(profile):
+                return profile
+            case .failure:
+                throw CoordinatorTestError.profileSaveFailed
+            }
+        }
         if loadFails {
             throw CoordinatorTestError.profileSaveFailed
         }
@@ -378,7 +567,8 @@ private actor CoordinatorProfileRepository: ProfileRepository {
     func snapshot() -> Snapshot {
         Snapshot(
             attemptedProfiles: attemptedProfiles,
-            savedProfiles: savedProfiles
+            savedProfiles: savedProfiles,
+            loadCount: loadCount
         )
     }
 }

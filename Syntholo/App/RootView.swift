@@ -98,12 +98,14 @@ private enum RootRuntime {
             )
         }
 
+        #if DEBUG
         if arguments.contains("--ui-testing") {
             return makeUITestCoordinator(
                 session: session,
                 arguments: arguments
             )
         }
+        #endif
 
         return OnboardingCoordinator(
             session: session,
@@ -114,6 +116,7 @@ private enum RootRuntime {
         )
     }
 
+    #if DEBUG
     private static func makeUITestCoordinator(
         session: AppSession,
         arguments: [String]
@@ -134,6 +137,9 @@ private enum RootRuntime {
         let hasDelayedSignedOutSession = arguments.contains(
             "--session-fixture=delayed-signed-out"
         )
+        let hasProfileLoadFailure = arguments.contains(
+            "--profile-load-fixture=fail-once-existing"
+        )
         let restoredUser = isOnboardingReset || hasDelayedSignedOutSession
             ? nil
             : user
@@ -148,7 +154,9 @@ private enum RootRuntime {
             ? 1
             : 0
 
-        if !isOnboardingReset && !hasDelayedSignedOutSession {
+        if !isOnboardingReset
+            && !hasDelayedSignedOutSession
+            && !hasProfileLoadFailure {
             session.transition(to: .signedIn)
         }
 
@@ -164,12 +172,14 @@ private enum RootRuntime {
             ),
             profileRepository: UITestProfileRepository(
                 loadedProfile: loadedProfile,
-                saveFailuresRemaining: profileFailures
+                saveFailuresRemaining: profileFailures,
+                loadFailuresRemaining: hasProfileLoadFailure ? 1 : 0
             ),
             analytics: NoOpAnalyticsClient(),
             now: { Date(timeIntervalSince1970: 1_800_000_000) }
         )
     }
+    #endif
 }
 
 private struct UnavailableAuthClient: AuthClient {
@@ -207,6 +217,7 @@ private struct UnavailableProfileRepository: ProfileRepository {
     func load(userID _: String) async throws -> LearnerProfile? { nil }
 }
 
+#if DEBUG
 private actor UITestAuthClient: AuthClient {
     private let authenticatedUser: AuthenticatedUser
     private var restoredUser: AuthenticatedUser?
@@ -259,13 +270,16 @@ private actor UITestAuthClient: AuthClient {
 private actor UITestProfileRepository: ProfileRepository {
     private var loadedProfile: LearnerProfile?
     private var saveFailuresRemaining: Int
+    private var loadFailuresRemaining: Int
 
     init(
         loadedProfile: LearnerProfile?,
-        saveFailuresRemaining: Int
+        saveFailuresRemaining: Int,
+        loadFailuresRemaining: Int
     ) {
         self.loadedProfile = loadedProfile
         self.saveFailuresRemaining = saveFailuresRemaining
+        self.loadFailuresRemaining = loadFailuresRemaining
     }
 
     func save(_ profile: LearnerProfile) async throws {
@@ -277,9 +291,14 @@ private actor UITestProfileRepository: ProfileRepository {
     }
 
     func load(userID: String) async throws -> LearnerProfile? {
+        if loadFailuresRemaining > 0 {
+            loadFailuresRemaining -= 1
+            throw ProfileRepositoryError.backendFailure
+        }
         guard loadedProfile?.userID == userID else {
             return nil
         }
         return loadedProfile
     }
 }
+#endif

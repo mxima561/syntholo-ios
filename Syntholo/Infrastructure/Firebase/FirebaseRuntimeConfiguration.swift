@@ -65,9 +65,14 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
         isRunningTests: Bool,
         optionsPath: (AppEnvironment) -> String?
     ) -> FirebaseRuntimeConfiguration {
+        #if DEBUG
+        if arguments.contains("--ui-testing") {
+            return .emulator
+        }
+        #endif
+
         if environment == .development
-            || isRunningTests
-            || arguments.contains("--ui-testing") {
+            || isRunningTests {
             return .emulator
         }
 

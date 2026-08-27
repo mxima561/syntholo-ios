@@ -204,6 +204,28 @@ final class OnboardingUITests: XCTestCase {
         try app.performAccessibilityAudit(for: onboardingAuditTypes)
     }
 
+    func testProfileCheckFailureUsesDistinctRetryAndPassesAccessibilityAudit() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing",
+            "--profile-load-fixture=fail-once-existing",
+        ]
+        app.launch()
+
+        XCTAssertTrue(
+            app.buttons["Retry checking profile"].waitForExistence(timeout: 3)
+        )
+        XCTAssertTrue(app.staticTexts["We couldn’t check your profile"].exists)
+        XCTAssertFalse(app.buttons["Retry saving profile"].exists)
+
+        try app.performAccessibilityAudit(for: onboardingAuditTypes)
+
+        app.buttons["Retry checking profile"].tap()
+
+        XCTAssertTrue(app.tabBars.buttons["Learn"].waitForExistence(timeout: 3))
+    }
+
     private func reachAccountCreation(
         in app: XCUIApplication,
         recordingScreenshots: Bool = false

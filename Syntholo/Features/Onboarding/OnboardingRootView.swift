@@ -43,40 +43,36 @@ struct OnboardingRootView: View {
 
     @ViewBuilder
     private var currentStep: some View {
-        switch store.step {
-        case .welcome:
-            WelcomeView(onStart: coordinator.startOnboarding)
-        case .age:
-            AgeConfirmationView(
-                selectedAgeBand: store.draft.ageBand,
-                onSelectAgeBand: coordinator.confirmAge,
-                onUnderThirteen: store.rejectUnderThirteen
-            )
-        case .ageRestricted:
-            AgeRestrictedView()
-        case .goal:
-            goalView
-        case .experience:
-            experienceView
-        case .pathRecommendation:
-            PathRecommendationView(
-                recommendedPath: store.recommendedPath ?? .school,
-                selectedPath: store.draft.path,
-                onSelectPath: coordinator.selectPath
-            )
-        case .coach:
-            CoachModeView(
-                selectedMode: store.draft.coachMode,
-                onSelectMode: coordinator.selectCoachMode
-            )
-        case .account:
-            if store.canRetryProfileSave {
-                ProfileSaveRetryView {
-                    Task { @MainActor in
-                        await coordinator.retryProfileSave()
-                    }
-                }
-            } else {
+        if let profileRecoveryKind = coordinator.profileRecoveryKind {
+            recoveryView(for: profileRecoveryKind)
+        } else {
+            switch store.step {
+            case .welcome:
+                WelcomeView(onStart: coordinator.startOnboarding)
+            case .age:
+                AgeConfirmationView(
+                    selectedAgeBand: store.draft.ageBand,
+                    onSelectAgeBand: coordinator.confirmAge,
+                    onUnderThirteen: store.rejectUnderThirteen
+                )
+            case .ageRestricted:
+                AgeRestrictedView()
+            case .goal:
+                goalView
+            case .experience:
+                experienceView
+            case .pathRecommendation:
+                PathRecommendationView(
+                    recommendedPath: store.recommendedPath ?? .school,
+                    selectedPath: store.draft.path,
+                    onSelectPath: coordinator.selectPath
+                )
+            case .coach:
+                CoachModeView(
+                    selectedMode: store.draft.coachMode,
+                    onSelectMode: coordinator.selectCoachMode
+                )
+            case .account:
                 AccountCreationView(
                     authClient: coordinator.authClient,
                     onAuthenticated: finishAuthentication,
@@ -84,13 +80,37 @@ struct OnboardingRootView: View {
                         isEmailAuthPresented = true
                     }
                 )
+            case .savingProfile:
+                savingProfileView
+            case .firstLessonHandoff:
+                FirstLessonHandoffView(
+                    onStartFirstLesson: coordinator.completeFirstLessonHandoff
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func recoveryView(
+        for kind: ProfileRecoveryKind
+    ) -> some View {
+        switch kind {
+        case .checkingProfile:
+            checkingProfileView
+        case .profileCheckFailed:
+            ProfileCheckRetryView {
+                Task { @MainActor in
+                    await coordinator.retryProfileRecovery()
+                }
             }
         case .savingProfile:
             savingProfileView
-        case .firstLessonHandoff:
-            FirstLessonHandoffView(
-                onStartFirstLesson: coordinator.completeFirstLessonHandoff
-            )
+        case .profileSaveFailed:
+            ProfileSaveRetryView {
+                Task { @MainActor in
+                    await coordinator.retryProfileRecovery()
+                }
+            }
         }
     }
 
@@ -170,6 +190,21 @@ struct OnboardingRootView: View {
         }
     }
 
+    private var checkingProfileView: some View {
+        OnboardingPage(
+            eyebrow: "Profile check",
+            progress: 6,
+            title: "Checking your profile",
+            introduction: "Making sure your saved profile is ready.",
+            accessibilityIdentifier: "onboarding.profile-checking"
+        ) {
+            ProgressView()
+                .controlSize(.large)
+                .tint(OnboardingPalette.lectureBlue)
+                .accessibilityLabel("Checking profile")
+        }
+    }
+
     private var savingProfileView: some View {
         OnboardingPage(
             eyebrow: "Orientation · 6/6",
@@ -219,6 +254,34 @@ private struct ProfileSaveRetryView: View {
                 action: onRetry
             )
             .accessibilityIdentifier("onboarding.profile-retry-button")
+        }
+    }
+}
+
+private struct ProfileCheckRetryView: View {
+    let onRetry: () -> Void
+
+    var body: some View {
+        OnboardingPage(
+            eyebrow: "Profile check",
+            progress: 6,
+            title: "We couldn’t check your profile",
+            introduction: "Your account is signed in. Check again before we save your learning route.",
+            accessibilityIdentifier: "onboarding.profile-check-retry"
+        ) {
+            Label(
+                "Your choices are safe on this device.",
+                systemImage: "arrow.clockwise.circle"
+            )
+            .font(.body)
+            .foregroundStyle(OnboardingPalette.academicInk)
+            .fixedSize(horizontal: false, vertical: true)
+
+            PrimaryButton(
+                title: "Retry checking profile",
+                action: onRetry
+            )
+            .accessibilityIdentifier("onboarding.profile-check-retry-button")
         }
     }
 }
