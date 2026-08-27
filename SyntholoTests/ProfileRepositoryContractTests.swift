@@ -35,6 +35,24 @@ final class ProfileRepositoryContractTests: XCTestCase {
         )
     }
 
+    func testInitialSaveUsesPublicDirectoryPreflightWithoutReadingPrivateClaim() async throws {
+        let store = RecordingProfileDocumentStore(serverDate: serverDate)
+        let repository = FirestoreProfileRepository(store: store)
+        let profile = makeProfile()
+
+        try await repository.save(profile)
+
+        let readPaths = await store.readPaths
+        XCTAssertEqual(
+            readPaths,
+            [
+                "users/\(profile.userID)",
+                "publicProfileDirectory/\(profile.handle)",
+            ]
+        )
+        XCTAssertFalse(readPaths.contains("profileHandleClaims/\(profile.handle)"))
+    }
+
     func testSaveThenLoadDecodesTheCompleteStoredProfile() async throws {
         let store = RecordingProfileDocumentStore(serverDate: serverDate)
         let repository = FirestoreProfileRepository(store: store)
@@ -83,13 +101,13 @@ final class ProfileRepositoryContractTests: XCTestCase {
         XCTAssertTrue(batches.isEmpty)
     }
 
-    func testInitialSaveRejectsAHandleAlreadyClaimedByAnotherUID() async throws {
+    func testInitialSaveRejectsAnOccupiedHiddenPublicDirectory() async throws {
         let profile = makeProfile()
         let store = RecordingProfileDocumentStore(
             documents: [
-                "profileHandleClaims/\(profile.handle)": [
+                "publicProfileDirectory/\(profile.handle)": [
                     "handle": .string(profile.handle),
-                    "ownerUID": .string("another-user"),
+                    "isDiscoverable": .bool(false),
                 ],
             ],
             serverDate: serverDate
@@ -379,10 +397,12 @@ private actor RecordingProfileDocumentStore: ProfileDocumentStore {
 
     enum StubError: Error {
         case requestedFailure
+        case privateClaimPermissionDenied
     }
 
     private var documents: [String: ProfileDocument]
     private(set) var committedBatches: [[ProfileDocumentWrite]] = []
+    private(set) var readPaths: [String] = []
     private let serverDate: Date
     private let failure: Failure?
 
@@ -403,6 +423,10 @@ private actor RecordingProfileDocumentStore: ProfileDocumentStore {
     func read(path: String) async throws -> ProfileDocument? {
         if failure == .read {
             throw StubError.requestedFailure
+        }
+        readPaths.append(path)
+        if path.hasPrefix("profileHandleClaims/"), documents[path] == nil {
+            throw StubError.privateClaimPermissionDenied
         }
         return documents[path]
     }

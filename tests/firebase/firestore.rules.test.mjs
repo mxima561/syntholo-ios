@@ -90,6 +90,51 @@ test("an owner creates the authoritative five-document set in one batch", async 
   await assertSucceeds(getDoc(doc(database, "publicProfileDirectory", handle)));
 });
 
+test("absent private claims stay denied while absent exact directory gets succeed", async () => {
+  const database = authenticatedDatabase("new-user");
+  const handle = handleFor("new-user");
+
+  await assertFails(getDoc(doc(database, "profileHandleClaims", handle)));
+  const directory = await assertSucceeds(
+    getDoc(doc(database, "publicProfileDirectory", handle)),
+  );
+  assert.equal(directory.exists(), false);
+});
+
+test("an authenticated exact directory get can detect hidden occupancy without UID", async () => {
+  await seedProfile("teen-user", "13-17", "school");
+  const handle = handleFor("teen-user");
+  const searcher = authenticatedDatabase("searcher-user");
+
+  const occupied = await assertSucceeds(
+    getDoc(doc(searcher, "publicProfileDirectory", handle)),
+  );
+  assert.equal(occupied.exists(), true);
+  assert.deepEqual(Object.keys(occupied.data()).sort(), [
+    "handle",
+    "isDiscoverable",
+  ]);
+  assert.equal(occupied.data().handle, handle);
+  assert.equal(occupied.data().isDiscoverable, false);
+  assert.equal("userID" in occupied.data(), false);
+});
+
+test("adapter-shaped public preflight permits the first complete profile save", async () => {
+  const userID = "first-save-user";
+  const database = authenticatedDatabase(userID);
+  const handle = handleFor(userID);
+
+  const user = await assertSucceeds(getDoc(doc(database, "users", userID)));
+  const directory = await assertSucceeds(
+    getDoc(doc(database, "publicProfileDirectory", handle)),
+  );
+  assert.equal(user.exists(), false);
+  assert.equal(directory.exists(), false);
+  await assertSucceeds(
+    createProfileBatch(database, userID, "18+", "work"),
+  );
+});
+
 test("initial creation rejects every incomplete subset of the authoritative set", async () => {
   const requiredDocuments = [
     "user",

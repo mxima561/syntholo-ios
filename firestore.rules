@@ -292,12 +292,9 @@ service cloud.firestore {
 
     match /publicProfileDirectory/{handle} {
       allow get: if isSignedIn()
-        && isValidPublicProfile(resource.data, handle)
         && (
-          resource.data.isDiscoverable == true
-          || get(
-            /databases/$(database)/documents/profileHandleClaims/$(handle)
-          ).data.ownerUID == request.auth.uid
+          resource == null
+          || isValidPublicProfile(resource.data, handle)
         );
       allow list: if false;
 

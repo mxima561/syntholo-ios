@@ -114,16 +114,10 @@ struct FirestoreProfileRepository: ProfileRepository {
                 claim: existingClaim,
                 directory: existingDirectory
             )
-        } else if let existingClaim = try await store.read(
-            path: Self.claimPath(profile.handle)
-        ) {
-            guard case let .string(ownerUID)? = existingClaim["ownerUID"] else {
-                throw ProfileRepositoryError.malformedProfileDocuments
-            }
-            if ownerUID != profile.userID {
-                throw ProfileRepositoryError.handleAlreadyClaimed
-            }
-            throw ProfileRepositoryError.incompleteProfileDocuments
+        } else if try await store.read(
+            path: Self.directoryPath(profile.handle)
+        ) != nil {
+            throw ProfileRepositoryError.handleAlreadyClaimed
         }
 
         try await store.commit(
