@@ -8,7 +8,7 @@
 
 **Tech Stack:** Xcode 26.6, Swift 6, SwiftUI, Observation, XCTest, XcodeGen, xcconfig, GitHub Actions.
 
-**Spec:** `docs/superpowers/specs/2026-08-25-syntholo-ios-mvp-prd.md` sections 3, 4, 11, 15, 16, 22, 28, and 29.
+**Spec:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md` (Book I, DEC-*, Phase 0). Historical PRD sections 3, 4, 11, 15, 16, 22, 28, and 29 are background only.
 
 ## Global Constraints
 

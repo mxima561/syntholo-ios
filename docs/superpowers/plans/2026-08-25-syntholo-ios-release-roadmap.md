@@ -8,7 +8,7 @@
 
 **Tech Stack:** Swift 6, SwiftUI, Observation, Swift Testing/XCTest, XcodeGen, Firebase Apple SDK, Cloud Functions for Firebase, TypeScript, OpenAI Responses API, StoreKit 2, GitHub Actions.
 
-**Spec:** `docs/superpowers/specs/2026-08-25-syntholo-ios-mvp-prd.md`
+**Spec:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md` (binding). Historical PRD is not law on conflict.
 
 ## Global Constraints
 
@@ -21,7 +21,8 @@
 - No OpenAI key, Firebase service credential, or App Store secret may ship in the app bundle or repository.
 - Users aged 13–17 receive the same core curriculum with stricter privacy defaults and no free-text social communication.
 - Each slice must pass unit tests, UI smoke tests, accessibility checks, analytics validation, and privacy review before merging.
-- The approved PRD remains authoritative. Product-scope changes require a dated PRD amendment before implementation.
+- The Product Bible is authoritative. Product-scope changes require a dated bible amendment before implementation.
+- Phase 7 ships 1.0 social only (friends, reactions, report/block). Leagues, leaderboards, team quests, and shared streaks are north-star, not Closed TestFlight P0.
 
 ---
 
@@ -36,7 +37,7 @@
 | 4 | `2026-08-25-syntholo-ai-coach.md` | Five tone modes, rubric scoring, hints, revisions, safety | Phases 1–3 | Structured feedback is explainable, safe, and mode-consistent |
 | 5 | `2026-08-25-syntholo-engagement.md` | Campus home, streaks, XP, daily challenge, review queue | Phases 2–4 | Engagement rewards learning without blocking recovery |
 | 6 | `2026-08-25-syntholo-subscriptions.md` | StoreKit products, paywall, entitlements, restore, limits | Phases 1–5 | Sandbox purchase matrix and server reconciliation pass |
-| 7 | `2026-08-25-syntholo-social.md` | Profiles, friends, leagues, reactions, shared streaks | Phases 1, 3, 5 | Abuse-resistant preset-only social flow passes safety review |
+| 7 | `2026-08-25-syntholo-social.md` | Profiles, friends, reactions, report/block (no leagues) | Phases 1, 3, 5 | Abuse-resistant preset-only social flow passes safety review |
 | 8 | `2026-08-25-syntholo-profile-operations.md` | Settings, downloads, notifications, privacy, support, analytics | Phases 1–7 | Account controls and operational telemetry are complete |
 | 9 | `2026-08-25-syntholo-app-store-hardening.md` | Accessibility, privacy manifests, performance, TestFlight, release | All phases | Every PRD release gate and App Store checklist item passes |
 
@@ -67,7 +68,7 @@ All product slices ── Profile & operations ── App Store hardening
 
 - [ ] Complete phases 5–7.
 - [ ] Load all five path shells and enough approved content to test progression.
-- [ ] Validate daily limits, purchase/restore/refund states, leagues, reactions, and shared streaks.
+- [ ] Validate daily limits, purchase/restore/refund states, friends, preset reactions, report, and block. No leagues in 1.0.
 - [ ] Conduct VoiceOver, Dynamic Type, Reduce Motion, contrast, and keyboard-access reviews.
 - [ ] Record retention, lesson completion, coach usefulness, and paywall funnel baselines.
 
@@ -106,4 +107,3 @@ All product slices ── Profile & operations ── App Store hardening
 - [ ] Author learning-engine and AI-coach plans after the content schema is proven with fixtures.
 - [ ] Author engagement, subscriptions, and social plans after progress semantics are stable.
 - [ ] Author operations and App Store hardening plans last so they reference the real integrated system.
-
