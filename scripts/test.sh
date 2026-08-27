@@ -2,9 +2,12 @@
 set -euo pipefail
 
 ./scripts/bootstrap.sh
-destination='platform=iOS Simulator,name=iPhone 17 Pro'
+destination=${SYNTHOLO_DESTINATION:-}
+if [[ -z "$destination" ]]; then
+  destination='platform=iOS Simulator,name=iPhone 17 Pro'
+fi
 
-# Accessibility audits run below one method per process, not in this baseline invocation.
+# Accessibility audits run below in one dedicated sequential invocation.
 xcodebuild test \
   -project Syntholo.xcodeproj \
   -scheme Syntholo \
