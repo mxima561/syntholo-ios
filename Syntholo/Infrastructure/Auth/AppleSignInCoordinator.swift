@@ -40,20 +40,36 @@ final class AppleSignInCoordinator {
         case let .success(authorization):
             guard let credential = authorization.credential
                 as? ASAuthorizationAppleIDCredential,
-                let identityToken = credential.identityToken,
-                let idToken = String(data: identityToken, encoding: .utf8),
-                let rawNonce else {
+                let identityToken = credential.identityToken else {
                 self.rawNonce = nil
                 throw AuthError.invalidCredential
             }
 
-            self.rawNonce = nil
-            return try await authClient.signInWithApple(
-                idToken: idToken,
-                rawNonce: rawNonce,
+            return try await complete(
+                identityToken: identityToken,
                 fullName: credential.fullName
             )
         }
+    }
+
+    func complete(
+        identityToken: Data,
+        fullName: PersonNameComponents?
+    ) async throws -> AuthenticatedUser {
+        guard let idToken = String(
+            data: identityToken,
+            encoding: .utf8
+        ), let rawNonce else {
+            self.rawNonce = nil
+            throw AuthError.invalidCredential
+        }
+
+        self.rawNonce = nil
+        return try await authClient.signInWithApple(
+            idToken: idToken,
+            rawNonce: rawNonce,
+            fullName: fullName
+        )
     }
 }
 

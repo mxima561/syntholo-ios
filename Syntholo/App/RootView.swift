@@ -11,8 +11,8 @@ struct RootView: View {
             if showsOnboardingFixture {
                 OnboardingRootView(
                     store: onboardingStore,
-                    onContinueWithApple: {},
-                    onContinueWithGoogle: {},
+                    authClient: FirebaseAuthClient(),
+                    onAuthenticated: { _ in },
                     onContinueWithEmail: {},
                     onStartFirstLesson: {}
                 )

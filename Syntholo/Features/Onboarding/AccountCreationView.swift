@@ -1,9 +1,33 @@
 import SwiftUI
+import UIKit
 
 struct AccountCreationView: View {
-    let onContinueWithApple: () -> Void
-    let onContinueWithGoogle: () -> Void
+    let onAuthenticated: @MainActor (AuthenticatedUser) -> Void
     let onContinueWithEmail: () -> Void
+
+    @State private var appleCoordinator: AppleSignInCoordinator
+    @State private var googleCoordinator: GoogleSignInCoordinator
+    @State private var providerError: AuthError?
+    @State private var isGoogleSignInRunning = false
+
+    init(
+        authClient: any AuthClient,
+        googleConfiguration: GoogleSignInConfiguration = .current,
+        onAuthenticated: @escaping @MainActor (AuthenticatedUser) -> Void,
+        onContinueWithEmail: @escaping () -> Void
+    ) {
+        self.onAuthenticated = onAuthenticated
+        self.onContinueWithEmail = onContinueWithEmail
+        _appleCoordinator = State(
+            initialValue: AppleSignInCoordinator(authClient: authClient)
+        )
+        _googleCoordinator = State(
+            initialValue: GoogleSignInCoordinator(
+                authClient: authClient,
+                configuration: googleConfiguration
+            )
+        )
+    }
 
     var body: some View {
         OnboardingPage(
@@ -14,21 +38,40 @@ struct AccountCreationView: View {
             accessibilityIdentifier: "onboarding.account"
         ) {
             VStack(spacing: Space.sm) {
-                providerButton(
-                    title: "Continue with Apple",
-                    systemImage: "apple.logo",
-                    action: onContinueWithApple
+                AppleAuthenticationButton(
+                    coordinator: appleCoordinator,
+                    onCompletion: handleProviderCompletion
                 )
+                .accessibilityLabel("Continue with Apple")
+                .accessibilityIdentifier("onboarding.auth.apple")
+
                 providerButton(
                     title: "Continue with Google",
                     systemImage: nil,
-                    action: onContinueWithGoogle
+                    action: continueWithGoogle,
+                    isEnabled: !isGoogleSignInRunning
                 )
                 providerButton(
                     title: "Continue with email",
                     systemImage: "envelope",
                     action: onContinueWithEmail
                 )
+
+                if let providerError, providerError.shouldPresentMessage {
+                    Label {
+                        Text(
+                            LocalizedStringKey(providerError.localizationKey)
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        Image(systemName: "exclamationmark.circle")
+                            .accessibilityHidden(true)
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(OnboardingPalette.correctionCoral)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("onboarding.auth.error")
+                }
             }
 
             Text("Your account stores your learning choices and progress.")
@@ -41,7 +84,8 @@ struct AccountCreationView: View {
     private func providerButton(
         title: LocalizedStringKey,
         systemImage: String?,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
+        isEnabled: Bool = true
     ) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
@@ -58,6 +102,7 @@ struct AccountCreationView: View {
                 Text(title)
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Color.clear
                     .frame(width: 24, height: 1)
@@ -74,6 +119,57 @@ struct AccountCreationView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!isEnabled)
         .accessibilityLabel(Text(title))
+    }
+
+    private func continueWithGoogle() {
+        guard !isGoogleSignInRunning else {
+            return
+        }
+
+        providerError = nil
+        isGoogleSignInRunning = true
+        Task { @MainActor in
+            defer { isGoogleSignInRunning = false }
+
+            do {
+                guard let viewController = presentingViewController else {
+                    throw AuthError.providerUnavailable
+                }
+                let user = try await googleCoordinator.signIn(
+                    presenting: viewController
+                )
+                handleProviderCompletion(.success(user))
+            } catch {
+                handleProviderCompletion(.failure(AuthError.map(error)))
+            }
+        }
+    }
+
+    private func handleProviderCompletion(
+        _ result: Result<AuthenticatedUser, AuthError>
+    ) {
+        switch result {
+        case let .success(user):
+            providerError = nil
+            onAuthenticated(user)
+        case let .failure(error):
+            providerError = error.shouldPresentMessage ? error : nil
+        }
+    }
+
+    private var presentingViewController: UIViewController? {
+        let rootViewController = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController
+
+        var presentedViewController = rootViewController
+        while let next = presentedViewController?.presentedViewController {
+            presentedViewController = next
+        }
+        return presentedViewController
     }
 }

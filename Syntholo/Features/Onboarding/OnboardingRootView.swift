@@ -2,8 +2,8 @@ import SwiftUI
 
 struct OnboardingRootView: View {
     @Bindable var store: OnboardingStore
-    let onContinueWithApple: () -> Void
-    let onContinueWithGoogle: () -> Void
+    let authClient: any AuthClient
+    let onAuthenticated: @MainActor (AuthenticatedUser) -> Void
     let onContinueWithEmail: () -> Void
     let onStartFirstLesson: () -> Void
 
@@ -61,8 +61,8 @@ struct OnboardingRootView: View {
             )
         case .account:
             AccountCreationView(
-                onContinueWithApple: onContinueWithApple,
-                onContinueWithGoogle: onContinueWithGoogle,
+                authClient: authClient,
+                onAuthenticated: onAuthenticated,
                 onContinueWithEmail: onContinueWithEmail
             )
         case .savingProfile:

@@ -37,20 +37,27 @@ final class OnboardingUITests: XCTestCase {
     func testAdultStudyBeginnerPathReachesAccountCreation() {
         let app = launchOnboarding()
 
-        attachScreenshot(named: "Task5-Welcome", of: app)
-        app.buttons["Start learning"].tap()
-        app.buttons["I’m 18 or older"].tap()
-        app.buttons["Study smarter"].tap()
-        app.buttons["Beginner-friendly"].tap()
-        attachScreenshot(named: "Task5-Path", of: app)
-        app.buttons["Choose AI for School"].tap()
-        attachScreenshot(named: "Task5-Coach", of: app)
-        app.buttons["Supportive"].tap()
+        reachAccountCreation(in: app, recordingScreenshots: true)
         attachScreenshot(named: "Task5-Account", of: app)
 
-        XCTAssertTrue(app.buttons["Continue with Apple"].exists)
+        XCTAssertTrue(app.buttons["onboarding.auth.apple"].exists)
         XCTAssertTrue(app.buttons["Continue with Google"].exists)
         XCTAssertTrue(app.buttons["Continue with email"].exists)
+    }
+
+    func testUnconfiguredGooglePresentsSetupMessageAndKeepsProvidersVisible() {
+        let app = launchOnboarding()
+        reachAccountCreation(in: app)
+
+        app.buttons["Continue with Google"].tap()
+
+        XCTAssertTrue(
+            app.staticTexts[
+                "Google sign-in needs local setup. See docs/setup/firebase.md."
+            ].waitForExistence(timeout: 2)
+        )
+        XCTAssertTrue(app.buttons["onboarding.auth.apple"].exists)
+        XCTAssertTrue(app.buttons["Continue with Google"].exists)
     }
 
     func testOnboardingCheckpointsPassAccessibilityAudits() throws {
@@ -112,5 +119,26 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(alternate.waitForExistence(timeout: 2))
         XCTAssertTrue(alternate.isSelected)
         attachScreenshot(named: "Task5-Path-Alternate-Selected", of: app)
+    }
+
+    private func reachAccountCreation(
+        in app: XCUIApplication,
+        recordingScreenshots: Bool = false
+    ) {
+        if recordingScreenshots {
+            attachScreenshot(named: "Task5-Welcome", of: app)
+        }
+        app.buttons["Start learning"].tap()
+        app.buttons["I’m 18 or older"].tap()
+        app.buttons["Study smarter"].tap()
+        app.buttons["Beginner-friendly"].tap()
+        if recordingScreenshots {
+            attachScreenshot(named: "Task5-Path", of: app)
+        }
+        app.buttons["Choose AI for School"].tap()
+        if recordingScreenshots {
+            attachScreenshot(named: "Task5-Coach", of: app)
+        }
+        app.buttons["Supportive"].tap()
     }
 }
