@@ -15,6 +15,7 @@ struct AccountCreationView: View {
 
     #if DEBUG
     private let uiTestAuthClient: (any AuthClient)?
+    @State private var uiTestProviderAttemptMarker: String?
     #endif
 
     init(
@@ -31,8 +32,8 @@ struct AccountCreationView: View {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         uiTestAuthClient = arguments.contains("--ui-testing")
-            && (arguments.contains("--auth-fixture=success")
-                || arguments.contains("--auth-fixture=cancelled"))
+            && (arguments.contains("--provider-fixture=success")
+                || arguments.contains("--provider-fixture=cancelled"))
             ? authClient
             : nil
         #endif
@@ -47,7 +48,20 @@ struct AccountCreationView: View {
         )
     }
 
+    @ViewBuilder
     var body: some View {
+        #if DEBUG
+        if let uiTestProviderAttemptMarker {
+            accountPage.accessibilityValue(uiTestProviderAttemptMarker)
+        } else {
+            accountPage
+        }
+        #else
+        accountPage
+        #endif
+    }
+
+    private var accountPage: some View {
         OnboardingPage(
             eyebrow: "Orientation · 6/6",
             progress: 6,
@@ -63,7 +77,7 @@ struct AccountCreationView: View {
                         systemImage: "apple.logo",
                         action: { continueWithUITestProvider(.apple) }
                     )
-                    .accessibilityIdentifier("onboarding.auth.apple")
+                    .accessibilityIdentifier("onboarding.auth.apple.fixture")
                 } else {
                     appleAuthenticationButton
                 }
@@ -124,7 +138,7 @@ struct AccountCreationView: View {
             }
         )
         .accessibilityLabel("Continue with Apple")
-        .accessibilityIdentifier("onboarding.auth.apple")
+        .accessibilityIdentifier("onboarding.auth.apple.native")
     }
 
     private var googleAuthenticationButton: some View {
@@ -239,8 +253,12 @@ struct AccountCreationView: View {
                 }
                 handleProviderCompletion(.success(user), provider: provider)
             } catch {
+                let authError = AuthError.map(error)
+                if authError == .cancelled {
+                    uiTestProviderAttemptMarker = "\(provider.rawValue):cancelled"
+                }
                 handleProviderCompletion(
-                    .failure(AuthError.map(error)),
+                    .failure(authError),
                     provider: provider
                 )
             }

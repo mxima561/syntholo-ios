@@ -7,6 +7,7 @@ cd "$repository_root"
 
 ./scripts/bootstrap.sh
 ./tests/scripts/test_run_with_timeout.sh
+./tests/scripts/test_result_assertions.sh
 ./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
 
 destination=${SYNTHOLO_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}
@@ -17,26 +18,10 @@ assert_test_result() {
   local result_bundle=$1
   local expected_count=$2
   local label=$3
-  local summary_file="$result_directory/${label}.json"
 
   xcrun xcresulttool get test-results summary \
-    --path "$result_bundle" > "$summary_file"
-  node - "$summary_file" "$expected_count" "$label" <<'NODE'
-const fs = require("node:fs");
-
-const [summaryPath, expectedCount, label] = process.argv.slice(2);
-const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
-const required = Number(expectedCount);
-if (summary.result !== "Passed" || summary.failedTests !== 0 || summary.skippedTests !== 0) {
-  console.error(`${label} result was ${summary.result}: ${summary.passedTests} passed, ${summary.failedTests} failed, ${summary.skippedTests} skipped.`);
-  process.exit(1);
-}
-if (summary.totalTestCount !== required) {
-  console.error(`${label} selected ${summary.totalTestCount} tests; expected exactly ${required}.`);
-  process.exit(1);
-}
-console.log(`${label}: ${summary.passedTests} passed, 0 failed, 0 skipped.`);
-NODE
+    --path "$result_bundle" \
+    | node ./scripts/assert_xcresult_summary.mjs "$expected_count" "$label"
 }
 
 echo "Building all test targets for $destination."
@@ -48,8 +33,22 @@ echo "Building all test targets for $destination."
     -derivedDataPath DerivedData \
     CODE_SIGNING_ALLOWED=NO
 
-functional_result="$result_directory/Functional.xcresult"
-echo "Running unit and functional UI tests."
+unit_result="$result_directory/Unit.xcresult"
+echo "Running unit tests."
+./scripts/run_with_timeout.sh 300 \
+  xcodebuild -quiet test-without-building \
+    -project Syntholo.xcodeproj \
+    -scheme Syntholo \
+    -destination "$destination" \
+    -derivedDataPath DerivedData \
+    -parallel-testing-enabled NO \
+    CODE_SIGNING_ALLOWED=NO \
+    -resultBundlePath "$unit_result" \
+    -only-testing:SyntholoTests
+assert_test_result "$unit_result" 98 unit-tests
+
+functional_ui_result="$result_directory/FunctionalUI.xcresult"
+echo "Running functional UI tests."
 ./scripts/run_with_timeout.sh 600 \
   xcodebuild -quiet test-without-building \
     -project Syntholo.xcodeproj \
@@ -58,10 +57,11 @@ echo "Running unit and functional UI tests."
     -derivedDataPath DerivedData \
     -parallel-testing-enabled NO \
     CODE_SIGNING_ALLOWED=NO \
-    -resultBundlePath "$functional_result" \
+    -resultBundlePath "$functional_ui_result" \
+    -only-testing:SyntholoUITests \
     -skip-testing:SyntholoUITests/AccessibilityAuditUITests \
     -skip-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
-assert_test_result "$functional_result" 114 functional-tests
+assert_test_result "$functional_ui_result" 16 functional-ui-tests
 
 if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
   echo "Skipping accessibility audits by explicit diagnostic request."
@@ -92,7 +92,7 @@ else
       CODE_SIGNING_ALLOWED=NO \
       -resultBundlePath "$onboarding_accessibility_result" \
       -only-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
-  assert_test_result "$onboarding_accessibility_result" 9 onboarding-accessibility-tests
+  assert_test_result "$onboarding_accessibility_result" 10 onboarding-accessibility-tests
 fi
 
 ./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh

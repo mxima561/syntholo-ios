@@ -170,7 +170,7 @@ private enum RootRuntime {
             ? 1
             : 0
         let shouldCancelAuthentication = arguments.contains(
-            "--auth-fixture=cancelled"
+            "--provider-fixture=cancelled"
         )
         let holdNanoseconds: UInt64 = 120_000_000_000
 

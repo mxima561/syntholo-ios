@@ -36,7 +36,7 @@ npm ci
 ./scripts/test_firebase_rules.sh
 ```
 
-Do not install or use a global Firebase CLI for verification. The script requires the exact `firebase-tools` version from `package.json` and `package-lock.json`, creates a temporary Firebase config with non-default ephemeral Firestore, hub, and logging ports, and cleans up the emulator on success, assertion failure, interruption, or timeout. Local emulator tests do not require Firebase authentication or live credentials.
+Do not install or use a global Firebase CLI for verification. The script requires the exact `firebase-tools` version from `package.json` and `package-lock.json`, creates a temporary Firebase config with non-default ephemeral Firestore, hub, and logging ports, and cleans up the emulator on success, assertion failure, interruption, or timeout. It parses the final TAP summary and requires exactly 20 tests and 20 passes with zero failures, cancellations, or skips. Local emulator tests do not require Firebase authentication or live credentials.
 
 For interactive Auth and Firestore development, use the pinned local CLI:
 

@@ -4,7 +4,7 @@ import XCTest
 final class OnboardingUITests: XCTestCase {
     private func launchOnboarding(
         reset: Bool = true,
-        authFixture: String? = "success",
+        providerFixture: String? = nil,
         storageKey: String = UUID().uuidString,
         extraArguments: [String] = []
     ) -> XCUIApplication {
@@ -17,8 +17,8 @@ final class OnboardingUITests: XCTestCase {
         if reset {
             app.launchArguments.append("--onboarding-reset")
         }
-        if let authFixture {
-            app.launchArguments.append("--auth-fixture=\(authFixture)")
+        if let providerFixture {
+            app.launchArguments.append("--provider-fixture=\(providerFixture)")
         }
         app.launchArguments.append(contentsOf: extraArguments)
         app.launch()
@@ -58,45 +58,51 @@ final class OnboardingUITests: XCTestCase {
         submitEmailAccount(in: app)
 
         assertFirstLessonHandoff(in: app)
+        completeFirstLessonHandoff(in: app)
     }
 
     func testAdultCompletesWithAppleAndReachesFirstLessonHandoff() {
-        let app = launchOnboarding()
+        let app = launchOnboarding(providerFixture: "success")
 
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
         assertAllProvidersAreAvailable(in: app)
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         assertFirstLessonHandoff(in: app)
+        completeFirstLessonHandoff(in: app)
     }
 
     func testAdultCompletesWithGoogleAndReachesFirstLessonHandoff() {
-        let app = launchOnboarding()
+        let app = launchOnboarding(providerFixture: "success")
 
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
         assertAllProvidersAreAvailable(in: app)
         app.buttons["Continue with Google"].tap()
 
         assertFirstLessonHandoff(in: app)
+        completeFirstLessonHandoff(in: app)
     }
 
     func testProviderAuthenticationCancellationKeepsAccountWithoutError() {
-        let app = launchOnboarding(authFixture: "cancelled")
+        let app = launchOnboarding(providerFixture: "cancelled")
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
 
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
+        assertProviderCancellationAttempt("apple", in: app)
         assertAccountRemainsWithoutError(in: app)
 
         app.buttons["Continue with Google"].tap()
+        assertProviderCancellationAttempt("google", in: app)
         assertAccountRemainsWithoutError(in: app)
     }
 
     func testProfileSaveFailureRetriesWithoutRepeatingAuthentication() {
         let app = launchOnboarding(
+            providerFixture: "success",
             extraArguments: ["--profile-fixture=fail-once"]
         )
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         XCTAssertTrue(
             app.buttons["Retry saving profile"].waitForExistence(timeout: 3)
@@ -147,7 +153,7 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testNoPaywallSocialCatalogOrNotificationAppearsBeforeHandoff() {
-        let app = launchOnboarding()
+        let app = launchOnboarding(providerFixture: "success")
 
         assertNoEarlyInterruption(in: app)
         app.buttons["Start learning"].tap()
@@ -162,14 +168,14 @@ final class OnboardingUITests: XCTestCase {
         assertNoEarlyInterruption(in: app)
         app.buttons["Supportive"].tap()
         assertNoEarlyInterruption(in: app)
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         assertFirstLessonHandoff(in: app)
         assertNoEarlyInterruption(in: app)
     }
 
     func testUnconfiguredGooglePresentsSetupMessageAndKeepsProvidersVisible() {
-        let app = launchOnboarding(authFixture: nil)
+        let app = launchOnboarding()
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
 
         app.buttons["Continue with Google"].tap()
@@ -280,7 +286,7 @@ final class OnboardingUITests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        XCTAssertTrue(app.buttons["onboarding.auth.apple"].exists, file: file, line: line)
+        XCTAssertTrue(app.buttons["Continue with Apple"].exists, file: file, line: line)
         XCTAssertTrue(app.buttons["Continue with Google"].exists, file: file, line: line)
         XCTAssertTrue(app.buttons["Continue with email"].exists, file: file, line: line)
     }
@@ -314,6 +320,45 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertFalse(app.tabBars.buttons["Learn"].exists, file: file, line: line)
     }
 
+    private func completeFirstLessonHandoff(
+        in app: XCUIApplication,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        app.buttons["Start the first lesson"].tap()
+        XCTAssertTrue(
+            app.tabBars.buttons["Learn"].waitForExistence(timeout: 3),
+            file: file,
+            line: line
+        )
+        XCTAssertTrue(app.navigationBars["Learn"].exists, file: file, line: line)
+        XCTAssertFalse(app.buttons["Start the first lesson"].exists, file: file, line: line)
+    }
+
+    private func assertProviderCancellationAttempt(
+        _ provider: String,
+        in app: XCUIApplication,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let accountRoot = app.descendants(matching: .any)
+            .matching(identifier: "onboarding.account")
+            .firstMatch
+        let marker = "\(provider):cancelled"
+        let predicate = NSPredicate(format: "value == %@", marker)
+        let expectation = XCTNSPredicateExpectation(
+            predicate: predicate,
+            object: accountRoot
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation], timeout: 2),
+            .completed,
+            "The \(provider) cancellation fixture never completed.",
+            file: file,
+            line: line
+        )
+    }
+
     private func assertNoEarlyInterruption(
         in app: XCUIApplication,
         file: StaticString = #filePath,
@@ -342,6 +387,7 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
     ]
 
     private func launchOnboarding(
+        providerFixture: String? = nil,
         extraArguments: [String] = []
     ) -> XCUIApplication {
         continueAfterFailure = false
@@ -349,9 +395,12 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         app.launchArguments = [
             "--ui-testing",
             "--onboarding-reset",
-            "--auth-fixture=success",
             "--onboarding-storage-key=a11y-\(UUID().uuidString)",
-        ] + extraArguments
+        ]
+        if let providerFixture {
+            app.launchArguments.append("--provider-fixture=\(providerFixture)")
+        }
+        app.launchArguments.append(contentsOf: extraArguments)
         app.launch()
         return app
     }
@@ -379,7 +428,20 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         app.buttons["Choose AI for School"].tap()
         try audit(app, waitingFor: app.buttons["Supportive"])
         app.buttons["Supportive"].tap()
-        try audit(app, waitingFor: app.buttons["Continue with Apple"])
+        let nativeAppleControl = app.buttons["onboarding.auth.apple.native"]
+        try audit(app, waitingFor: nativeAppleControl)
+        XCTAssertFalse(app.buttons["onboarding.auth.apple.fixture"].exists)
+    }
+
+    func testExpandedOtherPathsLayoutPassesAccessibilityAudits() throws {
+        let app = launchOnboarding()
+        app.buttons["Start learning"].tap()
+        app.buttons["I’m 18 or older"].tap()
+        app.buttons["Study smarter"].tap()
+        app.buttons["Beginner-friendly"].tap()
+        app.buttons["Other paths"].tap()
+
+        try audit(app, waitingFor: app.buttons["AI for Work"])
     }
 
     func testAgeRestrictedLayoutPassesAccessibilityAudits() throws {
@@ -400,20 +462,22 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
 
     func testProfileSavingLayoutPassesAccessibilityAudits() throws {
         let app = launchOnboarding(
+            providerFixture: "success",
             extraArguments: ["--profile-fixture=hold-save"]
         )
         reachAccountCreation(in: app)
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         try audit(app, waitingFor: app.staticTexts["Saving your profile…"])
     }
 
     func testProfileSaveRecoveryLayoutPassesAccessibilityAudits() throws {
         let app = launchOnboarding(
+            providerFixture: "success",
             extraArguments: ["--profile-fixture=fail-once"]
         )
         reachAccountCreation(in: app)
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         try audit(app, waitingFor: app.buttons["Retry saving profile"])
     }
@@ -439,9 +503,9 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
     }
 
     func testFirstLessonHandoffLayoutPassesAccessibilityAudits() throws {
-        let app = launchOnboarding()
+        let app = launchOnboarding(providerFixture: "success")
         reachAccountCreation(in: app)
-        app.buttons["onboarding.auth.apple"].tap()
+        app.buttons["onboarding.auth.apple.fixture"].tap()
 
         try audit(app, waitingFor: app.buttons["Start the first lesson"])
     }

@@ -154,11 +154,13 @@ NODE
 
 echo "Running Firestore Rules with firebase-tools $actual_firebase_version, Java $java_major, and isolated port $firestore_port."
 
+rules_output="$temporary_directory/firestore-rules.tap.log"
 "$firebase_cli" emulators:exec \
   --project syntholo-local \
   --config "$firebase_config" \
   --only firestore \
-  "node --test tests/firebase/firestore.rules.test.mjs" &
+  "node --test tests/firebase/firestore.rules.test.mjs" \
+  > "$rules_output" 2>&1 &
 firebase_pid=$!
 
 set +e
@@ -167,9 +169,14 @@ firebase_status=$?
 set -e
 firebase_pid=""
 
+/usr/bin/sed -n 'p' "$rules_output"
+
 if [[ "$firebase_status" -ne 0 ]]; then
   exit "$firebase_status"
 fi
+
+node ./scripts/assert_tap_summary.mjs 20 firestore-rules-tests \
+  < "$rules_output"
 
 node - "$firestore_port" <<'NODE'
 const net = require("node:net");

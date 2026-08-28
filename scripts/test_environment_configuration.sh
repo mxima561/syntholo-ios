@@ -38,7 +38,7 @@ fixture_markers=(
   "--ui-testing"
   "--onboarding-reset"
   "--onboarding-storage-key="
-  "--auth-fixture="
+  "--provider-fixture="
   "--session-fixture="
   "--profile-fixture="
   "--profile-load-fixture="

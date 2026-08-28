@@ -5,15 +5,21 @@ Verified on 2026-08-27 against Phase 1 base commit
 
 ## Release status
 
-The automated identity/onboarding exit gate is green. The repository has
+The local automated identity/onboarding exit gate is green on the verified
+toolchain below. The repository has
 deterministic coverage for every required Phase 1 journey, every distinct
 onboarding and recovery layout, both build configurations, and Firestore
 Rules. Live Firebase console credentials are intentionally absent, so live
 Apple, Google, and email authentication remain deployment checks rather than
 repository test evidence.
 
-Release remains blocked on one manual accessibility check: spoken VoiceOver
-focus order on physical hardware. The available iOS Simulator and Mac
+Remote CI is pending until this branch is pushed. Neither configured GitHub
+Actions job has run for this unpushed commit, so this document does not claim a
+current-iOS or iOS 17.5 remote pass.
+
+Local release readiness remains blocked on one manual accessibility check:
+spoken VoiceOver focus order on physical hardware. The pending remote CI jobs
+must also pass after the branch is pushed. The available iOS Simulator and Mac
 accessibility tooling exposed the app's ordered accessibility tree, but did not
 provide a working simulated VoiceOver control, observable VoiceOver focus, or
 captured speech. This limitation is not recorded as a pass. The exact release
@@ -51,26 +57,30 @@ exact nonzero selections:
 
 | Selection | Exact result |
 | --- | ---: |
-| Swift unit tests | 98 |
-| Functional UI tests | 16 (14 onboarding, 2 app shell) |
-| Combined functional result | 114 passed, 0 failed, 0 skipped |
+| Swift unit tests | 98 passed, 0 failed, 0 skipped |
+| Functional UI tests | 16 passed, 0 failed, 0 skipped (14 onboarding, 2 app shell) |
 | AppShell accessibility tests | 28 passed, 0 failed, 0 skipped |
-| Onboarding accessibility tests | 9 passed, 0 failed, 0 skipped |
-| Firestore Rules tests | 20 passed, 0 failed, 0 skipped |
+| Onboarding accessibility tests | 10 passed, 0 failed, 0 skipped |
+| Firestore Rules tests | 20 tests/pass, 0 failed, 0 cancelled, 0 skipped |
 
-The result parser rejects a failed or skipped test and requires equality with
-each expected count; a zero-selected or partially selected suite cannot pass.
-AppShell and onboarding accessibility tests run in separate sequential result
-bundles so a stalled or failed class retains a narrow result boundary.
+Unit and functional UI tests run under independent target filters and produce
+separate result bundles. The XCTest parser requires 98 unit passes and 16
+functional UI passes exactly, with zero failures or skips. Dedicated harness
+regressions prove that 97/98 units, 15/16 UI tests, or a skipped test fails the
+gate. The TAP parser independently requires exactly 20 Rules tests and passes
+with zero failures, cancellations, or skips; 19/20 and skipped fixtures are
+also rejected. A zero-selected or partially selected suite cannot pass.
+AppShell and onboarding accessibility tests retain their own sequential result
+bundles so a stalled or failed class has a narrow result boundary.
 
 Every long stage runs through a wall-clock watchdog. The watchdog establishes
 a new POSIX process group, verifies that the group exists before monitoring,
 uses an epoch deadline that remains expired across system sleep, and escalates
 `INT`, `TERM`, then `KILL` to the full group. Its regression uses a parent and
 child that ignore `INT` and `TERM`, expects timeout status 124, and verifies
-that neither process survives. Configuration, build, and functional/AppShell
-audits are capped at 600 seconds; onboarding audits at 420 seconds; Rules at
-300 seconds.
+that neither process survives. Unit and Rules stages are capped at 300
+seconds; configuration, build, functional UI, and AppShell audits at 600
+seconds; onboarding audits at 420 seconds.
 
 ### Build configuration proof
 
@@ -90,16 +100,16 @@ and provider continuation implementation.
 | Requirement | Evidence |
 | --- | --- |
 | Under 13 blocked | Restriction is terminal; no provider or account control is reachable. |
-| Teen and adult paths | Teen completes through email; adults complete independently through Apple and Google. |
+| Teen and adult paths | Teen completes through email; adults complete independently through Apple and Google; each taps the handoff action and reaches Learn/AppShell. |
 | All three providers | Apple, Google, and email controls are asserted together on the account screen. |
-| Authentication cancellation | Apple and Google cancellation retain the account screen without an error; email form cancellation returns to the same screen. |
+| Authentication cancellation | Apple and Google each wait for a provider-specific post-await cancellation marker before asserting that the account screen remains without an error; email form cancellation returns to the same screen. |
 | Profile-save recovery | A first save failure exposes the typed retry route; retry reaches handoff without showing auth controls again. |
 | Kill and relaunch | A per-test persisted draft relaunches at the exact path-selection step without resetting. |
 | Completed profile restore | A complete restored profile opens Learn directly without replaying onboarding or handoff. |
 | No early interruption | Paywall, Social tab/prompt, catalog/browser, notification action, and system alert absence are checked throughout the pre-handoff journey. |
 | Recovery separation | Loading, profile checking, profile-check failure, profile saving, and profile-save failure have distinct deterministic routes. |
 
-All 21 explicit `waitForExistence` calls in the onboarding UI suite specify a
+All 22 explicit `waitForExistence` calls in the onboarding UI suite specify a
 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
@@ -116,19 +126,23 @@ Each onboarding audit uses the unchanged category set:
 - clipped text;
 - traits.
 
-The nine tests audit welcome, age, goal, experience, recommended path, coach,
-account, under-13 restriction, email account, profile saving, profile-save
-recovery, profile checking, profile-check recovery, first-lesson handoff, and
-session loading layouts. AppShell adds 28 category-specific audits across
-Learn, Practice, Social, and Profile.
+The ten tests audit welcome, age, goal, experience, recommended path, expanded
+Other paths, coach, account, under-13 restriction, email account, profile
+saving, profile-save recovery, profile checking, profile-check recovery,
+first-lesson handoff, and session loading layouts. The Account checkpoint
+asserts that the production native Apple control is present and the generic
+provider fixture control is absent. Provider interaction replacement is
+enabled only by the explicit provider-fixture argument used in Apple/Google
+completion and cancellation journeys. AppShell adds 28 category-specific
+audits across Learn, Practice, Social, and Profile.
 
 The Task 9 accessibility RED exposed three real nodes: `Recommended route` and
 the first-lesson action could clip at large Dynamic Type, and the system text
 toolbar cancellation item was reported as non-scaling. Text now grows
 vertically where required. The email modal uses a standard 44-point close icon
 with the accessible name `Cancel`, avoiding an audit exception or hidden
-control. The final focused onboarding sweep passed 23 of 23 behavioral and
-accessibility tests.
+control. The post-review focused sweeps passed 16 of 16 functional UI tests and
+10 of 10 onboarding accessibility tests.
 
 ## Manual accessibility evidence
 
@@ -180,10 +194,11 @@ binary; requires Node 22 and Java 21 or newer; discovers Java from `JAVA_HOME`,
 
 Each run allocates non-default ephemeral Firestore, hub, and logging ports,
 generates a temporary emulator config, uses only project `syntholo-local`, and
-removes the config on every exit path. The pinned local run passes 20 Rules
-tests and confirms the Firestore listener is closed when `emulators:exec`
-returns. Local Rules verification requires neither Firebase authentication nor
-production credentials.
+removes the config on every exit path. It parses the TAP summary and accepts
+only exactly 20 tests/pass with zero failures, cancellations, or skips. The
+pinned local run meets that contract and confirms the Firestore listener is
+closed when `emulators:exec` returns. Local Rules verification requires neither
+Firebase authentication nor production credentials.
 
 ## CI self-review
 
@@ -192,10 +207,12 @@ production credentials.
 - `macos-26`, Xcode 26.6, current iOS destination;
 - `macos-14`, Xcode 16.2, iPhone 15 Pro / iOS 17.5.
 
-Both jobs install XcodeGen, exact Node 22.22.2, exact Temurin 21.0.8+9, run
+Both job definitions install XcodeGen, exact Node 22.22.2, exact Temurin
+21.0.8+9, run
 `npm ci`, assert local Firebase CLI 15.28.1, select the intended Xcode, and run
-the same `./scripts/test.sh`. The hosted iOS 17.5 execution remains CI evidence;
-that older runtime is not installed in the local Xcode 26.6 environment.
+the same `./scripts/test.sh`. This is configuration self-review only. The
+branch has not been pushed, both remote job results are pending, and the older
+iOS 17.5 runtime is not installed in the local Xcode 26.6 environment.
 
 ## Credential, privacy, and dependency review
 
