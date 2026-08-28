@@ -31,6 +31,30 @@ assert_rejects() {
   fi
 }
 
+assert_rejects_with_detail() {
+  local input=$1
+  local expected_detail=$2
+  shift 2
+  local assertion_output
+  local assertion_status
+
+  set +e
+  assertion_output=$(printf '%s\n' "$input" | node "$@" 2>&1)
+  assertion_status=$?
+  set -e
+
+  if [[ "$assertion_status" -eq 0 ]]; then
+    echo "Expected result assertion to reject a failed fixture: $*" >&2
+    exit 1
+  fi
+
+  if ! grep -Fq "$expected_detail" <<< "$assertion_output"; then
+    echo "Expected failed result output to contain: $expected_detail" >&2
+    echo "$assertion_output" >&2
+    exit 1
+  fi
+}
+
 unit_summary='{"result":"Passed","totalTestCount":98,"passedTests":98,"failedTests":0,"skippedTests":0}'
 functional_ui_summary='{"result":"Passed","totalTestCount":16,"passedTests":16,"failedTests":0,"skippedTests":0}'
 
@@ -41,6 +65,10 @@ assert_rejects '{"result":"Passed","totalTestCount":97,"passedTests":97,"failedT
 assert_rejects '{"result":"Passed","totalTestCount":15,"passedTests":15,"failedTests":0,"skippedTests":0}' \
   "$xcresult_assertion" 16 functional-ui-tests
 assert_rejects '{"result":"Passed","totalTestCount":16,"passedTests":15,"failedTests":0,"skippedTests":1}' \
+  "$xcresult_assertion" 16 functional-ui-tests
+failed_ui_summary='{"result":"Failed","totalTestCount":16,"passedTests":15,"failedTests":1,"skippedTests":0,"testFailures":[{"testName":"testAlternatePathStaysSelectedWithoutReplacingRecommendation()","failureText":"AI for Work did not expose its persisted selected state."}]}'
+assert_rejects_with_detail "$failed_ui_summary" \
+  'testAlternatePathStaysSelectedWithoutReplacingRecommendation(): AI for Work did not expose its persisted selected state.' \
   "$xcresult_assertion" 16 functional-ui-tests
 
 complete_tap=$'TAP version 13\n1..20\n# tests 20\n# suites 0\n# pass 20\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0'

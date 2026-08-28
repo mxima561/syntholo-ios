@@ -50,6 +50,7 @@ assert_test_result "$unit_result" 98 unit-tests
 
 functional_ui_result="$result_directory/FunctionalUI.xcresult"
 echo "Running functional UI tests."
+functional_ui_command_status=0
 ./scripts/run_with_timeout.sh 600 \
   xcodebuild -quiet test-without-building \
     -project Syntholo.xcodeproj \
@@ -61,8 +62,24 @@ echo "Running functional UI tests."
     -resultBundlePath "$functional_ui_result" \
     -only-testing:SyntholoUITests \
     -skip-testing:SyntholoUITests/AccessibilityAuditUITests \
-    -skip-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
-assert_test_result "$functional_ui_result" 16 functional-ui-tests
+    -skip-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests \
+  || functional_ui_command_status=$?
+
+functional_ui_assertion_status=0
+if [[ -d "$functional_ui_result" ]]; then
+  assert_test_result "$functional_ui_result" 16 functional-ui-tests \
+    || functional_ui_assertion_status=$?
+else
+  echo "functional-ui-tests did not produce an xcresult bundle." >&2
+  functional_ui_assertion_status=1
+fi
+
+if [[ "$functional_ui_command_status" -ne 0 ]]; then
+  exit "$functional_ui_command_status"
+fi
+if [[ "$functional_ui_assertion_status" -ne 0 ]]; then
+  exit "$functional_ui_assertion_status"
+fi
 
 if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
   echo "Skipping accessibility audits by explicit diagnostic request."

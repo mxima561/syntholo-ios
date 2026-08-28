@@ -112,7 +112,7 @@ and provider continuation implementation.
 | Alternate selection | After selecting AI for Work and navigating back, the recommendation remains AI for School while the alternate exposes the persisted `Selected` accessibility value and retains its native selected trait. |
 
 All 32 explicit `waitForExistence` calls in the onboarding UI suite specify a
-1-, 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
+2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
 
@@ -221,6 +221,12 @@ available Temurin 21.0.12+8.0.LTS; run `npm ci`; assert local Firebase CLI
 canonical gate includes a job-scoped static regression that enforces this
 contract independently for both jobs.
 
+If the functional UI xcodebuild command fails after producing an xcresult, the
+canonical gate now parses that result before exiting with the original command
+status. It prints the failed test name and assertion detail followed by the
+unchanged exact 16-pass count summary. A missing result remains a hard failure,
+and the 16 passed / 0 failed / 0 skipped contract is unchanged.
+
 Remote run 33139333630 failed both jobs during `setup-java` because the prior
 exact value `21.0.8+9` was unavailable; neither job reached repository tests.
 The toolchain replacement was then exercised by run 33140973344. Its
@@ -260,6 +266,34 @@ passed 1/1 and then all 5/5 repetitions on iOS 26.5. This correction has not
 been pushed, so both replacement CI jobs remain pending controller
 verification. The iOS 17.5 runtime is not installed in the local Xcode 26.6
 environment.
+
+Remote run 33147697636 exercised that version. Its iOS 17.5 job again passed
+setup and 98/98 units, then failed in the same functional UI phase before later
+suites. The run used the earlier quiet failure path and published neither an
+assertion detail nor an xcresult artifact. Its current-iOS job was still in
+progress when this correction began and later passed the complete canonical
+gate with exact 98/16/28/10/20 counts and zero failures, skips, or
+cancellations.
+
+The remaining race was the one-second absence decision, not the persisted
+selection assertion: on a slower runtime an expanded AI for Work row can still
+be materializing when that probe expires, after which the fallback disclosure
+tap collapses it. This correction gives every transition in this journey a
+five-second condition window, including a full five-second restored-row probe
+before the fallback tap. These are bounded maxima rather than fixed sleeps. It
+retains the explicit `Selected` value assertion and the independent AI for
+School recommendation assertions.
+
+The remote failure is the behavioral RED. Reproducing delayed accessibility
+materialization locally would require adding a DEBUG timing fixture to
+production, so no such test-only product surface was introduced. On the local
+iOS 26.5 runtime, the corrected test passed 1/1, then five distinct repetitions
+passed 5/5; the complete functional UI bundle passed 16/16. Separately, the
+diagnostic harness failed before implementation because failed xcresult output
+omitted the test detail, then passed after implementation and printed the test
+name and assertion from a real failed xcresult while still rejecting its count.
+This correction has not been pushed, so replacement CI remains pending
+controller verification.
 
 ## Credential, privacy, and dependency review
 

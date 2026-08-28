@@ -26,6 +26,14 @@ const isExactPass = summary.result === "Passed"
   && summary.skippedTests === 0;
 
 if (!isExactPass) {
+  for (const failure of summary.testFailures ?? []) {
+    const testName = failure.testName
+      ?? failure.testIdentifierString
+      ?? "unknown test";
+    const failureText = failure.failureText ?? "No failure detail provided.";
+    console.error(`${label} failure: ${testName}: ${failureText}`);
+  }
+
   console.error(
     `${label} expected exactly ${expectedCount} passed, 0 failed, 0 skipped; `
       + `received result=${summary.result}, total=${summary.totalTestCount}, `

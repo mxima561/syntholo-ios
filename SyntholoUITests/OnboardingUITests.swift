@@ -232,40 +232,40 @@ final class OnboardingUITests: XCTestCase {
 
     func testAlternatePathStaysSelectedWithoutReplacingRecommendation() {
         let app = launchOnboarding()
-        XCTAssertTrue(app.buttons["Start learning"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Start learning"].waitForExistence(timeout: 5))
         app.buttons["Start learning"].tap()
-        XCTAssertTrue(app.buttons["I’m 18 or older"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["I’m 18 or older"].waitForExistence(timeout: 5))
         app.buttons["I’m 18 or older"].tap()
-        XCTAssertTrue(app.buttons["Study smarter"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Study smarter"].waitForExistence(timeout: 5))
         app.buttons["Study smarter"].tap()
-        XCTAssertTrue(app.buttons["Beginner-friendly"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Beginner-friendly"].waitForExistence(timeout: 5))
         app.buttons["Beginner-friendly"].tap()
-        XCTAssertTrue(app.buttons["Other paths"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Other paths"].waitForExistence(timeout: 5))
         app.buttons["Other paths"].tap()
         let initialAlternate = app.buttons["AI for Work"]
-        XCTAssertTrue(initialAlternate.waitForExistence(timeout: 2))
+        XCTAssertTrue(initialAlternate.waitForExistence(timeout: 5))
         initialAlternate.tap()
-        XCTAssertTrue(app.buttons["Supportive"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Supportive"].waitForExistence(timeout: 5))
 
         app.buttons["Back"].tap()
 
-        XCTAssertTrue(app.buttons["Choose AI for School"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["Recommended route"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["AI for School"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Choose AI for School"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Recommended route"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["AI for School"].waitForExistence(timeout: 5))
         let alternate = app.buttons["AI for Work"]
-        if !alternate.waitForExistence(timeout: 1) {
+        if !alternate.waitForExistence(timeout: 5) {
             let otherPaths = app.buttons["Other paths"]
-            XCTAssertTrue(otherPaths.waitForExistence(timeout: 2))
+            XCTAssertTrue(otherPaths.waitForExistence(timeout: 5))
             otherPaths.tap()
         }
-        XCTAssertTrue(alternate.waitForExistence(timeout: 2))
+        XCTAssertTrue(alternate.waitForExistence(timeout: 5))
         let selectedValue = NSPredicate(format: "value == %@", "Selected")
         let selectedExpectation = XCTNSPredicateExpectation(
             predicate: selectedValue,
             object: alternate
         )
         XCTAssertEqual(
-            XCTWaiter.wait(for: [selectedExpectation], timeout: 2),
+            XCTWaiter.wait(for: [selectedExpectation], timeout: 5),
             .completed,
             "AI for Work did not expose its persisted selected state."
         )
