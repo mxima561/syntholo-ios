@@ -15,6 +15,7 @@ struct PrimaryButton: View {
         Button(action: action) {
             Text(title)
                 .font(SyntholoTextStyle.label)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: configuration.minimumHeight)
         }

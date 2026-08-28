@@ -24,6 +24,7 @@ struct PathRecommendationView: View {
                         .accessibilityHidden(true)
                     Text("Recommended route")
                         .foregroundStyle(OnboardingPalette.academicInk)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.caption.weight(.semibold))
 

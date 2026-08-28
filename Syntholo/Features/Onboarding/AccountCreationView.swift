@@ -13,6 +13,10 @@ struct AccountCreationView: View {
     @State private var providerError: AuthError?
     @State private var isGoogleSignInRunning = false
 
+    #if DEBUG
+    private let uiTestAuthClient: (any AuthClient)?
+    #endif
+
     init(
         authClient: any AuthClient,
         googleConfiguration: GoogleSignInConfiguration = .current,
@@ -24,6 +28,14 @@ struct AccountCreationView: View {
     ) {
         self.onAuthenticated = onAuthenticated
         self.onContinueWithEmail = onContinueWithEmail
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        uiTestAuthClient = arguments.contains("--ui-testing")
+            && (arguments.contains("--auth-fixture=success")
+                || arguments.contains("--auth-fixture=cancelled"))
+            ? authClient
+            : nil
+        #endif
         _appleCoordinator = State(
             initialValue: AppleSignInCoordinator(authClient: authClient)
         )
@@ -44,21 +56,36 @@ struct AccountCreationView: View {
             accessibilityIdentifier: "onboarding.account"
         ) {
             VStack(spacing: Space.sm) {
-                AppleAuthenticationButton(
-                    coordinator: appleCoordinator,
-                    onCompletion: { result in
-                        handleProviderCompletion(result, provider: .apple)
-                    }
-                )
-                .accessibilityLabel("Continue with Apple")
-                .accessibilityIdentifier("onboarding.auth.apple")
+                #if DEBUG
+                if uiTestAuthClient != nil {
+                    providerButton(
+                        title: "Continue with Apple",
+                        systemImage: "apple.logo",
+                        action: { continueWithUITestProvider(.apple) }
+                    )
+                    .accessibilityIdentifier("onboarding.auth.apple")
+                } else {
+                    appleAuthenticationButton
+                }
+                #else
+                appleAuthenticationButton
+                #endif
 
-                providerButton(
-                    title: "Continue with Google",
-                    systemImage: nil,
-                    action: continueWithGoogle,
-                    isEnabled: !isGoogleSignInRunning
-                )
+                #if DEBUG
+                if uiTestAuthClient != nil {
+                    providerButton(
+                        title: "Continue with Google",
+                        systemImage: nil,
+                        action: { continueWithUITestProvider(.google) },
+                        isEnabled: !isGoogleSignInRunning
+                    )
+                } else {
+                    googleAuthenticationButton
+                }
+                #else
+                googleAuthenticationButton
+                #endif
+
                 providerButton(
                     title: "Continue with email",
                     systemImage: "envelope",
@@ -87,6 +114,26 @@ struct AccountCreationView: View {
                 .foregroundStyle(OnboardingPalette.academicInk.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private var appleAuthenticationButton: some View {
+        AppleAuthenticationButton(
+            coordinator: appleCoordinator,
+            onCompletion: { result in
+                handleProviderCompletion(result, provider: .apple)
+            }
+        )
+        .accessibilityLabel("Continue with Apple")
+        .accessibilityIdentifier("onboarding.auth.apple")
+    }
+
+    private var googleAuthenticationButton: some View {
+        providerButton(
+            title: "Continue with Google",
+            systemImage: nil,
+            action: continueWithGoogle,
+            isEnabled: !isGoogleSignInRunning
+        )
     }
 
     private func providerButton(
@@ -157,6 +204,49 @@ struct AccountCreationView: View {
             }
         }
     }
+
+    #if DEBUG
+    private func continueWithUITestProvider(
+        _ provider: AuthenticationProvider
+    ) {
+        guard let uiTestAuthClient, !isGoogleSignInRunning else {
+            return
+        }
+
+        providerError = nil
+        isGoogleSignInRunning = true
+        Task { @MainActor in
+            defer { isGoogleSignInRunning = false }
+
+            do {
+                let user = switch provider {
+                case .apple:
+                    try await uiTestAuthClient.signInWithApple(
+                        idToken: "ui-test-token",
+                        rawNonce: "ui-test-nonce",
+                        fullName: nil
+                    )
+                case .google:
+                    try await uiTestAuthClient.signInWithGoogle(
+                        idToken: "ui-test-token",
+                        accessToken: "ui-test-access-token"
+                    )
+                case .password:
+                    try await uiTestAuthClient.createEmailAccount(
+                        email: "ui-test@example.invalid",
+                        password: "ui-test-password"
+                    )
+                }
+                handleProviderCompletion(.success(user), provider: provider)
+            } catch {
+                handleProviderCompletion(
+                    .failure(AuthError.map(error)),
+                    provider: provider
+                )
+            }
+        }
+    }
+    #endif
 
     private func handleProviderCompletion(
         _ result: Result<AuthenticatedUser, AuthError>,

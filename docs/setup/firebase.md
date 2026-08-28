@@ -27,11 +27,21 @@ Without the local file, checked-in placeholders keep unsigned builds valid. The 
 
 ## Run local emulators
 
-Install the Firebase CLI, authenticate if the CLI requests it, and start Auth and Firestore:
+Rules verification requires Node 22, the exact dependencies in `package-lock.json`, and Java 21 or newer. Install Java with a JDK distribution such as Temurin 21 or Homebrew `openjdk@21`. The runner checks `JAVA_HOME`, macOS `/usr/libexec/java_home`, the standard Homebrew locations, and then `java` on `PATH`.
+
+Restore the pinned local tooling and run the isolated Rules gate:
 
 ```bash
-npm install --global firebase-tools
-firebase emulators:start --project syntholo-local --only auth,firestore
+npm ci
+./scripts/test_firebase_rules.sh
+```
+
+Do not install or use a global Firebase CLI for verification. The script requires the exact `firebase-tools` version from `package.json` and `package-lock.json`, creates a temporary Firebase config with non-default ephemeral Firestore, hub, and logging ports, and cleans up the emulator on success, assertion failure, interruption, or timeout. Local emulator tests do not require Firebase authentication or live credentials.
+
+For interactive Auth and Firestore development, use the pinned local CLI:
+
+```bash
+./node_modules/.bin/firebase emulators:start --project syntholo-local --only auth,firestore
 ```
 
 Ordinary development builds, tests, and launches with `--ui-testing` use the non-secret `syntholo-local` project identity and connect to Auth on `127.0.0.1:9099` and Firestore on `127.0.0.1:8080`. No Firebase plist is required for those launches.

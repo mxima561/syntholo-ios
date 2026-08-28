@@ -37,6 +37,8 @@ release_binary="$release_app/Syntholo"
 fixture_markers=(
   "--ui-testing"
   "--onboarding-reset"
+  "--onboarding-storage-key="
+  "--auth-fixture="
   "--session-fixture="
   "--profile-fixture="
   "--profile-load-fixture="
@@ -51,7 +53,7 @@ done
 
 if /usr/bin/nm "$release_binary" \
   | xcrun swift-demangle \
-  | /usr/bin/grep -Eq 'UITest(AuthClient|ProfileRepository)|makeUITestCoordinator'; then
+  | /usr/bin/grep -Eq 'UITest(AuthClient|ProfileRepository)|makeUITestCoordinator|continueWithUITestProvider|uiTestAuthClient'; then
   echo "Release binary contains UI-test fixture implementation symbols." >&2
   exit 1
 fi

@@ -137,10 +137,26 @@ private enum RootRuntime {
         let hasDelayedSignedOutSession = arguments.contains(
             "--session-fixture=delayed-signed-out"
         )
+        let hasHeldProfileLoad = arguments.contains(
+            "--profile-load-fixture=fail-once-hold-existing"
+        )
         let hasProfileLoadFailure = arguments.contains(
             "--profile-load-fixture=fail-once-existing"
-        )
-        let restoredUser = isOnboardingReset || hasDelayedSignedOutSession
+        ) || hasHeldProfileLoad
+        let onboardingStorageKey = arguments
+            .first { $0.hasPrefix("--onboarding-storage-key=") }
+            .map { String($0.dropFirst("--onboarding-storage-key=".count)) }
+        let onboardingRepository = onboardingStorageKey.map {
+            OnboardingDraftRepository.userDefaults(
+                .standard,
+                key: "com.syntholo.ui-testing.onboarding.\($0)"
+            )
+        } ?? .memory()
+        if isOnboardingReset {
+            try? onboardingRepository.clear()
+        }
+        let restoredUser = onboardingStorageKey != nil
+            || hasDelayedSignedOutSession
             ? nil
             : user
         let loadedProfile = restoredUser.map { restoredUser in
@@ -153,19 +169,26 @@ private enum RootRuntime {
         let profileFailures = arguments.contains("--profile-fixture=fail-once")
             ? 1
             : 0
+        let shouldCancelAuthentication = arguments.contains(
+            "--auth-fixture=cancelled"
+        )
+        let holdNanoseconds: UInt64 = 120_000_000_000
 
         if !isOnboardingReset
             && !hasDelayedSignedOutSession
-            && !hasProfileLoadFailure {
+            && !hasProfileLoadFailure
+            && !hasHeldProfileLoad
+            && onboardingStorageKey == nil {
             session.transition(to: .signedIn)
         }
 
         return OnboardingCoordinator(
             session: session,
-            onboardingStore: OnboardingStore(repository: .memory()),
+            onboardingStore: OnboardingStore(repository: onboardingRepository),
             authClient: UITestAuthClient(
                 authenticatedUser: user,
                 restoredUser: restoredUser,
+                shouldCancelAuthentication: shouldCancelAuthentication,
                 restoreDelayNanoseconds: hasDelayedSignedOutSession
                     ? 3_000_000_000
                     : 0
@@ -173,7 +196,13 @@ private enum RootRuntime {
             profileRepository: UITestProfileRepository(
                 loadedProfile: loadedProfile,
                 saveFailuresRemaining: profileFailures,
-                loadFailuresRemaining: hasProfileLoadFailure ? 1 : 0
+                loadFailuresRemaining: hasProfileLoadFailure ? 1 : 0,
+                saveDelayNanoseconds: arguments.contains(
+                    "--profile-fixture=hold-save"
+                ) ? holdNanoseconds : 0,
+                loadDelayNanoseconds: hasHeldProfileLoad
+                    ? holdNanoseconds
+                    : 0
             ),
             analytics: NoOpAnalyticsClient(),
             now: { Date(timeIntervalSince1970: 1_800_000_000) }
@@ -221,15 +250,18 @@ private struct UnavailableProfileRepository: ProfileRepository {
 private actor UITestAuthClient: AuthClient {
     private let authenticatedUser: AuthenticatedUser
     private var restoredUser: AuthenticatedUser?
+    private let shouldCancelAuthentication: Bool
     private let restoreDelayNanoseconds: UInt64
 
     init(
         authenticatedUser: AuthenticatedUser,
         restoredUser: AuthenticatedUser?,
+        shouldCancelAuthentication: Bool,
         restoreDelayNanoseconds: UInt64
     ) {
         self.authenticatedUser = authenticatedUser
         self.restoredUser = restoredUser
+        self.shouldCancelAuthentication = shouldCancelAuthentication
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
     }
 
@@ -237,7 +269,10 @@ private actor UITestAuthClient: AuthClient {
         email: String,
         password: String
     ) async throws -> AuthenticatedUser {
-        authenticatedUser
+        if shouldCancelAuthentication {
+            throw AuthError.cancelled
+        }
+        return authenticatedUser
     }
 
     func signInWithApple(
@@ -245,14 +280,20 @@ private actor UITestAuthClient: AuthClient {
         rawNonce: String,
         fullName: PersonNameComponents?
     ) async throws -> AuthenticatedUser {
-        authenticatedUser
+        if shouldCancelAuthentication {
+            throw AuthError.cancelled
+        }
+        return authenticatedUser
     }
 
     func signInWithGoogle(
         idToken: String,
         accessToken: String
     ) async throws -> AuthenticatedUser {
-        authenticatedUser
+        if shouldCancelAuthentication {
+            throw AuthError.cancelled
+        }
+        return authenticatedUser
     }
 
     func restoreSession() async -> AuthenticatedUser? {
@@ -271,18 +312,27 @@ private actor UITestProfileRepository: ProfileRepository {
     private var loadedProfile: LearnerProfile?
     private var saveFailuresRemaining: Int
     private var loadFailuresRemaining: Int
+    private let saveDelayNanoseconds: UInt64
+    private let loadDelayNanoseconds: UInt64
 
     init(
         loadedProfile: LearnerProfile?,
         saveFailuresRemaining: Int,
-        loadFailuresRemaining: Int
+        loadFailuresRemaining: Int,
+        saveDelayNanoseconds: UInt64,
+        loadDelayNanoseconds: UInt64
     ) {
         self.loadedProfile = loadedProfile
         self.saveFailuresRemaining = saveFailuresRemaining
         self.loadFailuresRemaining = loadFailuresRemaining
+        self.saveDelayNanoseconds = saveDelayNanoseconds
+        self.loadDelayNanoseconds = loadDelayNanoseconds
     }
 
     func save(_ profile: LearnerProfile) async throws {
+        if saveDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: saveDelayNanoseconds)
+        }
         if saveFailuresRemaining > 0 {
             saveFailuresRemaining -= 1
             throw ProfileRepositoryError.backendFailure
@@ -294,6 +344,9 @@ private actor UITestProfileRepository: ProfileRepository {
         if loadFailuresRemaining > 0 {
             loadFailuresRemaining -= 1
             throw ProfileRepositoryError.backendFailure
+        }
+        if loadDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: loadDelayNanoseconds)
         }
         guard loadedProfile?.userID == userID else {
             return nil

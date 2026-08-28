@@ -1,61 +1,56 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+repository_root=$(cd "$script_directory/.." && pwd)
+cd "$repository_root"
+
 ./scripts/bootstrap.sh
-./scripts/test_environment_configuration.sh
-destination=${SYNTHOLO_DESTINATION:-}
-if [[ -z "$destination" ]]; then
-  destination='platform=iOS Simulator,name=iPhone 17 Pro'
-fi
+./tests/scripts/test_run_with_timeout.sh
+./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
 
-# Accessibility audits run below in one dedicated sequential invocation.
-xcodebuild test \
-  -project Syntholo.xcodeproj \
-  -scheme Syntholo \
-  -destination "$destination" \
-  -derivedDataPath DerivedData \
-  CODE_SIGNING_ALLOWED=NO \
-  -skip-testing:SyntholoUITests/AccessibilityAuditUITests
+destination=${SYNTHOLO_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}
+result_directory=$(mktemp -d "${TMPDIR:-/tmp}/syntholo-test-results.XXXXXX")
+trap 'rm -rf "$result_directory"' EXIT
 
-if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
-  echo "Skipping accessibility audits by explicit diagnostic request."
-  exit 0
-fi
+assert_test_result() {
+  local result_bundle=$1
+  local expected_count=$2
+  local label=$3
+  local summary_file="$result_directory/${label}.json"
 
-run_with_timeout() {
-  local timeout_seconds=$1
-  shift
+  xcrun xcresulttool get test-results summary \
+    --path "$result_bundle" > "$summary_file"
+  node - "$summary_file" "$expected_count" "$label" <<'NODE'
+const fs = require("node:fs");
 
-  "$@" &
-  local command_pid=$!
-
-  (
-    sleep "$timeout_seconds"
-    if kill -0 "$command_pid" 2>/dev/null; then
-      echo "Accessibility audit timed out after ${timeout_seconds}s (PID ${command_pid})." >&2
-      kill -INT "$command_pid" 2>/dev/null || true
-      sleep 10
-      kill -TERM "$command_pid" 2>/dev/null || true
-      sleep 5
-      kill -KILL "$command_pid" 2>/dev/null || true
-    fi
-  ) &
-  local watchdog_pid=$!
-
-  local command_status
-  if wait "$command_pid"; then
-    command_status=0
-  else
-    command_status=$?
-  fi
-
-  kill "$watchdog_pid" 2>/dev/null || true
-  wait "$watchdog_pid" 2>/dev/null || true
-  return "$command_status"
+const [summaryPath, expectedCount, label] = process.argv.slice(2);
+const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
+const required = Number(expectedCount);
+if (summary.result !== "Passed" || summary.failedTests !== 0 || summary.skippedTests !== 0) {
+  console.error(`${label} result was ${summary.result}: ${summary.passedTests} passed, ${summary.failedTests} failed, ${summary.skippedTests} skipped.`);
+  process.exit(1);
+}
+if (summary.totalTestCount !== required) {
+  console.error(`${label} selected ${summary.totalTestCount} tests; expected exactly ${required}.`);
+  process.exit(1);
+}
+console.log(`${label}: ${summary.passedTests} passed, 0 failed, 0 skipped.`);
+NODE
 }
 
-echo "Running accessibility audit suite."
-run_with_timeout 600 \
+echo "Building all test targets for $destination."
+./scripts/run_with_timeout.sh 600 \
+  xcodebuild -quiet build-for-testing \
+    -project Syntholo.xcodeproj \
+    -scheme Syntholo \
+    -destination "$destination" \
+    -derivedDataPath DerivedData \
+    CODE_SIGNING_ALLOWED=NO
+
+functional_result="$result_directory/Functional.xcresult"
+echo "Running unit and functional UI tests."
+./scripts/run_with_timeout.sh 600 \
   xcodebuild -quiet test-without-building \
     -project Syntholo.xcodeproj \
     -scheme Syntholo \
@@ -63,4 +58,41 @@ run_with_timeout 600 \
     -derivedDataPath DerivedData \
     -parallel-testing-enabled NO \
     CODE_SIGNING_ALLOWED=NO \
-    -only-testing:SyntholoUITests/AccessibilityAuditUITests
+    -resultBundlePath "$functional_result" \
+    -skip-testing:SyntholoUITests/AccessibilityAuditUITests \
+    -skip-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
+assert_test_result "$functional_result" 114 functional-tests
+
+if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
+  echo "Skipping accessibility audits by explicit diagnostic request."
+else
+  shell_accessibility_result="$result_directory/ShellAccessibility.xcresult"
+  echo "Running AppShell accessibility audit tests sequentially."
+  ./scripts/run_with_timeout.sh 600 \
+    xcodebuild -quiet test-without-building \
+      -project Syntholo.xcodeproj \
+      -scheme Syntholo \
+      -destination "$destination" \
+      -derivedDataPath DerivedData \
+      -parallel-testing-enabled NO \
+      CODE_SIGNING_ALLOWED=NO \
+      -resultBundlePath "$shell_accessibility_result" \
+      -only-testing:SyntholoUITests/AccessibilityAuditUITests
+  assert_test_result "$shell_accessibility_result" 28 shell-accessibility-tests
+
+  onboarding_accessibility_result="$result_directory/OnboardingAccessibility.xcresult"
+  echo "Running onboarding accessibility audit tests sequentially."
+  ./scripts/run_with_timeout.sh 420 \
+    xcodebuild -quiet test-without-building \
+      -project Syntholo.xcodeproj \
+      -scheme Syntholo \
+      -destination "$destination" \
+      -derivedDataPath DerivedData \
+      -parallel-testing-enabled NO \
+      CODE_SIGNING_ALLOWED=NO \
+      -resultBundlePath "$onboarding_accessibility_result" \
+      -only-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
+  assert_test_result "$onboarding_accessibility_result" 9 onboarding-accessibility-tests
+fi
+
+./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh
