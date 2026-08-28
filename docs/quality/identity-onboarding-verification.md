@@ -111,8 +111,8 @@ and provider continuation implementation.
 | Recovery separation | Loading, profile checking, profile-check failure, profile saving, and profile-save failure have distinct deterministic routes. |
 | Alternate selection | After selecting AI for Work and navigating back, the recommendation remains AI for School while the alternate exposes the persisted `Selected` accessibility value and retains its native selected trait. |
 
-All 23 explicit `waitForExistence` calls in the onboarding UI suite specify a
-2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
+All 32 explicit `waitForExistence` calls in the onboarding UI suite specify a
+1-, 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
 
@@ -232,13 +232,31 @@ with zero failures, skips, or cancellations. Its iOS 17.5 job passed setup and
 functional UI bundle. Quiet logs named no assertion and no xcresult artifact
 was uploaded, so later accessibility and Rules stages did not run in that job.
 
-The compatibility correction replaces the runtime-sensitive immediate
+The first compatibility correction replaced the runtime-sensitive immediate
 `isSelected` read with a bounded predicate on the app-exposed `Selected` value
-and waits for the first disclosed alternate before tapping it. Locally on iOS
-26.5, the pre-fix test passed 10/10 repetitions, confirming the failure is
-runtime-specific; the value regression then failed 0/1 before implementation,
-passed 1/1 after implementation, and passed a further 5/5 repetitions. The
-expanded-layout accessibility audit also passed 1/1. This correction has not
+and waited for the first disclosed alternate before tapping it. Locally on iOS
+26.5, the pre-fix test passed 10/10 repetitions; the value regression then
+failed 0/1 before implementation, passed 1/1 after implementation, and passed
+a further 5/5 repetitions. The expanded-layout accessibility audit also passed
+1/1.
+
+Remote run 33144414854 exercised that correction. Its current-iOS job again
+passed the complete canonical gate with the exact 98/16/28/10/20 counts and
+zero failures, skips, or cancellations. Its iOS 17.5 job again passed setup and
+98/98 units, then named only the same alternate-path functional UI test as
+failed; quiet logs again contained no assertion and no xcresult artifact, so
+later suites did not run. This repeat isolated the remaining cross-version
+assumption: `showsOtherPaths` is local SwiftUI `@State`, and navigation back may
+validly restore the disclosure either expanded or collapsed. The test always
+toggled `Other paths`; on an expanded restoration it collapsed the row before
+looking it up.
+
+The test now waits for the returning recommendation layout, queries AI for Work
+first, and toggles `Other paths` only when that row is absent. It then keeps the
+same bounded proof that AI for Work exposes `Selected` while AI for School
+remains the recommendation. A local RED modeled an already-expanded return and
+failed 0/1 when the unconditional toggle hid the row. The conditional version
+passed 1/1 and then all 5/5 repetitions on iOS 26.5. This correction has not
 been pushed, so both replacement CI jobs remain pending controller
 verification. The iOS 17.5 runtime is not installed in the local Xcode 26.6
 environment.
