@@ -237,7 +237,9 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["Study smarter"].tap()
         app.buttons["Beginner-friendly"].tap()
         app.buttons["Other paths"].tap()
-        app.buttons["AI for Work"].tap()
+        let initialAlternate = app.buttons["AI for Work"]
+        XCTAssertTrue(initialAlternate.waitForExistence(timeout: 2))
+        initialAlternate.tap()
         XCTAssertTrue(app.buttons["Supportive"].waitForExistence(timeout: 2))
 
         app.buttons["Back"].tap()
@@ -248,7 +250,16 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["Other paths"].tap()
         let alternate = app.buttons["AI for Work"]
         XCTAssertTrue(alternate.waitForExistence(timeout: 2))
-        XCTAssertTrue(alternate.isSelected)
+        let selectedValue = NSPredicate(format: "value == %@", "Selected")
+        let selectedExpectation = XCTNSPredicateExpectation(
+            predicate: selectedValue,
+            object: alternate
+        )
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [selectedExpectation], timeout: 2),
+            .completed,
+            "AI for Work did not expose its persisted selected state."
+        )
     }
 
     private func reachAccountCreation(

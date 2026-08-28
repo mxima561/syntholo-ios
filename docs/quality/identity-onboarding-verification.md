@@ -109,8 +109,9 @@ and provider continuation implementation.
 | Completed profile restore | A complete restored profile opens Learn directly without replaying onboarding or handoff. |
 | No early interruption | Paywall, Social tab/prompt, catalog/browser, notification action, and system alert absence are checked throughout the pre-handoff journey. |
 | Recovery separation | Loading, profile checking, profile-check failure, profile saving, and profile-save failure have distinct deterministic routes. |
+| Alternate selection | After selecting AI for Work and navigating back, the recommendation remains AI for School while the alternate exposes the persisted `Selected` accessibility value and retains its native selected trait. |
 
-All 22 explicit `waitForExistence` calls in the onboarding UI suite specify a
+All 23 explicit `waitForExistence` calls in the onboarding UI suite specify a
 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
@@ -136,6 +137,11 @@ provider fixture control is absent. Provider interaction replacement is
 enabled only by the explicit provider-fixture argument used in Apple/Google
 completion and cancellation journeys. AppShell adds 28 category-specific
 audits across Learn, Practice, Social, and Profile.
+
+Choice rows retain the native selected accessibility trait and also expose an
+explicit localized `Selected` or `Not selected` value. The value gives XCTest
+a condition-based state signal after SwiftUI disclosure/navigation updates on
+older runtimes without replacing the trait used by assistive technology.
 
 The Task 9 accessibility RED exposed three real nodes: `Recommended route` and
 the first-lesson action could clip at large Dynamic Type, and the system text
@@ -217,9 +223,25 @@ contract independently for both jobs.
 
 Remote run 33139333630 failed both jobs during `setup-java` because the prior
 exact value `21.0.8+9` was unavailable; neither job reached repository tests.
-This replacement commit has not been pushed, so its two remote job results are
-pending controller verification. The older iOS 17.5 runtime is not installed
-in the local Xcode 26.6 environment.
+The toolchain replacement was then exercised by run 33140973344. Its
+current-iOS job passed the complete canonical gate: 98 unit, 16 functional UI,
+28 AppShell accessibility, 10 onboarding accessibility, and 20 Rules tests,
+with zero failures, skips, or cancellations. Its iOS 17.5 job passed setup and
+98/98 units, then failed only
+`testAlternatePathStaysSelectedWithoutReplacingRecommendation` in the
+functional UI bundle. Quiet logs named no assertion and no xcresult artifact
+was uploaded, so later accessibility and Rules stages did not run in that job.
+
+The compatibility correction replaces the runtime-sensitive immediate
+`isSelected` read with a bounded predicate on the app-exposed `Selected` value
+and waits for the first disclosed alternate before tapping it. Locally on iOS
+26.5, the pre-fix test passed 10/10 repetitions, confirming the failure is
+runtime-specific; the value regression then failed 0/1 before implementation,
+passed 1/1 after implementation, and passed a further 5/5 repetitions. The
+expanded-layout accessibility audit also passed 1/1. This correction has not
+been pushed, so both replacement CI jobs remain pending controller
+verification. The iOS 17.5 runtime is not installed in the local Xcode 26.6
+environment.
 
 ## Credential, privacy, and dependency review
 

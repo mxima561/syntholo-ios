@@ -104,6 +104,7 @@ struct ChoiceListView<ID: Hashable>: View {
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier(item.title)
+                .accessibilityValue(isSelected ? "Selected" : "Not selected")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
