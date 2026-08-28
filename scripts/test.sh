@@ -8,6 +8,7 @@ cd "$repository_root"
 ./scripts/bootstrap.sh
 ./tests/scripts/test_run_with_timeout.sh
 ./tests/scripts/test_result_assertions.sh
+./tests/scripts/test_ci_configuration.sh
 ./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
 
 destination=${SYNTHOLO_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}

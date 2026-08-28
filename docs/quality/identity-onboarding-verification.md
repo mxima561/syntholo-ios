@@ -41,7 +41,7 @@ checklist appears below.
 | Firestore emulator | 1.22.0 | downloaded by the pinned CLI |
 | Firebase JavaScript SDK | 12.18.0 | `package-lock.json` |
 | Rules Unit Testing | 5.0.2 | `package-lock.json` |
-| Java | OpenJDK 21.0.12.1 | Temurin 21.0.8+9 |
+| Java | OpenJDK 21.0.12.1 | Temurin 21.0.12+8.0.LTS |
 
 ## Canonical automated gate
 
@@ -52,8 +52,9 @@ Run the complete local gate from the repository root:
 ```
 
 The script regenerates the Xcode project, proves its watchdog behavior, checks
-the environment configuration, builds all test targets, and then runs these
-exact nonzero selections:
+both CI jobs' exact action/toolchain contract, checks the environment
+configuration, builds all test targets, and then runs these exact nonzero
+selections:
 
 | Selection | Exact result |
 | --- | ---: |
@@ -207,12 +208,18 @@ Firebase authentication nor production credentials.
 - `macos-26`, Xcode 26.6, current iOS destination;
 - `macos-14`, Xcode 16.2, iPhone 15 Pro / iOS 17.5.
 
-Both job definitions install XcodeGen, exact Node 22.22.2, exact Temurin
-21.0.8+9, run
-`npm ci`, assert local Firebase CLI 15.28.1, select the intended Xcode, and run
-the same `./scripts/test.sh`. This is configuration self-review only. The
-branch has not been pushed, both remote job results are pending, and the older
-iOS 17.5 runtime is not installed in the local Xcode 26.6 environment.
+Both job definitions use the Node 24-based `checkout@v5`, `setup-node@v5`, and
+`setup-java@v5` actions; install XcodeGen, exact Node 22.22.2, and exact
+available Temurin 21.0.12+8.0.LTS; run `npm ci`; assert local Firebase CLI
+15.28.1; select the intended Xcode; and run the same `./scripts/test.sh`. The
+canonical gate includes a job-scoped static regression that enforces this
+contract independently for both jobs.
+
+Remote run 33139333630 failed both jobs during `setup-java` because the prior
+exact value `21.0.8+9` was unavailable; neither job reached repository tests.
+This replacement commit has not been pushed, so its two remote job results are
+pending controller verification. The older iOS 17.5 runtime is not installed
+in the local Xcode 26.6 environment.
 
 ## Credential, privacy, and dependency review
 
