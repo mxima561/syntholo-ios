@@ -19,10 +19,57 @@ assert_test_result() {
   local result_bundle=$1
   local expected_count=$2
   local label=$3
+  local include_diagnostics=${4:-0}
+  local -a diagnostic_paths=()
 
-  xcrun xcresulttool get test-results summary \
-    --path "$result_bundle" \
-    | node ./scripts/assert_xcresult_summary.mjs "$expected_count" "$label"
+  if [[ "$include_diagnostics" == "1" ]]; then
+    local tests_path="$result_directory/${label}-tests.json"
+    if xcrun xcresulttool get test-results tests \
+      --path "$result_bundle" > "$tests_path"; then
+      diagnostic_paths+=("$tests_path")
+
+      local activity_index=0
+      local failed_identifier
+      while IFS= read -r failed_identifier; do
+        [[ -n "$failed_identifier" ]] || continue
+        local activities_path="$result_directory/${label}-activities-${activity_index}.json"
+        if xcrun xcresulttool get test-results activities \
+          --path "$result_bundle" \
+          --test-id "$failed_identifier" > "$activities_path"; then
+          diagnostic_paths+=("$activities_path")
+        fi
+        activity_index=$((activity_index + 1))
+      done < <(
+        node -e '
+          const tree = require(process.argv[1]);
+          const walk = (value) => {
+            if (Array.isArray(value)) return value.forEach(walk);
+            if (!value || typeof value !== "object") return;
+            if (value.nodeType === "Test Case"
+                && value.result === "Failed"
+                && value.nodeIdentifier) {
+              console.log(value.nodeIdentifier);
+            }
+            Object.values(value).forEach(walk);
+          };
+          walk(tree);
+        ' "$tests_path"
+      )
+    else
+      echo "$label could not read xcresult test diagnostics." >&2
+    fi
+  fi
+
+  if [[ -n "${diagnostic_paths[0]:-}" ]]; then
+    xcrun xcresulttool get test-results summary \
+      --path "$result_bundle" \
+      | node ./scripts/assert_xcresult_summary.mjs \
+          "$expected_count" "$label" "${diagnostic_paths[@]}"
+  else
+    xcrun xcresulttool get test-results summary \
+      --path "$result_bundle" \
+      | node ./scripts/assert_xcresult_summary.mjs "$expected_count" "$label"
+  fi
 }
 
 echo "Building all test targets for $destination."
@@ -36,7 +83,7 @@ echo "Building all test targets for $destination."
 
 unit_result="$result_directory/Unit.xcresult"
 echo "Running unit tests."
-./scripts/run_with_timeout.sh 300 \
+./scripts/run_with_timeout.sh 600 \
   xcodebuild -quiet test-without-building \
     -project Syntholo.xcodeproj \
     -scheme Syntholo \
@@ -67,7 +114,7 @@ functional_ui_command_status=0
 
 functional_ui_assertion_status=0
 if [[ -d "$functional_ui_result" ]]; then
-  assert_test_result "$functional_ui_result" 16 functional-ui-tests \
+  assert_test_result "$functional_ui_result" 16 functional-ui-tests 1 \
     || functional_ui_assertion_status=$?
 else
   echo "functional-ui-tests did not produce an xcresult bundle." >&2

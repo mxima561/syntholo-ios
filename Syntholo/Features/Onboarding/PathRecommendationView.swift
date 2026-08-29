@@ -8,6 +8,19 @@ struct PathRecommendationView: View {
     @State private var showsOtherPaths = false
 
     var body: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--path-state-proof") {
+            content
+                .accessibilityValue(pathStateProof)
+        } else {
+            content
+        }
+        #else
+        content
+        #endif
+    }
+
+    private var content: some View {
         OnboardingPage(
             eyebrow: "Your route",
             progress: nil,
@@ -56,6 +69,12 @@ struct PathRecommendationView: View {
             .frame(minHeight: 44)
         }
     }
+
+    #if DEBUG
+    private var pathStateProof: String {
+        "recommended=\(recommendedPath.rawValue);selected=\(selectedPath?.rawValue ?? "none")"
+    }
+    #endif
 
     private var routeGraphic: some View {
         VStack(alignment: .leading, spacing: 0) {

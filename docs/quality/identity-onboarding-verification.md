@@ -79,9 +79,12 @@ a new POSIX process group, verifies that the group exists before monitoring,
 uses an epoch deadline that remains expired across system sleep, and escalates
 `INT`, `TERM`, then `KILL` to the full group. Its regression uses a parent and
 child that ignore `INT` and `TERM`, expects timeout status 124, and verifies
-that neither process survives. Unit and Rules stages are capped at 300
-seconds; configuration, build, functional UI, and AppShell audits at 600
-seconds; onboarding audits at 420 seconds.
+that neither process survives. Unit tests, configuration, build, functional
+UI, and AppShell audits are capped at 600 seconds; onboarding audits at 420
+seconds; and Rules at 300 seconds. The unit cap was raised from 300 seconds
+after a shared macOS CI runner reached that wall-clock limit without producing
+a result bundle; execution remains bounded and the separate exact 98-test
+assertion is unchanged.
 
 ### Build configuration proof
 
@@ -93,8 +96,9 @@ artifacts and verifies:
 - both use `com.syntholo.ios`, minimum iOS 17.0, and iPhone device family;
 - the Release binary contains no UI-test launch marker or UI-test fake symbol.
 
-The Release scan includes the Task 9 storage/authentication fixture markers
-and provider continuation implementation.
+The Release scan includes the Task 9 storage/authentication fixture markers,
+the DEBUG-only path-state proof marker, and provider continuation
+implementation.
 
 ## Deterministic journey coverage
 
@@ -109,9 +113,9 @@ and provider continuation implementation.
 | Completed profile restore | A complete restored profile opens Learn directly without replaying onboarding or handoff. |
 | No early interruption | Paywall, Social tab/prompt, catalog/browser, notification action, and system alert absence are checked throughout the pre-handoff journey. |
 | Recovery separation | Loading, profile checking, profile-check failure, profile saving, and profile-save failure have distinct deterministic routes. |
-| Alternate selection | After selecting AI for Work and navigating back, the recommendation remains AI for School while the alternate exposes the persisted `Selected` accessibility value and retains its native selected trait. |
+| Alternate selection | The journey selects AI for Work, advances, and navigates back. Visible production UI independently proves that AI for School is still recommended, while an explicit DEBUG-only state surface proves `recommended=school;selected=work` without depending on disclosure restoration behavior. |
 
-All 32 explicit `waitForExistence` calls in the onboarding UI suite specify a
+All 30 explicit `waitForExistence` calls in the onboarding UI suite specify a
 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
@@ -223,9 +227,11 @@ contract independently for both jobs.
 
 If the functional UI xcodebuild command fails after producing an xcresult, the
 canonical gate now parses that result before exiting with the original command
-status. It prints the failed test name and assertion detail followed by the
-unchanged exact 16-pass count summary. A missing result remains a hard failure,
-and the 16 passed / 0 failed / 0 skipped contract is unchanged.
+status. In addition to the summary failure, it reads the xcresult test tree and
+failed-test activities to print the source file and line when available, the
+failure activity, and identifiers for useful UI snapshot, hierarchy, screen
+recording, and element-debug attachments. A missing result remains a hard
+failure, and the 16 passed / 0 failed / 0 skipped contract is unchanged.
 
 Remote run 33139333630 failed both jobs during `setup-java` because the prior
 exact value `21.0.8+9` was unavailable; neither job reached repository tests.
@@ -294,6 +300,38 @@ omitted the test detail, then passed after implementation and printed the test
 name and assertion from a real failed xcresult while still rejecting its count.
 This correction has not been pushed, so replacement CI remains pending
 controller verification.
+
+Remote run 33151350870 exercised that correction. Its iOS 17.5 job passed
+setup and 98/98 unit tests, then failed the same alternate-path functional UI
+test. The then-current diagnostic path still printed only the generic
+`XCTAssertTrue failed`, so the source assertion and UI state were not available
+from the remote quiet log. Its current-iOS job did not complete unit tests: the
+shared runner reached the former 300-second unit process-group watchdog before
+an xcresult summary was produced. Neither failure is recorded as a product or
+accessibility pass, and later stages did not run in those jobs.
+
+The UI test no longer infers persisted onboarding state from whether SwiftUI
+restores the `Other paths` disclosure expanded or collapsed. It still selects
+AI for Work through the visible production row and proves after Back that the
+visible recommended label, title, and action remain AI for School. Under the
+explicit `--path-state-proof` launch flag, DEBUG builds additionally expose
+the view inputs as `recommended=school;selected=work` on the path page. That
+marker is derived from app state rather than the disclosure's accessibility
+tree; it is absent from ordinary accessibility launches and Release builds.
+The final state assertion has a unique failure message, as do every bounded
+transition assertion in this journey.
+
+The diagnostic regression failed before implementation because the parser
+discarded supplemental xcresult details. It now rejects the same failed
+summary while printing both a failure-node source line and a distinct
+`sourceCodeContext` line, its associated failure activity, and a UI Snapshot
+payload. Replaying the local failed xcresult from the prior implementation
+prints `OnboardingUITests.swift:259`, the failure activity, App UI hierarchy,
+UI Snapshot, and relevant element debug-description payload identifiers. The
+revised state proof passed the focused journey 1/1 and then five test
+iterations 5/5 on iPhone 17 Pro / iOS 26.5. The iOS 17.5 runtime remains
+unavailable locally, so replacement remote CI is still required after the
+controller pushes this commit.
 
 ## Credential, privacy, and dependency review
 

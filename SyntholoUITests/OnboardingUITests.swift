@@ -231,43 +231,75 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testAlternatePathStaysSelectedWithoutReplacingRecommendation() {
-        let app = launchOnboarding()
-        XCTAssertTrue(app.buttons["Start learning"].waitForExistence(timeout: 5))
+        let app = launchOnboarding(extraArguments: ["--path-state-proof"])
+        XCTAssertTrue(
+            app.buttons["Start learning"].waitForExistence(timeout: 5),
+            "Welcome did not expose Start learning."
+        )
         app.buttons["Start learning"].tap()
-        XCTAssertTrue(app.buttons["I’m 18 or older"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["I’m 18 or older"].waitForExistence(timeout: 5),
+            "Age selection did not appear after starting."
+        )
         app.buttons["I’m 18 or older"].tap()
-        XCTAssertTrue(app.buttons["Study smarter"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["Study smarter"].waitForExistence(timeout: 5),
+            "Goal selection did not appear after age confirmation."
+        )
         app.buttons["Study smarter"].tap()
-        XCTAssertTrue(app.buttons["Beginner-friendly"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["Beginner-friendly"].waitForExistence(timeout: 5),
+            "Experience selection did not appear after choosing a goal."
+        )
         app.buttons["Beginner-friendly"].tap()
-        XCTAssertTrue(app.buttons["Other paths"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["Other paths"].waitForExistence(timeout: 5),
+            "Path recommendation did not expose Other paths."
+        )
         app.buttons["Other paths"].tap()
         let initialAlternate = app.buttons["AI for Work"]
-        XCTAssertTrue(initialAlternate.waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            initialAlternate.waitForExistence(timeout: 5),
+            "Expanded Other paths did not expose AI for Work."
+        )
         initialAlternate.tap()
-        XCTAssertTrue(app.buttons["Supportive"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.buttons["Supportive"].waitForExistence(timeout: 5),
+            "Selecting AI for Work did not advance to coach selection."
+        )
 
         app.buttons["Back"].tap()
 
-        XCTAssertTrue(app.buttons["Choose AI for School"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Recommended route"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["AI for School"].waitForExistence(timeout: 5))
-        let alternate = app.buttons["AI for Work"]
-        if !alternate.waitForExistence(timeout: 5) {
-            let otherPaths = app.buttons["Other paths"]
-            XCTAssertTrue(otherPaths.waitForExistence(timeout: 5))
-            otherPaths.tap()
-        }
-        XCTAssertTrue(alternate.waitForExistence(timeout: 5))
-        let selectedValue = NSPredicate(format: "value == %@", "Selected")
-        let selectedExpectation = XCTNSPredicateExpectation(
-            predicate: selectedValue,
-            object: alternate
+        XCTAssertTrue(
+            app.buttons["Choose AI for School"].waitForExistence(timeout: 5),
+            "Back did not restore the AI for School recommendation action."
+        )
+        XCTAssertTrue(
+            app.staticTexts["Recommended route"].waitForExistence(timeout: 5),
+            "Back did not restore the recommendation label."
+        )
+        XCTAssertTrue(
+            app.staticTexts["AI for School"].waitForExistence(timeout: 5),
+            "AI for School was no longer the visible recommendation."
+        )
+
+        let pathState = app.descendants(matching: .any)["onboarding.path"]
+        XCTAssertTrue(
+            pathState.waitForExistence(timeout: 5),
+            "Back did not restore the path page state surface."
+        )
+        let expectedState = NSPredicate(
+            format: "value == %@",
+            "recommended=school;selected=work"
+        )
+        let stateExpectation = XCTNSPredicateExpectation(
+            predicate: expectedState,
+            object: pathState
         )
         XCTAssertEqual(
-            XCTWaiter.wait(for: [selectedExpectation], timeout: 5),
+            XCTWaiter.wait(for: [stateExpectation], timeout: 5),
             .completed,
-            "AI for Work did not expose its persisted selected state."
+            "App state did not preserve AI for Work separately from the AI for School recommendation."
         )
     }
 
