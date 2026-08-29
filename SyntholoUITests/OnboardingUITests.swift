@@ -231,7 +231,12 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testAlternatePathStaysSelectedWithoutReplacingRecommendation() {
-        let app = launchOnboarding(extraArguments: ["--path-state-proof"])
+        let app = launchOnboarding(
+            extraArguments: [
+                "--path-options-expanded",
+                "--path-state-proof",
+            ]
+        )
         XCTAssertTrue(
             app.buttons["Start learning"].waitForExistence(timeout: 5),
             "Welcome did not expose Start learning."
@@ -252,15 +257,10 @@ final class OnboardingUITests: XCTestCase {
             "Experience selection did not appear after choosing a goal."
         )
         app.buttons["Beginner-friendly"].tap()
-        XCTAssertTrue(
-            app.buttons["Other paths"].waitForExistence(timeout: 5),
-            "Path recommendation did not expose Other paths."
-        )
-        app.buttons["Other paths"].tap()
         let initialAlternate = app.buttons["AI for Work"]
         XCTAssertTrue(
             initialAlternate.waitForExistence(timeout: 5),
-            "Expanded Other paths did not expose AI for Work."
+            "Expanded path fixture did not expose the visible AI for Work choice."
         )
         initialAlternate.tap()
         XCTAssertTrue(
@@ -486,12 +486,13 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
     }
 
     func testExpandedOtherPathsLayoutPassesAccessibilityAudits() throws {
-        let app = launchOnboarding()
+        let app = launchOnboarding(
+            extraArguments: ["--path-options-expanded"]
+        )
         app.buttons["Start learning"].tap()
         app.buttons["I’m 18 or older"].tap()
         app.buttons["Study smarter"].tap()
         app.buttons["Beginner-friendly"].tap()
-        app.buttons["Other paths"].tap()
 
         try audit(app, waitingFor: app.buttons["AI for Work"])
     }

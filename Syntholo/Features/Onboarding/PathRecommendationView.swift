@@ -5,7 +5,13 @@ struct PathRecommendationView: View {
     let selectedPath: LearningPath?
     let onSelectPath: (LearningPath) -> Void
 
+    #if DEBUG
+    @State private var showsOtherPaths = ProcessInfo.processInfo.arguments.contains(
+        "--path-options-expanded"
+    )
+    #else
     @State private var showsOtherPaths = false
+    #endif
 
     var body: some View {
         #if DEBUG

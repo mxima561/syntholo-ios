@@ -39,6 +39,7 @@ fixture_markers=(
   "--onboarding-reset"
   "--onboarding-storage-key="
   "--provider-fixture="
+  "--path-options-expanded"
   "--path-state-proof"
   "--session-fixture="
   "--profile-fixture="

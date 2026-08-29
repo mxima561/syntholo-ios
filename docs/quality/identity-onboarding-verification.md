@@ -97,8 +97,8 @@ artifacts and verifies:
 - the Release binary contains no UI-test launch marker or UI-test fake symbol.
 
 The Release scan includes the Task 9 storage/authentication fixture markers,
-the DEBUG-only path-state proof marker, and provider continuation
-implementation.
+the DEBUG-only path-options and path-state proof markers, and provider
+continuation implementation.
 
 ## Deterministic journey coverage
 
@@ -113,9 +113,9 @@ implementation.
 | Completed profile restore | A complete restored profile opens Learn directly without replaying onboarding or handoff. |
 | No early interruption | Paywall, Social tab/prompt, catalog/browser, notification action, and system alert absence are checked throughout the pre-handoff journey. |
 | Recovery separation | Loading, profile checking, profile-check failure, profile saving, and profile-save failure have distinct deterministic routes. |
-| Alternate selection | The journey selects AI for Work, advances, and navigates back. Visible production UI independently proves that AI for School is still recommended, while an explicit DEBUG-only state surface proves `recommended=school;selected=work` without depending on disclosure restoration behavior. |
+| Alternate selection | An explicit DEBUG-only fixture starts the real Other paths content expanded, avoiding runtime-specific assumptions about the `DisclosureGroup` label's XCUI role. The journey visibly selects AI for Work, advances, and navigates back. Visible production UI independently proves that AI for School is still recommended, while a separate DEBUG-only state surface proves `recommended=school;selected=work`. |
 
-All 30 explicit `waitForExistence` calls in the onboarding UI suite specify a
+All 29 explicit `waitForExistence` calls in the onboarding UI suite specify a
 2-, 3-, or 5-second timeout. The two fixture operations used to hold visible
 loading states also have a finite 120-second task sleep; the test process never
 waits for those operations to finish.
@@ -141,6 +141,12 @@ provider fixture control is absent. Provider interaction replacement is
 enabled only by the explicit provider-fixture argument used in Apple/Google
 completion and cancellation journeys. AppShell adds 28 category-specific
 audits across Learn, Practice, Social, and Profile.
+
+The expanded Other paths audit uses the same explicit DEBUG-only initial
+expansion as the functional alternate-path journey and waits for the real AI
+for Work choice. It does not locate or tap the `DisclosureGroup` label, whose
+XCUI element role differs between supported iOS runtimes. Unflagged Debug and
+all Release launches retain the production default of collapsed.
 
 Choice rows retain the native selected accessibility trait and also expose an
 explicit localized `Selected` or `Not selected` value. The value gives XCTest
@@ -332,6 +338,31 @@ revised state proof passed the focused journey 1/1 and then five test
 iterations 5/5 on iPhone 17 Pro / iOS 26.5. The iOS 17.5 runtime remains
 unavailable locally, so replacement remote CI is still required after the
 controller pushes this commit.
+
+Remote run 33239641235 exercised that commit and validated the enhanced
+diagnostics. Its current-iOS job passed the complete canonical gate with exact
+98 unit, 16 functional UI, 28 AppShell accessibility, 10 onboarding
+accessibility, and 20 Rules passes, with zero failures, skips, or
+cancellations. Its iOS 17.5 job passed 98/98 units, then completed 15/16
+functional UI tests. The exact remaining failure was
+`OnboardingUITests.swift:255`: `Path recommendation did not expose Other
+paths.` The xcresult diagnostics also published the failed lookup's debug
+description, App UI hierarchy, UI Snapshot, and screen-recording attachment
+identifiers. Later accessibility and Rules stages did not run in that job.
+
+This evidence narrows the compatibility boundary to the framework label role:
+the path page rendered, but iOS 17.5 did not expose the `DisclosureGroup`
+label as the XCUI button queried by the test. Selection state was not involved.
+The functional journey and expanded-layout audit now launch with
+`--path-options-expanded`, wait for the visible AI for Work choice directly,
+and never query or toggle that framework label. The flag only initializes the
+existing `@State`; production remains collapsed without it, and Release
+compiles the initial state to `false`. Before implementation, the unchanged
+functional regression failed 0/1 on the missing AI for Work choice and the
+expanded-layout audit failed 0/1 at the same boundary. After implementation,
+both passed 1/1 on iPhone 17 Pro / iOS 26.5. The iOS 17.5 runtime remains
+unavailable locally, so replacement CI for this unpushed correction is still
+required.
 
 ## Credential, privacy, and dependency review
 
