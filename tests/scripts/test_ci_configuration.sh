@@ -27,9 +27,11 @@ assert_job_contract() {
   for expected_line in \
     'java-version: "21.0.12+8.0.LTS"' \
     'uses: actions/checkout@v5' \
+    'fetch-depth: 0' \
     'uses: actions/setup-node@v5' \
     'node-version: 22.22.2' \
     'uses: actions/setup-java@v5' \
+    './scripts/install_gitleaks.sh' \
     'test "$(./node_modules/.bin/firebase --version)" = "15.28.1"' \
     'run: ./scripts/test.sh'; do
     if ! grep -Fq -- "$expected_line" <<< "$block"; then

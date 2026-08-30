@@ -5,6 +5,7 @@ script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repository_root=$(cd "$script_directory/.." && pwd)
 cd "$repository_root"
 
+./scripts/test_content.sh
 ./scripts/bootstrap.sh
 ./tests/scripts/test_run_with_timeout.sh
 ./tests/scripts/test_result_assertions.sh

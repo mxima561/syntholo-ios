@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "name": "ascii",
+      "value": {
+        "message": "hello",
+        "count": 3
+      },
+      "canonical": "{\"count\":3,\"message\":\"hello\"}",
+      "sha256": "8166ef4cace4525bc39481e4e9665c29605aeec03d90ab5474720995f3f2ec77"
+    },
+    {
+      "name": "unicode",
+      "value": {
+        "symbol": "Δ",
+        "label": "Café"
+      },
+      "canonical": "{\"label\":\"Café\",\"symbol\":\"Δ\"}",
+      "sha256": "bf42cef826ee38a8e7ee5692235de4d58d1738343976275b2627cc7d18cf68d9"
+    },
+    {
+      "name": "nested-object",
+      "value": {
+        "z": {
+          "b": 2,
+          "a": 1
+        },
+        "a": true
+      },
+      "canonical": "{\"a\":true,\"z\":{\"a\":1,\"b\":2}}",
+      "sha256": "825cce5775e992c17886545fb7e26450fd51ddbb8644da4c765fdcdd63e3f3be"
+    },
+    {
+      "name": "array-order",
+      "value": {
+        "steps": [
+          "third",
+          "first",
+          "second"
+        ]
+      },
+      "canonical": "{\"steps\":[\"third\",\"first\",\"second\"]}",
+      "sha256": "0f34f8857f56f0bdda6b1e78d662679a3f3a11c0fd3dce50ca7fc6c30f841098"
+    },
+    {
+      "name": "null",
+      "value": {
+        "optional": null,
+        "required": "present"
+      },
+      "canonical": "{\"optional\":null,\"required\":\"present\"}",
+      "sha256": "40a03b6d81556c175b884adbb824820184b458c21162c94343403f264f492ed5"
+    },
+    {
+      "name": "omission",
+      "value": {
+        "retained": "value",
+        "nested": {
+          "present": 1
+        }
+      },
+      "canonical": "{\"nested\":{\"present\":1},\"retained\":\"value\"}",
+      "sha256": "aebb2e79764000702952b391214eef456aa796709ed24be82dd369eabc3dd546"
+    }
+  ]
+}

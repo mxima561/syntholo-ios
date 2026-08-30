@@ -1,0 +1,4 @@
+title = "Syntholo pinned gitleaks policy v1"
+
+[extend]
+useDefault = true
