@@ -48,11 +48,11 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 1 — Close the current publisher/rollback checkpoint
 
-**Status:** Complete at emulator scope in implementation commit `ec8ac97`; live staging enablement remains Step 13.
+**Status:** Complete at emulator scope in implementation commit `ec8ac97`; live staging enablement remains the first part of Step 12 and certification remains Step 13.
 
-- Finish deterministic regressions for source-file replacement, poisoned ambient Google credentials, non-loopback emulator hosts, foreign SDK/filesystem error redaction, and corrupt historical document identity.
+- Finish deterministic regressions for source-file replacement, fail-closed unsafe REST preference with poisoned ambient Google credentials, non-loopback emulator hosts, foreign SDK/filesystem error redaction, and corrupt historical document identity.
 - Prove the source bytes that are scanned are the exact bytes parsed and published.
-- Prove Firebase Admin cannot consult live ADC or contact a non-loopback endpoint in emulator mode.
+- Prove the unsafe REST preference and non-loopback endpoints are rejected before Firebase Admin construction or ambient credential lookup, and pin the accepted emulator client to non-REST loopback transport.
 - Prove first publish, version-head monotonicity, no-op audit, replay, collision, roll-forward, rollback, repeated rollback, injected failures, transaction budget, and authorization gates.
 - Run the publication suite on isolated dynamic emulator ports and record its exact discovered count with zero failure, skip, cancellation, or leaked listener.
 - Run the combined content suites, syntax checks, `git diff --check`, the full uninterrupted `./scripts/test.sh`, and full-history/worktree/generated-output/built-app secret scans.
@@ -171,8 +171,10 @@ Stop before original content or staging writes unless all four items are complet
 
 **Done when:** Every decision/access record is tracked and approved. There is no implementation override for this gate.
 
-### Step 12 — Author the first reviewed Foundations fixture (Phase 2 Task 12)
+### Step 12 — Enable the approved staging path, then author the first reviewed Foundations fixture (Phase 2 Task 12)
 
+- Only after Step 11 passes, extend the constrained operator command to staging: construct live Firestore only for the allowlisted staging project, use keyless ADC impersonation, derive and verify the actual principal/project ID/project number through authenticated metadata, and reject direct user ADC, service-account key JSON, development, production, mismatched confirmation, and unapproved identities before Firestore construction.
+- Apply the least-privilege publisher role, retain the underlying impersonator in Cloud Audit Logs, keep safe-output/source-scan/transaction semantics identical to emulator mode, and add deterministic authorization and disguised-production regressions.
 - Write fixture-specific failing tests first.
 - Author one original Foundations program, one module, and one structurally valid read-only lesson preview.
 - Include objective, duration, completion rule, prerequisites, concept, original diagram and text alternative, rights metadata, applied single-answer check, deterministic feedback, public scoring/rubric data, and a matching protected evaluation contract.
@@ -180,7 +182,7 @@ Stop before original content or staging writes unless all four items are complet
 - Complete curriculum, copyright/rights, safety, and accessibility review.
 - Keep authoring drafts outside the app target/resources.
 
-**Done when:** The reviewed fixture validates and its staging dry-run exposes only safe metadata and performs no write. Do not call this a complete Product Bible lesson; response capture, revision, outcomes, and progress come in Phase 3.
+**Done when:** The live operator path proves the approved staging identity and least privilege without accepting a key file or production target; the reviewed fixture validates; and its staging dry-run exposes only safe metadata and performs no write. Do not call this a complete Product Bible lesson; response capture, revision, outcomes, and progress come in Phase 3.
 
 ### Step 13 — Certify Phase 2 on staging (Phase 2 Task 13)
 
