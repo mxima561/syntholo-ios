@@ -162,6 +162,48 @@
         }
       }
     },
+    "A newer app is required for the latest curriculum. Your saved curriculum remains available below." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A newer app is required for the latest curriculum. Your saved curriculum remains available below." } } } },
+    "A newer version of Syntholo is required to view this curriculum." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "A newer version of Syntholo is required to view this curriculum." } } } },
+    "Catalog version" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Catalog version" } } } },
+    "Checking for available programs." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking for available programs." } } } },
+    "Checking for updates…" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking for updates…" } } } },
+    "Choose an available program to preview its lessons." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose an available program to preview its lessons." } } } },
+    "Concept" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Concept" } } } },
+    "Couldn’t refresh curriculum" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn’t refresh curriculum" } } } },
+    "Criteria" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Criteria" } } } },
+    "Curriculum catalog" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Curriculum catalog" } } } },
+    "Deterministic" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Deterministic" } } } },
+    "Diagram" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Diagram" } } } },
+    "Expected duration" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Expected duration" } } } },
+    "Language" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } } } },
+    "Learning content for this language isn’t available yet." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning content for this language isn’t available yet." } } } },
+    "Learning content is unavailable" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning content is unavailable" } } } },
+    "Learning content isn’t available right now. Please try again later." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning content isn’t available right now. Please try again later." } } } },
+    "Lesson version" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Lesson version" } } } },
+    "Lessons" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Lessons" } } } },
+    "Loading curriculum…" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading curriculum…" } } } },
+    "Module version" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Module version" } } } },
+    "Modules" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Modules" } } } },
+    "More modules are arriving" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "More modules are arriving" } } } },
+    "No curriculum is published yet" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No curriculum is published yet" } } } },
+    "Objective" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Objective" } } } },
+    "Program version" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Program version" } } } },
+    "Programs" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Programs" } } } },
+    "Question preview" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Question preview" } } } },
+    "Read-only lesson preview" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Read-only lesson preview" } } } },
+    "Read-only preview. Answers aren’t collected yet." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Read-only preview. Answers aren’t collected yet." } } } },
+    "Return to Learn and choose an available curriculum item." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Return to Learn and choose an available curriculum item." } } } },
+    "Rubric type" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Rubric type" } } } },
+    "Rubric version" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Rubric version" } } } },
+    "Saved curriculum" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved curriculum" } } } },
+    "Saved lessons remain available while Syntholo checks for updates." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved lessons remain available while Syntholo checks for updates." } } } },
+    "Text alternative" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Text alternative" } } } },
+    "These read-only criteria describe what the lesson checks without showing answers." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "These read-only criteria describe what the lesson checks without showing answers." } } } },
+    "This curriculum item is unavailable" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This curriculum item is unavailable" } } } },
+    "This program is in the catalog. Its learning modules are coming soon." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This program is in the catalog. Its learning modules are coming soon." } } } },
+    "Update Syntholo" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Update Syntholo" } } } },
+    "Your place is safe. Check your connection and try again." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your place is safe. Check your connection and try again." } } } },
+    "Your saved lessons remain available. Try again when you’re ready." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your saved lessons remain available. Try again when you’re ready." } } } },
     "Practice" : {
       "localizations" : {
         "en" : {
@@ -248,26 +290,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Social learning features are coming in the next product slice."
-          }
-        }
-      }
-    },
-    "Your learning campus" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your learning campus"
-          }
-        }
-      }
-    },
-    "Your next lesson and path progress will appear here." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your next lesson and path progress will appear here."
           }
         }
       }
