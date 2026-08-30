@@ -8,7 +8,7 @@
 
 **Implementation commit:** `085fbfa` (`feat(app): connect first lesson preview handoff`)
 
-**Documentation provenance:** To be introduced by the Task 9 documentation commit and finalized by the immediately following provenance commit
+**Documentation commit:** `d7031b8` (`docs(curriculum): record Task 9 checkpoint`)
 
 ## Result
 
