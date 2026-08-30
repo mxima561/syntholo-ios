@@ -8,7 +8,7 @@
 
 **Implementation commit:** `ec8ac97` (`feat(content): add atomic emulator publisher and rollback`)
 
-**Documentation commit:** `[PENDING — docs commit hash]`
+**Initial documentation checkpoint commit:** `c6cab41` (`docs: record Task 3 publication checkpoint`)
 
 ## Outcome
 
