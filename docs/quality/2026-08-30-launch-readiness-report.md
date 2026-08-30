@@ -138,6 +138,32 @@ The 12 focused Task 5 XCTest methods and 73 Node content tests pass against the 
 
 This checkpoint still does **not** complete Phase 2 or any Product Bible release gate. The app-owned cache, concrete exact-get repository, observable store/UI, preview handoff, curriculum UI/accessibility fixtures, analytics, original reviewed content, approved staging identity, production-shaped Rules/device proof, minimum-iOS CI, and named approvals remain open. No original learner-facing curriculum or live Firebase write was created, and the unresolved specialization still prohibits both.
 
+## Phase 2 app-owned curriculum-cache checkpoint
+
+Phase 2 Task 6 is complete in implementation commit `ba54963`. The app now owns an actor-isolated curriculum cache namespaced by environment, Firebase project, and locale. Its exact versioned envelope records source identity, save time, catalog identity/order, every learner-readable document digest, and the complete validated snapshot. Reads and replacements revalidate the complete graph and fail closed on malformed, incompatible, wrong-source, wrong-envelope, or digest-invalid data.
+
+Invalid primary data is quarantined beside the cache with a deterministic UTC-millisecond filename. Failed writes, transient reads, quarantine failures, and quarantine-name collisions cannot promote invalid data or overwrite/delete another valid scope. Production replacement uses Foundation atomic file writing.
+
+One uninterrupted canonical `./scripts/test.sh` invocation passed on iPhone 17 Pro / iOS 26.5 after the settled implementation:
+
+| Gate | Task 6 result |
+| --- | ---: |
+| Curriculum content contract | 73 passed, 0 failed, 0 cancelled, 0 skipped |
+| Operator identity | 32 passed, 0 failed, 0 cancelled, 0 skipped |
+| Publication/rollback lifecycle | 38 passed, 0 failed, 0 cancelled, 0 skipped |
+| Swift unit tests | 143 passed, 0 failed, 0 skipped |
+| Functional UI journeys | 18 passed, 0 failed, 0 skipped |
+| AppShell accessibility audits | 28 passed, 0 failed, 0 skipped |
+| Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
+| Firestore Rules | 31 passed, 0 failed, 0 cancelled, 0 skipped |
+| **Aggregate** | **374 passed** |
+
+The focused `CurriculumCacheTests` suite passed 25/25. Independent code and failure-mode reviews found no remaining P0, P1, or P2 Task 6 issue after transient filesystem read errors were separated from invalid cache data so a valid primary is not quarantined on an ordinary I/O failure. Full-history and first-party worktree scans were clean.
+
+A standalone Release simulator build succeeded. Its direct 150.10 KB app-bundle scan and 4.11 MB extracted-strings/normalized-plist scan were clean under pinned Gitleaks 8.30.1, and the two synthetic published-client fixtures plus the shared digest-vector resource were absent from `Syntholo.app`. A separate diagnostic scan of the complete 1.37 GB `DerivedData` tree reported 102 redacted matches: all were in downloaded Firebase/GoogleSignIn sources, their test fixtures or repository pack, gRPC/OpenSSL artifacts and code signatures, or copied third-party private headers. None was in first-party source or the scanned app bundle. This is strong resource-separation evidence, not signed App Store archive certification.
+
+This checkpoint does **not** complete Phase 2 or any Product Bible release gate. The exact-get repository, observable store/UI, preview handoff, UI/accessibility fixtures, analytics, original reviewed content, staging publication/device proof, minimum-iOS CI, physical accessibility, and named approvals remain open. No specialization was selected or inferred, and no original learner content or staging/production Firebase write was created.
+
 ## Initial audit verification evidence (historical)
 
 Before the remediation checkpoint above, the canonical `./scripts/test.sh` gate passed on this machine using Xcode 26.6, iPhone 17 Pro / iOS 26.5, XcodeGen 2.46.0, Node 22.23.2, npm 10.9.8, Java 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0.
@@ -160,7 +186,7 @@ After adding the pinned Phase 2 validator/Admin development dependencies, `npm a
 | --- | --- | --- | --- |
 | 0 — Foundation | Verified | Swift 6, iOS 17, iPhone-only, XcodeGen, environments, design system, four tabs, CI/test gate | Physical-device checks still matter at release, but Phase 0 engineering is sound |
 | 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence, typed local-persistence recovery, and localization hardening | Live provider smoke tests, development/staging Firebase configuration, minimum-iOS CI evidence, physical VoiceOver evidence, daily-goal/settings completion |
-| 2 — Curriculum platform | In progress | Frozen contract, synthetic schema/validator/digests, independently reviewed emulator-only atomic publisher/rollback, authenticated shallow exact-read Rules, and the pure Swift curriculum domain/digest validator; the uninterrupted current gate passes 349 tests | Owner approval; cache/repository/store/UI, analytics, and staging proof; chosen specialization before original content authoring or staging load |
+| 2 — Curriculum platform | In progress | Frozen contract, synthetic schema/validator/digests, independently reviewed emulator-only atomic publisher/rollback, authenticated shallow exact-read Rules, pure Swift curriculum validation, and the actor-backed atomic app cache; the uninterrupted current gate passes 374 tests | Owner approval; exact-get repository/store/UI, analytics, and staging proof; chosen specialization before original content authoring or staging load |
 | 3 — Learning engine | Missing | First-lesson handoff is only a seam | Player, required formats, deterministic scoring, attempts, start limits, durable queue, cache/offline recovery, progress semantics |
 | 4 — AI coach | Missing | Coach-mode preference only | Moderation, immutable rubric load, structured scoring, server validation, separate tone rendering, feedback/revision/follow-up, fail-soft recovery |
 | 5 — Engagement | Missing | Learn and Practice placeholders | Today mission, next action, XP, streak, daily challenge, objective review, persistence/reconciliation |
@@ -345,7 +371,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 
 ## Immediate next implementation slice
 
-Continue the approved synthetic Phase 2 sequence. The emulator-only publisher/rollback, exact-read Rules, and Swift curriculum-domain/digest-parity checkpoints are complete; the next engineering checkpoint is the app-owned cache, followed by the exact-get repository, store, and read-only preview UI. The first staging vertical checkpoint remains:
+Continue the approved synthetic Phase 2 sequence. The emulator-only publisher/rollback, exact-read Rules, Swift curriculum-domain/digest-parity, and app-owned cache checkpoints are complete; the next engineering checkpoint is the exact-get Firestore repository, followed by the store and read-only preview UI. The first staging vertical checkpoint remains:
 
 > A privately published, immutable Foundations fixture containing a program, module, lesson version, objective, expected duration, completion rule, still-diagram/concept content, one deterministic question, and rubric/version references syncs into the app and renders read-only from the existing first-lesson handoff.
 

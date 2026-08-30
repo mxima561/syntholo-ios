@@ -25,7 +25,8 @@ The immediate product failure remains the same: the onboarding CTA promises a fi
 | Phase 2 Task 3 | **Complete at emulator scope** | Publisher/rollback and operator identity are preserved at `ec8ac97`; independent security/contract reviews are clear and the uninterrupted 326-test gate passed. Live publication remains a later staging-gate task. |
 | Phase 2 Task 4 | **Complete at emulator scope** | Authenticated shallow exact gets, allowed missing-path semantics, list/write/private denial, fixed launch identifier bounds, and the preserved profile contract pass 31/31 Rules tests; no index was added. |
 | Phase 2 Task 5 | **Complete** | The pure Swift 6 curriculum domain, closed learner-readable models, strict JSON ingress, RFC 8785/SHA-256 parity, graph validation, typed load boundary, and test-only fixtures are committed at `f3a07ec`; the uninterrupted gate passes 349 tests. |
-| Phase 2 Tasks 6–13 | **Not complete** | Cache/repository/store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
+| Phase 2 Task 6 | **Complete** | The actor-backed environment/project/locale-isolated cache, exact bounded envelope, full graph/digest revalidation, atomic replacement, and deterministic fail-closed quarantine behavior are committed at `ba54963`; 25 focused cache tests pass and the uninterrupted gate passes 374 tests. |
+| Phase 2 Tasks 7–13 | **Not complete** | Exact-get repository, store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
 | Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
 | Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
 
@@ -91,7 +92,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 4 — Implement the Swift curriculum domain (Phase 2 Task 5)
 
-**Status:** Complete in implementation commit `f3a07ec`; see [`2026-08-30-phase-2-task-5-swift-domain-checkpoint.md`](2026-08-30-phase-2-task-5-swift-domain-checkpoint.md). Task 6 is next.
+**Status:** Complete in implementation commit `f3a07ec`; see [`2026-08-30-phase-2-task-5-swift-domain-checkpoint.md`](2026-08-30-phase-2-task-5-swift-domain-checkpoint.md). Task 7 is now the next engineering checkpoint.
 
 - Add stable/locale/version identifiers and exact `Codable`, `Equatable`, `Hashable`, and `Sendable` curriculum models.
 - Implement the same canonical JSON/digest and validation semantics used by Node.
@@ -103,6 +104,8 @@ These inputs can be worked on in parallel, but the associated implementation mus
 **Done when:** Node and Swift produce identical validation/digest results and strict-concurrency focused tests pass.
 
 ### Step 5 — Build the app-owned curriculum cache (Phase 2 Task 6)
+
+**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Task 7 is next.
 
 - Implement an actor-backed cache with atomic replacement.
 - Namespace by environment, project, and locale.
@@ -285,9 +288,9 @@ Stop before original content or staging writes unless all four items are complet
 
 ## 5. The next ten concrete actions
 
-1. Implement Task 6: the environment/project/locale-namespaced app-owned cache with atomic replacement and deterministic quarantine.
-2. Implement Task 7: the authenticated exact-get Firestore repository with saved-first event ordering and complete graph validation.
-3. In parallel, configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
+1. Implement Task 7: the authenticated exact-get Firestore repository with saved-first event ordering and complete graph validation.
+2. Configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
+3. Complete the remaining Phase 1 daily-goal/settings, live-provider device, and physical VoiceOver evidence.
 4. Obtain the six-owner Phase 2 contract approval.
 5. Implement Task 8: the observable curriculum store and honest Learn catalog/program/module/read-only lesson states.
 6. Implement Task 9: the same-session first-preview handoff with exact version identity.

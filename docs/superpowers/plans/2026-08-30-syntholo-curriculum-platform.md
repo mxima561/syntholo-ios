@@ -612,15 +612,17 @@ Expected: Node and Swift consume the same fixtures/vectors and produce identical
 - Create: `Syntholo/Infrastructure/Persistence/FileCurriculumCache.swift`
 - Create: `SyntholoTests/CurriculumCacheTests.swift`
 
-- [ ] Write failing tests for round trip, atomic replacement, environment/project/locale separation, corrupt/wrong envelope, malformed graph, digest mismatch, incompatible snapshot, failed write preserving the prior valid cache, and deterministic quarantine naming.
-- [ ] Confirm RED before implementation.
-- [ ] Implement the cache as an actor and inject root URL/clock in tests.
-- [ ] Revalidate the complete locale catalog snapshot before returning it.
-- [ ] Ensure quarantine failure never turns invalid data into valid data or deletes a separately valid snapshot.
+- [x] Write failing tests for round trip, atomic replacement, environment/project/locale separation, corrupt/wrong envelope, malformed graph, digest mismatch, incompatible snapshot, failed write preserving the prior valid cache, and deterministic quarantine naming.
+- [x] Confirm RED before implementation.
+- [x] Implement the cache as an actor and inject root URL/clock in tests.
+- [x] Revalidate the complete locale catalog snapshot before returning it.
+- [x] Ensure quarantine failure never turns invalid data into valid data or deletes a separately valid snapshot.
 
 Run the focused `CurriculumCacheTests` with the same Xcode settings as Task 5.
 
 Expected: the last valid graph survives every expected local failure and cache namespaces never cross.
+
+Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Task 7 is next.
 
 ### Task 7 — Implement the exact-get Firestore adapter test-first
 
