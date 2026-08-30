@@ -75,7 +75,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.2 — Lock the canonical quality baseline
 
-- [x] Keep the script-enforced baseline green: 73 curriculum-content, 106 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 20 Firestore Rules tests. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The August 30 Phase 2 checkpoint records one non-reproducing Social hit-region interruption, three consecutive passing reruns, and a resumed green gate; require one uninterrupted run before merge.
+- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 106 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 20 Firestore Rules tests—326 total. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The final August 30 invocation passed uninterrupted after the harness began pinning the exact functional-test simulator and rebooting it at accessibility group boundaries; the earlier Social hit-region anomaly and a later pre-test SpringBoard `Busy` launch denial are retained as disclosed tooling evidence, not presented as clean attempts.
 - [x] Run the suite on the current iOS simulator.
 - [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
 - [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
@@ -131,10 +131,11 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 1.3 — Build the private operator path
 
-- [ ] Create a constrained private workflow to draft, validate, dry-run preview, publish, and roll back content. Scheduling/archive/deprecation remain north-star admin work, not Phase 2 scope.
+- [x] Create and independently verify the constrained emulator-only synthetic workflow to validate, dry-run preview, publish, and roll back content. Scheduling/archive/deprecation remain north-star admin work, not Phase 2 scope.
+- [ ] Enable the same constrained workflow for the approved staging environment only after the Product decision gate and environment identities exist; the checked-in command path currently cannot perform a live write.
 - [ ] Bind every non-emulator operation to an allowlisted environment project ID/number and keyless ADC impersonation of an approved least-privilege publisher service account; reject direct user ADC and service-account key JSON. A caller-supplied display name cannot authorize or impersonate an actor, while Cloud audit logs retain the underlying impersonator.
-- [ ] Require an operation ID and immutable audit trail containing derived principal, actual project/environment, timestamp, full catalog/program transition, applied/no-op outcome, request digest, and publication digest. Every accepted operation, including a no-op, is audited; exact retries replay their recorded result and collisions fail.
-- [ ] Atomically maintain private version heads and require every newly created immutable version to exceed that stable identity/locale's historical maximum, including after rollback. Publishing an existing non-live catalog/program selection is rejected with “use rollback”; locale-catalog rollback restores one already-valid immutable manifest and its pinned program selections without rewriting history or lowering heads.
+- [x] Require and emulator-prove an operation ID and immutable audit trail containing derived principal, actual project/environment, timestamp, full catalog/program transition, applied/no-op outcome, request digest, and publication digest. Every accepted operation, including a no-op, is audited; exact retries replay their recorded result and collisions fail. Live derived-principal and Cloud Audit Log evidence remains part of staging certification.
+- [x] Atomically maintain and emulator-prove private version heads so every newly created immutable version exceeds that stable identity/locale's historical maximum, including after rollback. Publishing an existing non-live catalog/program selection is rejected with “use rollback”; locale-catalog rollback restores one already-valid immutable manifest and its pinned program selections without rewriting history or lowering heads.
 - [ ] Add Firestore Rules and server tests proving learners cannot publish or alter protected content. Rules prove only authenticated exact-get, shallow top-level shape/type/simple bounds, publication marker, private-read denial, and write denial; Node and Swift prove nested unions, ordering/uniqueness, graph, and digest integrity.
 
 #### Step 1.4 — Implement iOS curriculum sync
@@ -505,7 +506,7 @@ Start with this exact package and do not add AI, StoreKit, or social to it:
 
 1. Approve the frozen Phase 2 curriculum-platform contract.
 2. Preserve the completed schema, digest-vector, validator/shape, and pinned secret-scanner checkpoint; its 73-test synthetic gate is the contract baseline.
-3. Implement the emulator-only idempotent publisher/rollback transaction and curriculum Rules, then build the Swift domain, digest parity, cache, repository, store, and read-only preview UI.
+3. Preserve the completed emulator-only idempotent publisher/rollback checkpoint; implement curriculum Rules next, then build the Swift domain, digest parity, cache, repository, store, and read-only preview UI.
 4. In parallel, close Phase 1 daily-goal/settings, live staging identity, minimum-iOS 17 CI, and physical accessibility evidence.
 5. Product records the deep launch specialization in the Product Bible; do not infer or recommend the answer in implementation work.
 6. Configure and allowlist the staging Firebase project ID/number and approved keyless impersonated publisher principal, then record the matching tracked decision gate.

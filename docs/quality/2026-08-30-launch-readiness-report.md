@@ -64,9 +64,33 @@ Fresh aggregate evidence on August 30, 2026 is:
 | Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
 | Firestore Rules | 20 passed, 0 failed, 0 cancelled, 0 skipped |
 
-The latest uninterrupted `./scripts/test.sh` invocation was interrupted when `testSocialHitRegionAudit` failed after an anomalous 112-second run. The same isolated test then passed three consecutive reruns in 23.7–26.9 seconds, and every remaining shell accessibility, onboarding accessibility, and Rules check passed in the resumed gate. This is recorded as a non-reproducing UI-test interruption, not hidden as a clean first attempt; require another uninterrupted canonical run before merge.
+The then-latest `./scripts/test.sh` invocation was interrupted when `testSocialHitRegionAudit` failed after an anomalous 112-second run. The same isolated test then passed three consecutive reruns in 23.7–26.9 seconds, and every remaining shell accessibility, onboarding accessibility, and Rules check passed in the resumed gate. This historical interruption remains disclosed; the later Task 3 checkpoint below supplies the required uninterrupted canonical pass.
 
-This checkpoint does **not** complete Phase 2. Publisher/rollback transactions, curriculum Rules, Swift models/digests, cache/repository/store/UI, analytics, owner approval, and authorized staging proof remain open. No original learner-facing curriculum or Firebase content write was created.
+This checkpoint does **not** complete Phase 2. Curriculum Rules, Swift models/digests, cache/repository/store/UI, analytics, owner approval, and authorized staging proof remain open. No original learner-facing curriculum or live Firebase content write was created.
+
+## Phase 2 publication/rollback checkpoint
+
+The emulator-only idempotent publisher and rollback path is now implemented on `main` at commit `ec8ac97` and independently cleared by contract and security reviews. It provides exact environment/operator identity, strict source scanning and sealed-byte parsing, create-only immutable documents, monotonic version heads, catalog-rooted atomic publication and rollback, deterministic audit/replay/collision behavior, injected-failure atomicity, safe diagnostics, and dynamic isolated emulator ports. Production remains disabled and the checked-in command path cannot perform a live write.
+
+One final uninterrupted `./scripts/test.sh` invocation passed on iPhone 17 Pro / iOS 26.5:
+
+| Gate | Current result |
+| --- | ---: |
+| Curriculum content contract | 73 passed, 0 failed, 0 cancelled, 0 skipped |
+| Operator identity | 32 passed, 0 failed, 0 cancelled, 0 skipped |
+| Publication/rollback lifecycle | 38 passed, 0 failed, 0 cancelled, 0 skipped |
+| Swift unit tests | 106 passed, 0 failed, 0 skipped |
+| Functional UI journeys | 18 passed, 0 failed, 0 skipped |
+| AppShell accessibility audits | 28 passed, 0 failed, 0 skipped |
+| Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
+| Firestore Rules | 20 passed, 0 failed, 0 cancelled, 0 skipped |
+| **Aggregate** | **326 passed** |
+
+Before that final invocation, a tab-group transition reproduced a SpringBoard `Busy` preflight denial before the Practice audit body could launch. The same audit passed after an explicit boot-readiness wait. The canonical harness now derives the exact simulator ID from the passed functional result, pins later audit destinations to it, and performs a fail-closed boot-wait → targeted shutdown → boot-wait at each tab group and before onboarding. The final invocation then passed all 28 AppShell audits, including the previously anomalous Social hit-region audit, without retrying or masking a failed test.
+
+Gitleaks 8.30.1 found no leak in complete Git history, the first-party worktree, the generated `Syntholo.app`, the direct app bundle, or 3.44 MB of extracted strings/normalized plists. A separate diagnostic scan of the entire 1.04 GB `DerivedData` tree reported 93 matches; redacted path/rule triage placed every match in downloaded Firebase/gRPC/GoogleSignIn source, their test fixtures/code signatures, or copied third-party private headers. None was in first-party source or the shipping app. `npm audit --omit=dev` remains at zero production vulnerabilities; the nine moderate development-tool findings remain on the existing dependency ledger because the proposed forced fix is a breaking Firebase CLI downgrade.
+
+This checkpoint does **not** complete Phase 2. Curriculum Rules, Swift parity/cache/repository/store/UI, analytics, original reviewed content, approved staging identity, device publication/load/rollback evidence, minimum-iOS CI, and named owner approvals remain open. Product still has not recorded which of School, Work, Creation, or Build is the deep launch specialization, so original curriculum and every staging/production write remain prohibited.
 
 ## Initial audit verification evidence (historical)
 
@@ -90,7 +114,7 @@ After adding the pinned Phase 2 validator/Admin development dependencies, `npm a
 | --- | --- | --- | --- |
 | 0 — Foundation | Verified | Swift 6, iOS 17, iPhone-only, XcodeGen, environments, design system, four tabs, CI/test gate | Physical-device checks still matter at release, but Phase 0 engineering is sound |
 | 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence, typed local-persistence recovery, and localization hardening | Live provider smoke tests, development/staging Firebase configuration, minimum-iOS CI evidence, physical VoiceOver evidence, daily-goal/settings completion |
-| 2 — Curriculum platform | In progress | Frozen contract plus synthetic schema, deterministic validator/shape conversion, digest vectors, bounds/budget tests, and pinned history/worktree/generated/bundle secret scanning; 73 content tests pass | Owner approval; publisher/rollback, curriculum Rules, Swift domain/cache/repository/store/UI and staging proof; chosen specialization before original content authoring or staging load |
+| 2 — Curriculum platform | In progress | Frozen contract, synthetic schema/validator/digests, and independently reviewed emulator-only atomic publisher/rollback; 73 content, 32 identity, and 38 publication tests pass | Owner approval; curriculum Rules, Swift domain/cache/repository/store/UI, analytics, and staging proof; chosen specialization before original content authoring or staging load |
 | 3 — Learning engine | Missing | First-lesson handoff is only a seam | Player, required formats, deterministic scoring, attempts, start limits, durable queue, cache/offline recovery, progress semantics |
 | 4 — AI coach | Missing | Coach-mode preference only | Moderation, immutable rubric load, structured scoring, server validation, separate tone rendering, feedback/revision/follow-up, fail-soft recovery |
 | 5 — Engagement | Missing | Learn and Practice placeholders | Today mission, next action, XP, streak, daily challenge, objective review, persistence/reconciliation |
@@ -103,7 +127,7 @@ After adding the pinned Phase 2 validator/Admin development dependencies, `npm a
 
 ### User goal and accessibility target
 
-The audited user is a new adult learner choosing AI for School with beginner experience and the Supportive coach. The target is a clear, low-friction path from eligibility confirmation to a real first Foundations lesson, usable with VoiceOver, Dynamic Type, non-color state communication, and minimum 44-point targets.
+The audited user is a new adult learner using the existing AI for School test fixture, with beginner experience and the Supportive coach. This fixture is an audit scenario, not the unresolved Product Bible launch-specialization decision. The target is a clear, low-friction path from eligibility confirmation to a real first Foundations lesson, usable with VoiceOver, Dynamic Type, non-color state communication, and minimum 44-point targets.
 
 ### Step 1 — Welcome: healthy
 
@@ -247,7 +271,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 ### Milestone 1 — Make Syntholo real: Phases 2–4
 
 1. Choose the one deep specialization and freeze the versioned curriculum/rubric contract.
-2. Build the constrained publisher with draft, publish, immutable version, and rollback.
+2. Extend the verified emulator publisher to approved staging identity only after the Product/environment gate.
 3. Render a published fixture program/module/lesson in the iPhone app.
 4. Build the lesson engine around stable attempt IDs, deterministic objective scoring, durable queue states, cache/resume, credit semantics, and interruption tests.
 5. Connect the current first-lesson CTA directly to the real first lesson.
@@ -275,7 +299,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 
 ## Immediate next implementation slice
 
-Continue the approved synthetic Phase 2 sequence. The next engineering checkpoint is the emulator-only idempotent publisher and rollback transaction, followed by curriculum Rules and the Swift domain/cache/repository. The first staging vertical checkpoint remains:
+Continue the approved synthetic Phase 2 sequence. The emulator-only idempotent publisher and rollback transaction is complete; the next engineering checkpoint is curriculum Firestore Rules, followed by the Swift domain, digest parity, cache, exact-get repository, store, and read-only preview UI. The first staging vertical checkpoint remains:
 
 > A privately published, immutable Foundations fixture containing a program, module, lesson version, objective, expected duration, completion rule, still-diagram/concept content, one deterministic question, and rubric/version references syncs into the app and renders read-only from the existing first-lesson handoff.
 

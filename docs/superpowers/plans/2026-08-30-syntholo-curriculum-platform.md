@@ -526,14 +526,14 @@ Expected: schema/negative/golden-vector tests are GREEN, invalid input writes no
 - Modify: `scripts/test.sh`
 - Modify: `docs/setup/firebase.md`
 
-- [ ] Start with failing emulator tests for first catalog-root publish, atomic version-head creation/advance, historical-max monotonicity for every immutable identity (including after rollback), missing/corrupt head failure, same-live same-digest no-op writing exactly one audit and nothing else, different-digest collision, existing non-live selection rejection, v2 roll-forward, exact catalog rollback, repeated rollback audit-without-pointer-write, operation replay after later state changes, operation collision, immutable catalog pinning, and atomic audit/pointers.
-- [ ] Test disguised production-as-staging project, unknown project number, unapproved principal, synthetic fixture outside emulator, missing decision record for non-emulator, and transaction-budget rejection.
-- [ ] Before importing or constructing Firebase Admin, run the pinned gitleaks policy against the exact resolved source file in addition to the repository gate; reject planted AWS access-key/secret-key shapes and every scanner finding without honoring source-local suppressions.
-- [ ] Require mutually exclusive `--dry-run` or `--apply`, explicit operation ID, environment/project confirmation, and optional non-authorizing requested-by text.
-- [ ] Implement create-only immutable writes, derived principal/project verification, deterministic operation replay, and the exact publish/rollback semantics in Section 5.
-- [ ] Ensure every injected exception leaves the prior pointers/graph unchanged.
-- [ ] Use the repository's isolated-port emulator runner; never depend on a fixed port.
-- [ ] Add the publication emulator suite to `./scripts/test.sh` with an exact observed count.
+- [x] Start with failing emulator tests for first catalog-root publish, atomic version-head creation/advance, historical-max monotonicity for every immutable identity (including after rollback), missing/corrupt head failure, same-live same-digest no-op writing exactly one audit and nothing else, different-digest collision, existing non-live selection rejection, v2 roll-forward, exact catalog rollback, repeated rollback audit-without-pointer-write, operation replay after later state changes, operation collision, immutable catalog pinning, and atomic audit/pointers.
+- [x] Test disguised production-as-staging project, unknown project number, unapproved principal, synthetic fixture outside emulator, missing decision record for non-emulator, and transaction-budget rejection.
+- [x] Before importing or constructing Firebase Admin, run the pinned gitleaks policy against the exact resolved source file in addition to the repository gate; reject planted AWS access-key/secret-key shapes and every scanner finding without honoring source-local suppressions.
+- [x] Require mutually exclusive `--dry-run` or `--apply`, explicit operation ID, environment/project confirmation, and optional non-authorizing requested-by text.
+- [x] Implement create-only immutable writes, derived principal/project verification, deterministic operation replay, and the exact publish/rollback semantics in Section 5.
+- [x] Ensure every injected exception leaves the prior pointers/graph unchanged.
+- [x] Use the repository's isolated-port emulator runner; never depend on a fixed port.
+- [x] Add the publication emulator suite to `./scripts/test.sh` with an exact observed count of 38.
 
 Run:
 
