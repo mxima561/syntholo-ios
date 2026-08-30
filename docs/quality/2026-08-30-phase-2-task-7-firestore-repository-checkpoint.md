@@ -8,7 +8,7 @@
 
 **Implementation commit:** `83f6e1a` (`feat(curriculum): add exact firestore repository`)
 
-**Documentation provenance:** introduced by the Task 7 checkpoint documentation commit; finalized by the immediately following provenance commit
+**Documentation provenance:** introduced in `7a86530` (`docs(curriculum): record Task 7 checkpoint`); this field is finalized by the immediately following provenance commit
 
 ## Result
 
