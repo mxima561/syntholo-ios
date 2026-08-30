@@ -583,12 +583,12 @@ Expected: all profile and exact-get curriculum Rules tests pass with zero failur
 - Create: `SyntholoTests/CurriculumValidationTests.swift`
 - Modify: `project.yml` to add only `tests/fixtures/content/` and digest vectors as test-bundle resources, never app resources
 
-- [ ] Write failing tests for stable/locale/version IDs, exact schema parity, synthetic fixture decoding, shared digest vectors, duplicate identities, catalog order, prerequisite DAG, asset/rubric references, public scoring contract, malformed blocks, digest mismatch, and compatibility rejection.
-- [ ] Confirm RED before Swift implementation.
-- [ ] Implement small `Codable`, `Equatable`, `Hashable`, `Sendable` values and the closed block/completion unions.
-- [ ] Implement the exact `AsyncStream<CurriculumLoadEvent>` boundary from Section 6.1.
-- [ ] Model only learner-readable rubric/client scoring data; no protected evaluation-contract payload enters the app domain.
-- [ ] Keep Firebase, file-system, SwiftUI, and authoring-only rights workflow types out of the core domain where not needed.
+- [x] Write failing tests for stable/locale/version IDs, exact schema parity, synthetic fixture decoding, shared digest vectors, duplicate identities, catalog order, prerequisite DAG, asset/rubric references, public scoring contract, malformed blocks, digest mismatch, and compatibility rejection.
+- [x] Confirm RED before Swift implementation.
+- [x] Implement small `Codable`, `Equatable`, `Hashable`, `Sendable` values and the closed block/completion unions.
+- [x] Implement the exact `AsyncStream<CurriculumLoadEvent>` boundary from Section 6.1.
+- [x] Model only learner-readable rubric/client scoring data; no protected evaluation-contract payload enters the app domain.
+- [x] Keep Firebase, file-system, SwiftUI, and authoring-only rights workflow types out of the core domain where not needed.
 
 Run focused tests:
 

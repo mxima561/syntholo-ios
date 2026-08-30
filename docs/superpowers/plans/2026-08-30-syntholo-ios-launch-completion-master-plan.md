@@ -75,7 +75,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.2 — Lock the canonical quality baseline
 
-- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 106 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—337 total. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The final August 30 Task 4 invocation passed uninterrupted after the harness began pinning the exact functional-test simulator and rebooting it at accessibility group boundaries; the earlier Social hit-region anomaly and a later pre-test SpringBoard `Busy` launch denial are retained as disclosed tooling evidence, not presented as clean attempts.
+- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 118 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—349 total. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The final August 30 Task 5 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5; the recurring Xcode debugger-store diagnostic remained non-failing and no test was retried, skipped, or masked.
 - [x] Run the suite on the current iOS simulator.
 - [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
 - [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
@@ -136,11 +136,11 @@ These are product or operational inputs, not implementation details. Assign an o
 - [ ] Bind every non-emulator operation to an allowlisted environment project ID/number and keyless ADC impersonation of an approved least-privilege publisher service account; reject direct user ADC and service-account key JSON. A caller-supplied display name cannot authorize or impersonate an actor, while Cloud audit logs retain the underlying impersonator.
 - [x] Require and emulator-prove an operation ID and immutable audit trail containing derived principal, actual project/environment, timestamp, full catalog/program transition, applied/no-op outcome, request digest, and publication digest. Every accepted operation, including a no-op, is audited; exact retries replay their recorded result and collisions fail. Live derived-principal and Cloud Audit Log evidence remains part of staging certification.
 - [x] Atomically maintain and emulator-prove private version heads so every newly created immutable version exceeds that stable identity/locale's historical maximum, including after rollback. Publishing an existing non-live catalog/program selection is rejected with “use rollback”; locale-catalog rollback restores one already-valid immutable manifest and its pinned program selections without rewriting history or lowering heads.
-- [x] Add Firestore Rules and server tests proving learners cannot publish or alter protected content. Emulator evidence now proves authenticated exact-get, shallow top-level shape/type/simple bounds, publication marker, private-read denial, and write denial while preserving the profile contract; production-shaped staging proof remains open. Node proves nested unions, ordering/uniqueness, graph, and digest integrity before publication; Task 5 Swift must prove the learner-relevant subset before rendering or cache replacement.
+- [x] Add Firestore Rules and server tests proving learners cannot publish or alter protected content. Emulator evidence now proves authenticated exact-get, shallow top-level shape/type/simple bounds, publication marker, private-read denial, and write denial while preserving the profile contract; production-shaped staging proof remains open. Node proves nested unions, ordering/uniqueness, graph, and digest integrity before publication, and the completed Task 5 Swift domain independently proves the learner-relevant subset before rendering or cache replacement.
 
 #### Step 1.4 — Implement iOS curriculum sync
 
-- [ ] Add one `AsyncStream`-based repository contract that yields validated saved content immediately and then one terminal fresh/empty/update-required/unavailable result.
+- [x] Add one `AsyncStream`-based repository domain contract for validated saved content followed by fresh/empty/update-required/unavailable outcomes. Task 7 still owns the concrete exact-get adapter and deterministic event sequence.
 - [ ] Resolve a locale-addressed immutable catalog and every referenced program/content/asset version using authenticated exact gets; never fetch protected evaluation contracts in the client.
 - [ ] Cache the last valid compatible version and preserve it when sync fails.
 - [ ] Surface loading, empty, stale, incompatible-version, offline, and retry states.
@@ -506,7 +506,7 @@ Start with this exact package and do not add AI, StoreKit, or social to it:
 
 1. Approve the frozen Phase 2 curriculum-platform contract.
 2. Preserve the completed schema, digest-vector, validator/shape, and pinned secret-scanner checkpoint; its 73-test synthetic gate is the contract baseline.
-3. Preserve the completed emulator-only publisher/rollback and exact-read Rules checkpoints; implement the Swift domain and digest parity next, then build the cache, exact-get repository, store, and read-only preview UI.
+3. Preserve the completed emulator-only publisher/rollback, exact-read Rules, and Swift domain/digest-parity checkpoints; build the cache next, then the exact-get repository, store, and read-only preview UI.
 4. In parallel, close Phase 1 daily-goal/settings, live staging identity, minimum-iOS 17 CI, and physical accessibility evidence.
 5. Product records the deep launch specialization in the Product Bible; do not infer or recommend the answer in implementation work.
 6. Configure and allowlist the staging Firebase project ID/number and approved keyless impersonated publisher principal, then record the matching tracked decision gate.

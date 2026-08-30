@@ -24,7 +24,8 @@ The immediate product failure remains the same: the onboarding CTA promises a fi
 | Phase 2 Tasks 1–2 | **Complete** | Frozen curriculum contract, synthetic schema/fixture, canonical digests, validation, Firestore-shape conversion, and secret-scanner foundation; 73 content-contract tests pass. |
 | Phase 2 Task 3 | **Complete at emulator scope** | Publisher/rollback and operator identity are preserved at `ec8ac97`; independent security/contract reviews are clear and the uninterrupted 326-test gate passed. Live publication remains a later staging-gate task. |
 | Phase 2 Task 4 | **Complete at emulator scope** | Authenticated shallow exact gets, allowed missing-path semantics, list/write/private denial, fixed launch identifier bounds, and the preserved profile contract pass 31/31 Rules tests; no index was added. |
-| Phase 2 Tasks 5–13 | **Not complete** | Swift domain/cache/repository/store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
+| Phase 2 Task 5 | **Complete** | The pure Swift 6 curriculum domain, closed learner-readable models, strict JSON ingress, RFC 8785/SHA-256 parity, graph validation, typed load boundary, and test-only fixtures are committed at `f3a07ec`; the uninterrupted gate passes 349 tests. |
+| Phase 2 Tasks 6–13 | **Not complete** | Cache/repository/store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
 | Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
 | Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
 
@@ -89,6 +90,8 @@ These inputs can be worked on in parallel, but the associated implementation mus
 **Done when:** Authenticated exact reads work, missing allowed records return not-found, every unauthorized/private/write case fails, and no new broad index/query surface is added.
 
 ### Step 4 — Implement the Swift curriculum domain (Phase 2 Task 5)
+
+**Status:** Complete in implementation commit `f3a07ec`; see [`2026-08-30-phase-2-task-5-swift-domain-checkpoint.md`](2026-08-30-phase-2-task-5-swift-domain-checkpoint.md). Task 6 is next.
 
 - Add stable/locale/version identifiers and exact `Codable`, `Equatable`, `Hashable`, and `Sendable` curriculum models.
 - Implement the same canonical JSON/digest and validation semantics used by Node.
@@ -282,13 +285,13 @@ Stop before original content or staging writes unless all four items are complet
 
 ## 5. The next ten concrete actions
 
-1. Start Task 5 with failing Swift tests for IDs, exact model parity, shared digest vectors, malformed graphs, and compatibility rejection.
-2. Implement the strict-concurrency Swift domain, canonical JSON/digest validation, and exact `AsyncStream<CurriculumLoadEvent>` boundary.
+1. Implement Task 6: the environment/project/locale-namespaced app-owned cache with atomic replacement and deterministic quarantine.
+2. Implement Task 7: the authenticated exact-get Firestore repository with saved-first event ordering and complete graph validation.
 3. In parallel, configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
 4. Obtain the six-owner Phase 2 contract approval.
-5. Implement Task 6: the environment/project/locale-namespaced app-owned cache with atomic replacement and quarantine.
-6. Implement Task 7: the authenticated exact-get Firestore repository with saved-first event ordering and full-graph validation.
-7. Implement Tasks 8–11 in order: Learn UI → handoff → deterministic UI/a11y → analytics.
+5. Implement Task 8: the observable curriculum store and honest Learn catalog/program/module/read-only lesson states.
+6. Implement Task 9: the same-session first-preview handoff with exact version identity.
+7. Implement Tasks 10–11: deterministic UI/accessibility coverage, then privacy-safe analytics.
 8. Product records the specialization and environment owners provide the approved staging identity gate.
 9. Author and cross-functionally review the original Foundations fixture only after that gate.
 10. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification.
