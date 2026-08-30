@@ -23,7 +23,8 @@ The immediate product failure remains the same: the onboarding CTA promises a fi
 | Phase 1 — identity/onboarding | **Substantially complete** | Onboarding, age gate, goal, experience, path, coach, auth architecture, persistence recovery, and localization hardening exist. Daily goal/settings, live staging auth, iOS 17 CI proof, and physical VoiceOver proof remain. |
 | Phase 2 Tasks 1–2 | **Complete** | Frozen curriculum contract, synthetic schema/fixture, canonical digests, validation, Firestore-shape conversion, and secret-scanner foundation; 73 content-contract tests pass. |
 | Phase 2 Task 3 | **Complete at emulator scope** | Publisher/rollback and operator identity are preserved at `ec8ac97`; independent security/contract reviews are clear and the uninterrupted 326-test gate passed. Live publication remains a later staging-gate task. |
-| Phase 2 Tasks 4–13 | **Not complete** | Rules, Swift domain/cache/repository/store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
+| Phase 2 Task 4 | **Complete at emulator scope** | Authenticated shallow exact gets, allowed missing-path semantics, list/write/private denial, fixed launch identifier bounds, and the preserved profile contract pass 31/31 Rules tests; no index was added. |
+| Phase 2 Tasks 5–13 | **Not complete** | Swift domain/cache/repository/store/UI, preview navigation, UI/a11y tests, analytics, approved content, staging, and rollback certification remain. |
 | Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
 | Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
 
@@ -74,6 +75,8 @@ These inputs can be worked on in parallel, but the associated implementation mus
 **Done when:** A new and returning eligible learner can authenticate against staging, recover preferences, edit the daily goal/settings, and complete the critical flow on iOS 17 and current iOS without data loss or a critical accessibility defect.
 
 ### Step 3 — Add curriculum Firestore Rules (Phase 2 Task 4)
+
+**Status:** Complete at emulator scope in implementation commit `5e94dc0`; production-shaped staging Rules proof remains part of Step 13 certification.
 
 - Write failing Rules tests first.
 - Allow authenticated exact `get` only for shallow, valid, published learner-readable documents.
@@ -279,12 +282,12 @@ Stop before original content or staging writes unless all four items are complet
 
 ## 5. The next ten concrete actions
 
-1. Begin Task 4 with failing curriculum Rules tests.
-2. Implement and verify the authenticated exact-get/deny-all-write Rules contract while preserving profile protections.
+1. Start Task 5 with failing Swift tests for IDs, exact model parity, shared digest vectors, malformed graphs, and compatibility rejection.
+2. Implement the strict-concurrency Swift domain, canonical JSON/digest validation, and exact `AsyncStream<CurriculumLoadEvent>` boundary.
 3. In parallel, configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
 4. Obtain the six-owner Phase 2 contract approval.
-5. Implement Task 5: Swift domain and Node/Swift digest parity.
-6. Implement Tasks 6–7 in order: app-owned cache → exact-get Firestore repository.
+5. Implement Task 6: the environment/project/locale-namespaced app-owned cache with atomic replacement and quarantine.
+6. Implement Task 7: the authenticated exact-get Firestore repository with saved-first event ordering and full-graph validation.
 7. Implement Tasks 8–11 in order: Learn UI → handoff → deterministic UI/a11y → analytics.
 8. Product records the specialization and environment owners provide the approved staging identity gate.
 9. Author and cross-functionally review the original Foundations fixture only after that gate.

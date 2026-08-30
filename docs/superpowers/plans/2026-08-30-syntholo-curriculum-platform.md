@@ -552,15 +552,15 @@ Expected: all lifecycle, authorization-gate, collision, replay, and atomicity te
 - Modify: `scripts/test_firebase_rules.sh`
 - Review: `firestore.indexes.json`
 
-- [ ] Add failing Rules tests first.
-- [ ] Prove unauthenticated exact gets fail for configuration, catalog/program pointers, and every learner-readable immutable collection.
-- [ ] Seed valid published shapes with security disabled and prove authenticated exact gets succeed only through `get`, never `list`; prove an authenticated exact get of an allowed but absent path returns not-found rather than permission-denied.
-- [ ] Prove draft/non-published, wrong document ID, unknown/missing top-level key, wrong top-level type, unsupported schema, simple scalar/list over-bound, evaluation-contract, audit, and authoring-namespace reads fail.
-- [ ] Prove every authenticated create/update/delete fails for configuration, pointers, versions, assets, rubrics, private version heads/evaluation contracts, and audit.
-- [ ] Keep the final catch-all deny and all existing profile protections.
-- [ ] Do not add a broad curriculum list query. Implement exactly Section 4.9: Rules establish auth, the allowlisted top-level shape/types/simple bounds, publication marker, and denial; Node/Swift—not Rules—establish nested unions, uniqueness/order, cross-document graph, canonicalization, and SHA-256 integrity.
-- [ ] Add no index unless a later test-backed query contract requires it.
-- [ ] Update the exact Rules count to the observed complete total.
+- [x] Add failing Rules tests first. The initial RED run against the prior catch-all policy passed 28 of 31 tests and failed the three intended positive-read cases.
+- [x] Prove unauthenticated exact gets fail for configuration, catalog/program pointers, and every learner-readable immutable collection.
+- [x] Seed valid published shapes with security disabled and prove authenticated exact gets succeed only through `get`, never `list`; prove an authenticated exact get of an allowed but absent path returns not-found rather than permission-denied.
+- [x] Prove draft/non-published, wrong document ID, unknown/missing top-level key, wrong top-level type, unsupported schema, simple scalar/list over-bound, evaluation-contract, audit, and authoring-namespace reads fail.
+- [x] Prove every authenticated create/update/delete fails for configuration, pointers, versions, assets, rubrics, private version heads/evaluation contracts, and audit.
+- [x] Keep the final catch-all deny and all existing profile protections.
+- [x] Do not add a broad curriculum list query. Implement exactly Section 4.9: Rules establish auth, the allowlisted top-level shape/types/simple bounds, publication marker, and denial; Node/Swift—not Rules—establish nested unions, uniqueness/order, cross-document graph, canonicalization, and SHA-256 integrity.
+- [x] Add no index unless a later test-backed query contract requires it. `firestore.indexes.json` remains unchanged and empty.
+- [x] Update the exact Rules count to the observed complete total: 31 total, comprising 20 preserved profile tests and 11 curriculum tests.
 
 Run:
 
