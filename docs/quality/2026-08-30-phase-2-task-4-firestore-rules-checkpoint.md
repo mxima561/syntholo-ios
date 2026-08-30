@@ -8,7 +8,7 @@
 
 **Implementation commit:** `5e94dc0` (`feat(content): protect exact curriculum reads`)
 
-**Documentation provenance:** introduced by the Task 4 documentation commit recorded in the follow-up provenance update
+**Documentation provenance:** introduced in `2e0b735` (`docs: record Task 4 rules checkpoint`); this field is finalized by the immediately following provenance commit
 
 ## Result
 
