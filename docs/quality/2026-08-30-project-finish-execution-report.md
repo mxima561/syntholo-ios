@@ -13,7 +13,7 @@
 
 Finish Syntholo 1.0 as a trustworthy, accessible native iPhone school for learners aged 13 and older. A launch build is not complete until a learner can onboard, authenticate, start and finish a real lesson, receive explainable feedback, recover work after interruption, see accurate progress and limits, purchase or restore Pro, use the bounded social system safely, manage or delete their data, and install a signed App Store build backed by approved content and operating procedures.
 
-The immediate product gap is now narrower: observable Learn state, sanitized read-only curriculum screens, production root composition, and an exact same-session preview handoff are implemented. The preview still is not a real lesson start. The critical path therefore continues with Task 10 deterministic UI/no-Firestore and rendered accessibility proof, curriculum analytics and approved publication, then the real lesson engine, and only then AI, engagement, subscriptions, and social.
+The immediate product gap is now narrower: observable Learn state, sanitized read-only curriculum screens, production root composition, an exact same-session preview handoff, deterministic curriculum-state UI/no-Firestore proof, and fresh catalog/preview automated accessibility evidence are implemented. The preview still is not a real lesson start. The critical path therefore continues with Task 11 privacy-safe curriculum analytics and approved publication, then the real lesson engine, and only then AI, engagement, subscriptions, and social.
 
 ## 2. Current standing
 
@@ -26,10 +26,11 @@ The immediate product gap is now narrower: observable Learn state, sanitized rea
 | Phase 2 Task 4 | **Complete at emulator scope** | Authenticated shallow exact gets, allowed missing-path semantics, list/write/private denial, fixed launch identifier bounds, and the preserved profile contract pass 31/31 Rules tests; no index was added. |
 | Phase 2 Task 5 | **Complete** | The pure Swift 6 curriculum domain, closed learner-readable models, strict JSON ingress, RFC 8785/SHA-256 parity, graph validation, typed load boundary, and test-only fixtures are committed at `f3a07ec`; the uninterrupted gate passes 349 tests. |
 | Phase 2 Task 6 | **Complete** | The actor-backed environment/project/locale-isolated cache, exact bounded envelope, full graph/digest revalidation, atomic replacement, and deterministic fail-closed quarantine behavior are committed at `ba54963`; 25 focused cache tests pass and the uninterrupted gate passes 374 tests. |
-| Phase 2 Task 7 | **Repository engineering complete** | The authenticated server-source exact-get adapter, runtime/Firestore source provenance, deterministic saved/fresh/terminal events, complete immutable-graph validation, strict Firebase normalization, and cancellation-safe cache replacement are committed at `83f6e1a`; 30 repository tests pass and the uninterrupted gate passes 407 tests. Task 9 later added the minimal DEBUG happy-path/loading repository; Task 10 owns its full state-matrix expansion and formal no-Firestore proof. |
+| Phase 2 Task 7 | **Repository engineering complete** | The authenticated server-source exact-get adapter, runtime/Firestore source provenance, deterministic saved/fresh/terminal events, complete immutable-graph validation, strict Firebase normalization, and cancellation-safe cache replacement are committed at `83f6e1a`; 30 repository tests pass and the uninterrupted gate passes 407 tests. Task 9 later added the minimal DEBUG happy-path/loading repository, and Task 10 completed its full state-matrix expansion and formal no-Firestore proof. |
 | Phase 2 Task 8 | **Feature slice complete** | Implementation commit `0d8ab1f` adds the main-actor observable store, finite learner-safe states, exact typed Learn routes, ordered/fail-closed presentations, and sanitized read-only catalog/program/module/lesson UI; 19 store + 7 presentation tests, 202/202 complete Swift unit tests, and one uninterrupted 433/433 canonical invocation passed at that checkpoint. |
 | Phase 2 Task 9 | **Engineering complete** | Commit `085fbfa` connects root composition, exact typed preview navigation, route-before-sign-in ordering, retry/fallback behavior, returning-learner Learn home, and same-session preview presentation; 16/16 focused, 216/216 unit, and 447/447 canonical tests pass. |
-| Phase 2 Tasks 10–13 | **Not complete** | Complete deterministic UI/no-Firestore proof, curriculum-state and preview accessibility, analytics, approved original content, staging publication, and rollback certification remain. |
+| Phase 2 Task 10 | **Engineering complete** | Commit `b9083a7` adds the complete deterministic DEBUG state matrix, exact-`--ui-testing` no-Firebase/no-Firestore composition proof, exact preview-content and Back/tab-restoration journeys, and 14 isolated fresh catalog/preview accessibility methods; 8/8 focused fixture/composition, 224/224 unit, and 479/479 canonical tests pass. |
+| Phase 2 Tasks 11–13 | **Not complete** | Privacy-safe curriculum analytics, approved original content, staging publication/read/cache/roll-forward/rollback, physical/minimum-OS accessibility certification, and Phase 2 verification remain. |
 | Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
 | Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
 
@@ -108,7 +109,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 5 — Build the app-owned curriculum cache (Phase 2 Task 6)
 
-**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Tasks 7–9 have since completed their engineering slices; Task 10 is next.
+**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Tasks 7–10 have since completed their engineering slices; Task 11 is next.
 
 - Implement an actor-backed cache with atomic replacement.
 - Namespace by environment, project, and locale.
@@ -120,7 +121,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 6 — Build the exact-get Firestore repository (Phase 2 Task 7)
 
-**Status:** Repository engineering complete in implementation commit `83f6e1a`; see [`2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`](2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md). Task 9 now supplies the minimal DEBUG memory seam and root composition. The complete deterministic fixture matrix and formal no-Firestore XCUITest proof remain assigned to Step 9 (Task 10).
+**Status:** Repository engineering complete in implementation commit `83f6e1a`; see [`2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`](2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md). Task 9 later supplied the minimal DEBUG memory seam and root composition; Task 10 has since completed the deterministic fixture matrix and formal no-Firestore XCUITest composition proof.
 
 - Resolve configuration, locale catalog, pinned program versions, modules, lessons, rubrics, and assets through authenticated exact gets.
 - Never resolve a snapshot through mutable program pointers, list queries, audit documents, or protected evaluation contracts.
@@ -146,7 +147,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 8 — Connect the same-session first-preview handoff (Phase 2 Task 9)
 
-**Status:** Engineering complete in implementation commit `085fbfa`; see [`2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`](2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md). The focused router/handoff suite passes 16/16, the complete Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447. This proves an exact read-only preview handoff only; rendered catalog/preview accessibility remains Task 10 work, and `SHIP-FIRST-LESSON` remains Phase 3 work.
+**Status:** Engineering complete in implementation commit `085fbfa`; see [`2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`](2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md). The focused router/handoff suite passes 16/16, the complete Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447. This proves an exact read-only preview handoff only; Task 10 has since supplied rendered fresh catalog/preview automated accessibility evidence, while `SHIP-FIRST-LESSON` remains Phase 3 work.
 
 - Add a typed route retaining locale, catalog, program, module, lesson, and rubric versions.
 - Build curriculum dependencies once in root composition; do not inject Firestore into onboarding.
@@ -160,12 +161,16 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 9 — Add deterministic UI fixtures and end-to-end coverage (Phase 2 Task 10)
 
-- Add debug-only in-memory fixtures for fresh, saved, saved → fresh, offline/no cache, incompatible with/without fallback, empty, malformed, and fail-once/retry.
-- Guarantee `--ui-testing` never contacts Firestore.
-- Test onboarding → exact preview and catalog → program → module → preview.
-- Test that no catalog/paywall/notification/social interruption precedes the onboarding preview.
-- Add accessibility audits for every curriculum state and preview.
-- Discover and record exact unit, functional UI, and accessibility totals only after the final green run.
+**Status:** Engineering complete in implementation commit `b9083a7`; see [`2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md`](2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md). The focused fixture/composition suite passes 8/8, Apple/Google/email exact-preview journeys pass 3/3, fresh Back/tab restoration passes 1/1, the final contrast/clipped-text rechecks pass 2/2, and the final accessibility5 recheck passes 1/1. One uninterrupted canonical invocation passes 479/479 with zero failure, skip, or cancellation.
+
+- Add DEBUG-only in-memory fixtures for fresh, saved, saved → fresh, offline/no cache, incompatible with/without fallback, empty, a typed malformed terminal event, fail-once/retry, and retained loading.
+- Make exact `--ui-testing` select memory dependencies before Firebase configuration/bootstrap/live construction; keep a defensive pre-SDK bootstrap guard.
+- Test Apple/Google/email onboarding → exact title/objective and catalog → program → module → preview → Back/tab restoration.
+- Preserve the Task 9 proof that no catalog/paywall/notification/social interruption precedes the onboarding preview.
+- Add 14 isolated accessibility methods for the fresh synthetic catalog/preview: six raw XCTest categories plus an accessibility5 measured-growth/clipped-text method per screen. Raw `.dynamicType`, other fixture states, and physical assistive-technology claims remain excluded.
+- Record 224 unit, 28 functional UI, and 14 curriculum accessibility only after the final green run; the full canonical total is 479.
+
+The preview is now an immersive nested destination with fixed localized **Read-only lesson preview** chrome and a 48-point Back control. Tabs hide within preview and restore on Back, superseding only Task 9's historical post-preview visible-tab assertion. iOS 26 edge-effect suppression is availability-gated with an iOS 17 fallback. The malformed fixture injects a typed terminal event rather than malformed decoder bytes.
 
 **Done when:** The curriculum UI is deterministic, has no live test dependency, and the canonical gate reports zero failure, skip, or cancellation.
 
@@ -297,16 +302,16 @@ Stop before original content or staging writes unless all four items are complet
 
 ## 5. The next ten concrete actions
 
-1. Implement Task 10: expand deterministic memory repository fixtures, prove the `--ui-testing` no-Firestore guarantee, cover full UI journeys, and audit the rendered curriculum catalog and preview.
-2. Implement Task 11: add privacy-safe curriculum route analytics.
-3. Configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
-4. Complete the remaining Phase 1 daily-goal/settings, live-provider device, and physical VoiceOver evidence.
-5. Obtain the six-owner Phase 2 contract approval.
-6. Product records the specialization and environment owners provide the approved staging identity gate without engineering selecting or inferring it.
-7. Author and cross-functionally review the original Foundations fixture only after that gate.
-8. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification.
-9. Preserve Task 8's exact state/sanitization contracts and Task 9's exact route/order contracts while Task 10 expands the minimal DEBUG happy-path/loading fixtures into the full deterministic state and accessibility matrix.
-10. Keep `SHIP-FIRST-LESSON` explicitly open until Phase 3 adds real start, interaction, feedback, completion, and progress behavior.
+1. Implement Task 11: add privacy-safe curriculum route analytics.
+2. Configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
+3. Complete the remaining Phase 1 daily-goal/settings, live-provider device, and physical VoiceOver evidence.
+4. Obtain the six-owner Phase 2 contract approval.
+5. Product records the specialization and environment owners provide the approved staging identity gate without engineering selecting or inferring it.
+6. Author and cross-functionally review the original Foundations fixture only after that gate.
+7. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification.
+8. Preserve Task 8's exact state/sanitization, Task 9's exact route/order, and Task 10's deterministic composition/UI/accessibility boundaries while building analytics and staging evidence.
+9. Keep `SHIP-FIRST-LESSON` explicitly open until Phase 3 adds real start, interaction, feedback, completion, and progress behavior.
+10. Keep Phase 2 exit open until specialization, owner approval, analytics, original content, staging, minimum-OS, and named physical accessibility evidence all pass.
 
 Do not start Phase 3 implementation until the immutable Phase 2 content identity and staging path are proven. Do not start Phase 4 AI scoring until Phase 3 attempt/rubric/version semantics are proven.
 

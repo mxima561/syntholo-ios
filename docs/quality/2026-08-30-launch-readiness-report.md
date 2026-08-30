@@ -14,7 +14,7 @@ This goal is intentionally narrower than the Book II north star. Launch does **n
 
 Syntholo has a high-quality, freshly verified Phase 0 foundation and a substantially complete Phase 1 identity/onboarding slice. The current app is **not an internal alpha yet** because the learning product begins after the point where implementation stops.
 
-The repository is healthy enough to build on: every completed enforced suite has current passing evidence, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. Tasks 8–9 now supply observable Learn state, sanitized read-only curriculum screens, root dependency composition, and an exact same-session preview handoff. Task 10 deterministic curriculum UI/no-Firestore and catalog/preview accessibility evidence is next. This is still a preview seam, not the real first-lesson loop.
+The repository is healthy enough to build on: every completed enforced suite has current passing evidence, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. Tasks 8–10 now supply observable Learn state, sanitized read-only curriculum screens, root dependency composition, an exact same-session preview handoff, deterministic curriculum-state UI coverage without live test dependencies, and automated accessibility evidence for the fresh synthetic catalog/preview. Task 11 privacy-safe curriculum analytics is next. This is still a preview seam, not the real first-lesson loop.
 
 No Product Bible milestone is currently satisfied:
 
@@ -203,13 +203,13 @@ At the Task 8 checkpoint, the focused evidence was:
 | **Focused aggregate** | **26 passed** |
 | Complete Swift unit target at Task 8 | 202 passed, 0 failed, 0 skipped |
 
-The app build and isolated Swift 6/iOS 17 deployment-target typecheck pass. The iOS 17 simulator runtime is not installed locally, so this is not minimum-runtime execution evidence. At the Task 8 checkpoint, the seven existing Learn AppShell audits exercised the temporary honest composition-pending root fallback. Task 9 later moved those shell audits to an explicit deterministic loading state; Task 10 still owns accessibility journeys for the rendered curriculum catalog and lesson preview.
+The app build and isolated Swift 6/iOS 17 deployment-target typecheck pass. The iOS 17 simulator runtime is not installed locally, so this is not minimum-runtime execution evidence. At the Task 8 checkpoint, the seven existing Learn AppShell audits exercised the temporary honest composition-pending root fallback. Task 9 later moved those shell audits to an explicit deterministic loading state; Task 10 has since added separate fresh catalog and lesson-preview accessibility journeys.
 
 A standalone Release simulator build also succeeds with deployment target iOS 17.0, production environment configuration, bundle identifier `com.syntholo.ios`, and a universal simulator executable. Direct bundle and extracted-strings/normalized-plist scans are clean, and the app contains no synthetic fixture, test artifact, or private curriculum-path marker. Gitleaks 8.30.1 also reports no leak across the complete Git history or the first-party worktree, including the Task 8 implementation and documentation commits. This remains unsigned simulator evidence rather than App Store archive or minimum-runtime execution proof.
 
 One uninterrupted canonical invocation passed 433/433: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 202 Swift unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules. No failure, skip, cancellation, or retry was masked. See `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`.
 
-Task 8 did **not** complete Phase 2 or any Product Bible release gate. Task 9 has since supplied production root composition, `AppRouter` Learn-path ownership, and onboarding's exact same-session preview. The complete deterministic UI/no-Firestore proof, curriculum-state UI/accessibility journeys, analytics, approved original content, staging publication/device proof, minimum-iOS CI, physical accessibility, and named approvals remain open. No specialization was selected or inferred, no original learner content was authored, and no staging or production Firebase write occurred.
+Task 8 did **not** complete Phase 2 or any Product Bible release gate. Task 9 later supplied production root composition, `AppRouter` Learn-path ownership, and onboarding's exact same-session preview; Task 10 has since supplied the deterministic UI/no-Firestore proof and fresh catalog/preview automated accessibility journeys. Analytics, approved original content, staging publication/device proof, minimum-iOS CI, physical accessibility, and named approvals remain open. No specialization was selected or inferred, no original learner content was authored, and no staging or production Firebase write occurred.
 
 ## Phase 2 first-lesson preview handoff checkpoint
 
@@ -217,9 +217,38 @@ Phase 2 Task 9 is engineering-complete in implementation commit `085fbfa`; see `
 
 The focused router/handoff suites pass 16/16, the complete Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 216 Swift unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests. The focused coordinator tests prove exact route identity and route-before-session-completion ordering. Apple, Google, and email fixture UI journeys prove same-process preview presentation without catalog, paywall, notification, or Social interruption.
 
-This evidence has a precise accessibility boundary. The seven current Learn AppShell audits use the deterministic loading fixture, and the 11 onboarding audits stop at the handoff CTA. They do not audit the rendered curriculum catalog or lesson preview. Task 10 owns those audits, the complete fresh/saved/error/incompatible fixture matrix, exact preview-content assertions, and formal proof that every `--ui-testing` mode avoids live Firestore.
+This historical evidence has a precise accessibility boundary. The seven Task 9 Learn AppShell audits use the deterministic loading fixture, and the 11 onboarding audits stop at the handoff CTA. They do not audit the rendered curriculum catalog or lesson preview. Task 10 has since supplied those fresh-state audits, the complete deterministic fixture matrix, exact preview-content assertions, and formal exact-`--ui-testing` no-Firebase/no-Firestore composition proof.
 
 Task 9 does not start a lesson or implement attempts, answers, scoring, feedback, completion, progress, original curriculum, or staging publication. `SHIP-FIRST-LESSON`, Phase 2 exit, internal alpha, and every Product Bible release gate remain incomplete.
+
+## Phase 2 deterministic curriculum UI and accessibility checkpoint
+
+Phase 2 Task 10 is complete in implementation commit `b9083a7`; see `docs/quality/2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md`. DEBUG-only in-memory repositories now model fresh, saved-terminal, saved-to-fresh, offline/no-cache, incompatible with/without compatible fallback, empty, a typed malformed terminal event, fail-once/retry, and retained loading. Ten functional curriculum journeys cover the learner-visible states and exact catalog → program → module → preview route; Apple, Google, and email journeys each assert the exact synthetic title and objective after handoff.
+
+The exact `--ui-testing` branch returns test dependencies before Firebase runtime configuration, bootstrap, or live dependency construction. Closure-count unit tests establish that control-flow invariant for every fixture, and a defensive bootstrap guard returns before Firebase SDK configuration or Firestore access. This is formal app-composition proof, not packet-capture evidence or proof that Firebase frameworks are absent from the Debug binary.
+
+Task 10 deliberately supersedes Task 9's post-preview chrome behavior. The lesson preview is now an immersive nested destination with localized **Read-only lesson preview** chrome and a 48-point Back button; tabs are hidden inside preview and restore when Back returns to the module. Exact route identity and route-before-session-completion ordering are unchanged. The preview uses availability-gated iOS 26 `scrollEdgeEffectHidden` with an iOS 17 fallback, so Task 10 does not claim that no iOS 26 visual API was introduced.
+
+One uninterrupted canonical invocation passed:
+
+| Gate | Task 10 result |
+| --- | ---: |
+| Curriculum content contract | 73 passed, 0 failed, 0 cancelled, 0 skipped |
+| Operator identity | 32 passed, 0 failed, 0 cancelled, 0 skipped |
+| Publication/rollback lifecycle | 38 passed, 0 failed, 0 cancelled, 0 skipped |
+| Swift unit tests | 224 passed, 0 failed, 0 skipped |
+| Functional UI journeys | 28 passed, 0 failed, 0 skipped |
+| AppShell accessibility audits | 28 passed, 0 failed, 0 skipped |
+| Curriculum accessibility methods | 14 passed, 0 failed, 0 skipped |
+| Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
+| Firestore Rules | 31 passed, 0 failed, 0 cancelled, 0 skipped |
+| **Aggregate** | **479 passed** |
+
+The 14 isolated curriculum methods cover the fresh synthetic catalog and its exact preview only. Each screen has contrast, element-detection, hit-region, sufficient-description, clipped-text, and trait coverage plus a separate accessibility5 measured-growth/clipped-text method. Fitting preview cards are audited fully visible; oversized cards are audited at both top and bottom. Raw XCTest `.dynamicType` is excluded. These tests do not prove physical VoiceOver, Reduce Motion, Switch Control, physical-device behavior, every fixture state, or `SHIP-A11Y`.
+
+The focused fixture/composition suite passed 8/8; the three provider exact-preview journeys passed 3/3; fresh Back/tab restoration passed 1/1; the final contrast/clipped-text rechecks passed 2/2; and the final accessibility5 recheck passed 1/1. Gitleaks 8.30.1 was clean across the 28-commit post-implementation history and then-current worktree. The Release environment/bundle gate also passed and found no UI-test fixture markers or DEBUG test symbols in the unsigned Release `iphoneos` app.
+
+The malformed fixture injects the typed malformed terminal event and verifies learner-safe collapse; it does not test malformed decoder bytes. No original curriculum, specialization choice, staging/production operation, analytics, real lesson execution, physical accessibility, Phase 2 exit, launch approval, `SHIP-FIRST-LESSON`, or Product Bible release gate is claimed.
 
 ## Initial audit verification evidence (historical)
 
@@ -243,7 +272,7 @@ After adding the pinned Phase 2 validator/Admin development dependencies, `npm a
 | --- | --- | --- | --- |
 | 0 — Foundation | Verified | Swift 6, iOS 17, iPhone-only, XcodeGen, environments, design system, four tabs, CI/test gate | Physical-device checks still matter at release, but Phase 0 engineering is sound |
 | 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence, typed local-persistence recovery, and localization hardening | Live provider smoke tests, development/staging Firebase configuration, minimum-iOS CI evidence, physical VoiceOver evidence, daily-goal/settings completion |
-| 2 — Curriculum platform | In progress | Frozen contract through exact-get repository plus Task 8 Learn UI and Task 9 exact same-session preview handoff; Task 9 passes 16/16 focused, 216/216 unit, and 447/447 canonical tests | Owner approval; Task 10 deterministic UI/no-Firestore and rendered catalog/preview accessibility proof; analytics and staging proof; chosen specialization before original content authoring or staging load |
+| 2 — Curriculum platform | In progress | Frozen contract through exact-get repository plus Task 8 Learn UI, Task 9 exact same-session preview handoff, and Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility proof; Task 10 passes 8/8 focused fixture/composition tests, 224/224 unit, and 479/479 canonical tests | Owner approval; Task 11 analytics; original reviewed content and staging proof; full physical/minimum-OS accessibility certification; chosen specialization before original content authoring or staging load |
 | 3 — Learning engine | Missing | An exact immutable read-only first-lesson preview opens; no lesson-start or attempt mutation exists | Player, required formats, deterministic scoring, attempts, start limits, durable queue, cache/offline recovery, progress semantics |
 | 4 — AI coach | Missing | Coach-mode preference only | Moderation, immutable rubric load, structured scoring, server validation, separate tone rendering, feedback/revision/follow-up, fail-soft recovery |
 | 5 — Engagement | Missing | Root-composed read-only Learn catalog and preview UI exist; Practice and all engagement behavior remain placeholders | Today mission, next action, XP, streak, daily challenge, objective review, persistence/reconciliation |
@@ -324,7 +353,7 @@ At that checkpoint, the CTA promised “Start the first lesson,” but no lesson
 
 At the August 29 checkpoint, the action landed on a placeholder campus screen saying the lesson and progress “will appear here.” That was direct evidence that the preview handoff was broken.
 
-Commit `085fbfa` resolves this defect at preview scope. The neutral action is now **Preview the first lesson**, and it resolves and opens the exact immutable read-only preview in the same session. `SHIP-FIRST-LESSON` remains incomplete because no real lesson start, interaction, feedback, completion, or progress loop exists.
+Commit `085fbfa` resolves this defect at preview scope. The neutral action is now **Preview the first lesson**, and it resolves and opens the exact immutable read-only preview in the same session. Task 10 commit `b9083a7` retains that route/order invariant while making the preview an immersive nested destination: its localized header and 48-point Back control replace visible tab/navigation chrome until Back restores the module and tab shell. `SHIP-FIRST-LESSON` remains incomplete because no real lesson start, interaction, feedback, completion, or progress loop exists.
 
 The tab shell itself is visually clean and readable, but Practice, Social, and Profile are also placeholders in source.
 
@@ -346,7 +375,7 @@ The tab shell itself is visually clean and readable, but Practice, Social, and P
 2. **Resolved — fixed enum copy uses compile-time localization resources.** Fixed user-facing enum content is modeled as `LocalizedStringResource` and passed directly to SwiftUI.
 3. **Resolved — localized uppercase copy is authored in the catalog.** Runtime `.textCase(.uppercase)` is no longer used for those headings.
 4. **Keep state ownership private where possible.** Current local `@State` properties are private, which is good. Continue that rule in new lesson/player views.
-5. **Do not adopt iOS 26-only visual APIs for launch.** The minimum remains iOS 17. Any future iOS 26 polish must be availability-gated with an iOS 17 fallback and must not fork the product's core interaction model.
+5. **Keep newer visual polish bounded by the iOS 17 contract.** Task 10 uses iOS 26 `scrollEdgeEffectHidden` only behind an availability check and supplies an iOS 17 fallback. Any further newer-OS polish must remain similarly gated and must not fork the product's core interaction model.
 6. **Do not over-centralize the future player in one observable object.** Separate narrow observable state for content, current activity, attempt/sync status, and entitlement/allowance so unrelated network or queue changes do not invalidate the whole lesson tree.
 
 ## Launch definition of done
@@ -430,7 +459,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 
 ## Immediate next implementation slice
 
-Continue the approved synthetic Phase 2 sequence. The emulator-only publisher/rollback, exact-read Rules, Swift curriculum-domain/digest-parity, app-owned cache, exact-get Firestore repository, Task 8 observable-store/read-only-UI, and Task 9 root-composition/exact-preview checkpoints are implemented. The next engineering checkpoint is Task 10: expand deterministic DEBUG curriculum fixtures, prove every `--ui-testing` mode avoids live Firestore, cover the full catalog-to-preview journeys, and audit the rendered catalog and preview. The first staging vertical checkpoint remains:
+Continue the approved synthetic Phase 2 sequence. The emulator-only publisher/rollback, exact-read Rules, Swift curriculum-domain/digest-parity, app-owned cache, exact-get Firestore repository, Task 8 observable-store/read-only-UI, Task 9 root-composition/exact-preview, and Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility checkpoints are implemented. The next engineering checkpoint is Task 11 privacy-safe curriculum route analytics. The first staging vertical checkpoint remains:
 
 > A privately published, immutable Foundations fixture containing a program, module, lesson version, objective, expected duration, completion rule, still-diagram/concept content, one deterministic question, and rubric/version references syncs into the app and renders read-only from the existing first-lesson handoff.
 
@@ -439,6 +468,6 @@ Do not add AI, StoreKit, leagues, or a broader redesign to that checkpoint. Prov
 ## Evidence limits
 
 - Simulator captures verify visible layout and navigation behavior for the audited fixture, not live provider/network behavior.
-- Automated audits cover the AppShell loading state and onboarding handoff, not the rendered curriculum catalog or lesson preview; Task 10 owns those audits. Screenshots and XCTest also do not prove spoken VoiceOver focus/announcements on physical hardware.
+- Automated audits now cover the AppShell loading state, onboarding handoff, and the fresh synthetic catalog/preview. Task 10's curriculum boundary is 14 isolated methods: six raw categories plus one accessibility5 measured-growth/clipped-text lane per screen. It excludes raw `.dynamicType`, the other deterministic fixture states, spoken VoiceOver focus/announcements, Reduce Motion, Switch Control, and physical hardware.
 - Only iOS 26.5 ran locally. The configured iOS 17.5 CI job remains required for minimum-OS evidence.
 - Local Git provenance now begins at preserved baseline commit `b0ce17d` on `main`. No remote is configured, so upstream history, branch protection, and remote CI provenance still cannot be verified.

@@ -4,7 +4,7 @@
 
 **Created:** August 30, 2026
 
-**Status:** Engineering implemented and canonically verified through Task 9; the deterministic curriculum UI state matrix/no-Firestore proof, analytics, original content, and staging work remain open, and the Product Bible specialization decision still blocks every original-content or staging-write step
+**Status:** Engineering implemented and canonically verified through Task 10; privacy-safe analytics, original content, and staging work remain open, and the Product Bible specialization decision still blocks every original-content or staging-write step
 
 **Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
 
@@ -82,7 +82,7 @@ The existing `../syntholo-main/apps/admin` content editor is not a Phase 2 backe
 - Main-actor view state uses `@Observable`; a view that owns such state uses `@State private`.
 - `project.yml` recursively includes `Syntholo`, `SyntholoTests`, and `SyntholoUITests`; it is authoritative and `Syntholo.xcodeproj` remains generated and ignored.
 - Production composition occurs in `Syntholo/App/RootView.swift`; UI test launch arguments replace live services with deterministic fixtures.
-- The canonical gate is `./scripts/test.sh`, currently split into unit, functional UI, shell accessibility, onboarding accessibility, and Firestore Rules groups.
+- The canonical gate is `./scripts/test.sh`, currently split into content, operator identity, publication/rollback, unit, functional UI, AppShell accessibility, curriculum accessibility, onboarding accessibility, and Firestore Rules groups.
 - Exact test totals are asserted in `scripts/test.sh` and `scripts/test_firebase_rules.sh`; every new test must update the corresponding expected count to the observed complete total.
 - CI must stay green on the current simulator and the iOS 17.5 job in `.github/workflows/ios.yml`.
 
@@ -622,7 +622,7 @@ Run the focused `CurriculumCacheTests` with the same Xcode settings as Task 5.
 
 Expected: the last valid graph survives every expected local failure and cache namespaces never cross.
 
-Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Tasks 7–9 have since completed their engineering slices; Task 10 is next.
+Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Tasks 7–10 have since completed their engineering slices; Task 11 is next.
 
 ### Task 7 — Implement the exact-get Firestore adapter test-first
 
@@ -639,13 +639,13 @@ Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/qua
 - [x] Force server-source refresh and never issue a curriculum collection list query.
 - [x] Never request `evaluationContractVersions` or audit documents from the client.
 - [x] Validate the complete snapshot before cache replacement and keep profile behavior unchanged.
-- [x] Inject the current UI tests with a DEBUG-only memory repository so Task 9 XCUITest has no emulator-port dependency. Task 10 still owns the complete fixture matrix and an explicit proof that every `--ui-testing` mode avoids live Firestore.
+- [x] Inject the current UI tests with a DEBUG-only memory repository so Task 9 XCUITest has no emulator-port dependency. Task 10 has since completed the full fixture matrix and formal exact-`--ui-testing` no-Firebase/no-Firestore composition proof.
 
 Run focused `CurriculumRepositoryContractTests`.
 
 Expected: the adapter yields only complete compatible exact-version catalog snapshots and preserves a valid fallback.
 
-Checkpoint: the Task 7 exact-get repository engineering slice is complete in implementation commit `83f6e1a`; see `docs/quality/2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`. The focused repository suite passes 30/30, the combined repository/cache/runtime slice passes 69/69, and its uninterrupted canonical gate passed 407 tests. Task 9 now provides the minimal DEBUG memory seam required for its exact-preview journey; Task 10 must expand the state matrix and add the formal no-Firestore proof.
+Checkpoint: the Task 7 exact-get repository engineering slice is complete in implementation commit `83f6e1a`; see `docs/quality/2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`. The focused repository suite passes 30/30, the combined repository/cache/runtime slice passes 69/69, and its uninterrupted canonical gate passed 407 tests. Task 9 supplied the minimal DEBUG memory seam required for its exact-preview journey; Task 10 has since expanded it into the complete state matrix and formal no-Firestore proof.
 
 ### Task 8 — Build Learn state and read-only screens test-first
 
@@ -673,7 +673,7 @@ Run focused `CurriculumStoreTests` and an app build targeting iOS 17. Execute th
 
 Expected: every Section 6 state renders from the exact event contract without newer-only APIs.
 
-Checkpoint: the Task 8 store/read-only UI slice is complete in implementation commit `0d8ab1f`; see `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`. Nineteen store tests and seven presentation tests pass (26/26 focused), the Swift unit target passed 202/202, and its uninterrupted canonical invocation passed 433/433. Task 9 has since supplied root composition, router path ownership, and the same-session preview handoff. The full deterministic curriculum-state UI matrix, formal no-Firestore proof, and catalog/preview accessibility journeys remain Task 10.
+Checkpoint: the Task 8 store/read-only UI slice is complete in implementation commit `0d8ab1f`; see `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`. Nineteen store tests and seven presentation tests pass (26/26 focused), the Swift unit target passed 202/202, and its uninterrupted canonical invocation passed 433/433. Task 9 later supplied root composition, router path ownership, and the same-session preview handoff; Task 10 has since completed the deterministic curriculum-state UI matrix, formal no-Firestore composition proof, and fresh catalog/preview automated accessibility journeys.
 
 ### Task 9 — Connect typed preview navigation and same-session handoff
 
@@ -696,7 +696,7 @@ Checkpoint: the Task 8 store/read-only UI slice is complete in implementation co
 
 Expected: the preview opens directly without catalog/paywall/notification/social interruption, while evidence explicitly leaves `SHIP-FIRST-LESSON` incomplete until Phase 3.
 
-Checkpoint: Task 9 is complete in implementation commit `085fbfa`; see `docs/quality/2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`. The focused router/handoff suite passes 16/16, the Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447 with zero failure, skip, or cancellation. Focused coordinator tests prove exact typed-route identity and installation before `.signedIn`; Apple, Google, and email fixture UI journeys separately prove same-process preview presentation as the shell's first destination without catalog, paywall, notification, or social interruption. The DEBUG synthetic repository and shell-audit loading seam are absent from the Release bundle. Task 10 remains next and owns the complete state matrix, formal no-Firestore proof, exact preview-content assertions, and catalog/preview accessibility audits. `SHIP-FIRST-LESSON` remains incomplete until Phase 3.
+Checkpoint: Task 9 is complete in implementation commit `085fbfa`; see `docs/quality/2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`. The focused router/handoff suite passes 16/16, the Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447 with zero failure, skip, or cancellation. Focused coordinator tests prove exact typed-route identity and installation before `.signedIn`; Apple, Google, and email fixture UI journeys separately prove same-process preview presentation as the shell's first destination without catalog, paywall, notification, or social interruption. The DEBUG synthetic repository and shell-audit loading seam are absent from the Release bundle. Task 10 has since completed the fixture matrix, formal no-Firestore proof, exact preview-content assertions, and fresh catalog/preview automated accessibility audits. `SHIP-FIRST-LESSON` remains incomplete until Phase 3.
 
 ### Task 10 — Add deterministic UI fixtures and end-to-end UI coverage
 
@@ -704,20 +704,31 @@ Checkpoint: Task 9 is complete in implementation commit `085fbfa`; see `docs/qua
 
 - Expand: Debug-only `Syntholo/Features/Learn/CurriculumFixtures.swift`
 - Create: `SyntholoUITests/CurriculumUITests.swift`
+- Create: `Syntholo/App/SyntholoLaunchComposition.swift`
+- Create: `SyntholoTests/DebugCurriculumFixturesTests.swift`
+- Create: `SyntholoTests/SyntholoLaunchCompositionTests.swift`
 - Modify: `Syntholo/App/AppDependencies.swift`
+- Modify: `Syntholo/App/SyntholoApp.swift`
+- Modify: `Syntholo/Infrastructure/Firebase/FirebaseBootstrap.swift`
+- Modify: curriculum status/catalog/module/preview views
 - Modify: onboarding/shell UI test files
 - Modify: `scripts/test.sh`
+- Modify: `scripts/test_environment_configuration.sh`
 
-- [ ] Add memory fixtures for fresh, saved, saved→fresh, offline/no cache, incompatible with/without fallback, empty, malformed, and fail-once/retry.
-- [ ] Ensure `--ui-testing` never contacts live Firestore.
-- [ ] Require the exact preview title/objective after onboarding and test catalog → program → module → preview.
+- [x] Add memory fixtures for fresh, saved, saved→fresh, offline/no cache, incompatible with/without fallback, empty, a typed malformed terminal event, and fail-once/retry; retain deterministic loading for AppShell audits.
+- [x] Ensure exact `--ui-testing` composition selects memory clients before Firebase configuration/bootstrap/live dependencies and therefore cannot construct the live Firestore path; retain a defensive bootstrap guard.
+- [x] Require the exact preview title/objective after Apple, Google, and email onboarding and test catalog → program → module → preview → Back/tab restoration.
 - [x] Prove the absence of catalog/paywall/notification/social interruption before preview. Task 9's Apple, Google, and email fixture journeys now cover this invariant.
-- [ ] Add accessibility audits for catalog and preview states.
-- [ ] Update exact unit/functional/accessibility totals only after discovery and GREEN results.
+- [x] Add 14 isolated automated accessibility methods for the fresh catalog and exact preview: six raw XCTest categories per screen plus an accessibility5 measured-growth/clipped-text method per screen. Raw `.dynamicType` and physical assistive-technology claims remain excluded.
+- [x] Update exact unit/functional/accessibility totals only after discovery and GREEN results.
 
 Run focused UI tests, then `./scripts/test.sh`.
 
 Expected: zero failed/skipped/canceled tests and exact totals.
+
+Checkpoint: Task 10 is complete in implementation commit `b9083a7`; see `docs/quality/2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md`. The focused fixture/composition suite passes 8/8; Apple, Google, and email exact-preview journeys pass 3/3; fresh Back/tab restoration passes 1/1; final focused contrast/clipped-text rechecks pass 2/2; and the final focused accessibility5 recheck passes 1/1. One uninterrupted canonical invocation passes 479/479: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 224 unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules, with zero failure, skip, or cancellation. Gitleaks 8.30.1 is clean across the 28-commit post-implementation history and then-current worktree, and Release configuration/bundle separation passes.
+
+The preview now deliberately uses an immersive nested destination with localized **Read-only lesson preview** chrome and a 48-point Back control; tabs hide inside preview and restore on Back. Its iOS 26 edge-effect suppression is availability-gated with an iOS 17 fallback. Accessibility evidence applies to the fresh synthetic catalog/preview only and does not include raw `.dynamicType`, physical VoiceOver, Reduce Motion, Switch Control, device, or `SHIP-A11Y` proof. The malformed fixture injects a typed malformed terminal event rather than malformed decoder bytes. No specialization, original curriculum, staging/production operation, real lesson execution, Phase 2 exit, launch approval, or `SHIP-FIRST-LESSON` completion is claimed. Task 11 is next.
 
 ### Task 11 — Add privacy-safe analytics
 
