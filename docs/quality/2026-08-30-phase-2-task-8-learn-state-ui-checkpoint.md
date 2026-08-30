@@ -8,7 +8,7 @@
 
 **Implementation commit:** `0d8ab1f` (`feat(curriculum): add read-only Learn experience`)
 
-**Documentation provenance:** To be introduced by the Task 8 documentation commit and finalized by the immediately following provenance commit
+**Documentation provenance:** introduced in `5b2b522` (`docs(curriculum): record Task 8 checkpoint`); this field is finalized by the immediately following provenance commit
 
 ## Result
 
