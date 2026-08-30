@@ -6,9 +6,12 @@
     "node": ">=22 <23"
   },
   "scripts": {
+    "content:publish": "node tools/content/publish.mjs",
+    "content:rollback": "node tools/content/rollback.mjs",
     "content:validate": "node tools/content/validate.mjs",
     "test": "firebase emulators:exec --project syntholo-local --only firestore \"node --test tests/firebase/firestore.rules.test.mjs\"",
-    "test:content": "node --test --test-reporter=tap tests/content/curriculum-validation.test.mjs"
+    "test:content": "node --test --test-reporter=tap tests/content/curriculum-validation.test.mjs tests/content/operator-identity.test.mjs",
+    "test:content-publication": "./scripts/test_content_publication.sh"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "5.0.2",

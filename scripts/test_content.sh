@@ -61,6 +61,14 @@ node --test --test-reporter=tap \
 node ./scripts/assert_tap_summary.mjs 73 curriculum-content-tests \
   < "$content_output"
 
+operator_output="$temporary_directory/operator-identity-tests.tap.log"
+node --test --test-reporter=tap \
+  ./tests/content/operator-identity.test.mjs \
+  > "$operator_output" 2>&1
+/usr/bin/sed -n 'p' "$operator_output"
+node ./scripts/assert_tap_summary.mjs 32 curriculum-operator-identity-tests \
+  < "$operator_output"
+
 ./tests/scripts/test_secret_scan.sh
 ./scripts/scan_secrets.sh --history --worktree
 
@@ -75,4 +83,4 @@ if [[ -n "$tracked_sensitive_files" ]]; then
   exit 1
 fi
 
-echo "content-gate: schema, graph, digest, budget, CLI, dependency, and secret-scan checks passed."
+echo "content-gate: schema, graph, digest, budget, operator identity, CLI, dependency, and secret-scan checks passed."

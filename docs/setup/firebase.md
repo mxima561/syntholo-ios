@@ -50,7 +50,40 @@ npm run content:validate -- tests/fixtures/content/minimal-curriculum-v1.json
 npm run test:content
 ```
 
-The CLI reads strict UTF-8/JSON, rejects duplicate object keys, validates the closed draft schema and graph, derives immutable Firestore shapes and RFC 8785/SHA-256 digests, and reports only safe IDs, counts, and digests. Synthetic source classification survives a file copy through its reserved sentinel. A future publisher must reject synthetic sources unless the resolved environment is exactly the local emulator tuple and `FIRESTORE_EMULATOR_HOST` is set; validation alone never authorizes publication.
+The CLI reads strict UTF-8/JSON, rejects duplicate object keys, validates the closed draft schema and graph, derives immutable Firestore shapes and RFC 8785/SHA-256 digests, and reports only safe IDs, counts, and digests. Synthetic source classification survives a file copy through its reserved sentinel. The publisher rejects synthetic sources unless the resolved environment is exactly the local emulator tuple and `FIRESTORE_EMULATOR_HOST` is set; validation alone never authorizes publication.
+
+## Exercise the emulator-only publisher and rollback path
+
+The Phase 2 operator tool is intentionally limited to the exact local tuple `emulator / syntholo-local / emulator / emulator-local`. The checked-in environment allowlist contains no live project or principal, production is disabled, and no launch-content decision file exists while the Product Bible specialization decision remains open. Do not add staging values, author launch curriculum, or perform a live write before the named owners complete that decision and supply the real deployment identities.
+
+Run the isolated lifecycle gate:
+
+```bash
+./scripts/test_content_publication.sh
+```
+
+The runner uses the pinned Firebase CLI and Java 21, allocates non-default ephemeral Firestore, websocket, hub, and logging ports, requires exactly 38 passing tests with no failure, skip, or cancellation, and proves that all four ports close afterward. It covers first publication, immutable version heads, idempotent replay/collision, no-op auditing, roll-forward, exact rollback, corruption rejection, transaction-budget rejection, injected-failure atomicity, identity gates, and the exact-source secret scan.
+
+For an interactive local preview, start the emulator in one terminal:
+
+```bash
+./node_modules/.bin/firebase emulators:start --project syntholo-local --only firestore
+```
+
+Then identify it explicitly and run the preview from a second terminal:
+
+```bash
+export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+npm run content:publish -- --dry-run \
+  --operation-id 11111111-1111-4111-8111-111111111111 \
+  --environment emulator \
+  --project syntholo-local \
+  --confirm-project syntholo-local \
+  --source tests/fixtures/content/minimal-curriculum-v1.json
+```
+
+Replace `--dry-run` with `--apply` only against that local emulator. Every applied request needs a caller-generated lowercase RFC 4122 UUID; reuse an operation ID only to replay the exact same request. Rollback is catalog-rooted and requires a new operation ID plus `--catalog-pointer en-us --to-catalog-version <catalog-version-id>`. Both commands print only bounded operator metadata, IDs, counts, outcomes, and digests. Publish resolves and scans the exact source with the pinned repository gitleaks policy before Firebase Admin is imported or constructed.
 
 For interactive Auth and Firestore development, use the pinned local CLI:
 
