@@ -11,21 +11,26 @@ enum SyntholoRootPresentation: Equatable {
 
 @main
 struct SyntholoApp: App {
-    @State private var router = AppRouter()
+    @State private var dependencies: AppDependencies
     private let rootPresentation: SyntholoRootPresentation
 
     init() {
+        let configuration = FirebaseRuntimeConfiguration.current
         rootPresentation = SyntholoRootPresentation(
-            isFirebaseConfigured: FirebaseBootstrap.configure(.current)
+            isFirebaseConfigured: FirebaseBootstrap.configure(configuration)
+        )
+        _dependencies = State(
+            initialValue: AppDependencies.make(
+                configuration: configuration,
+                isFirebaseConfigured: rootPresentation == .application,
+                arguments: ProcessInfo.processInfo.arguments
+            )
         )
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView(
-                router: router,
-                isFirebaseConfigured: rootPresentation == .application
-            )
+            RootView(dependencies: dependencies)
             .onOpenURL { url in
                 _ = GoogleSignInCoordinator.handle(url)
             }

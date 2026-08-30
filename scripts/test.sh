@@ -130,7 +130,7 @@ echo "Running unit tests."
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 202 unit-tests
+assert_test_result "$unit_result" 216 unit-tests
 
 functional_ui_result="$result_directory/FunctionalUI.xcresult"
 echo "Running functional UI tests."

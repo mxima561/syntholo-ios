@@ -114,7 +114,7 @@ private struct CurriculumLoadingStatusView: View {
 
             Text("Checking for available programs.")
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

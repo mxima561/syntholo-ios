@@ -221,7 +221,7 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Learn"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.navigationBars["Learn"].exists)
         XCTAssertFalse(app.buttons["Start learning"].exists)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists)
+        XCTAssertFalse(app.buttons["Preview the first lesson"].exists)
     }
 
     func testNoPaywallSocialCatalogOrNotificationAppearsBeforeHandoff() {
@@ -427,7 +427,7 @@ final class OnboardingUITests: XCTestCase {
         )
         assertAllProvidersAreAvailable(in: app, file: file, line: line)
         XCTAssertFalse(app.staticTexts["onboarding.auth.error"].exists, file: file, line: line)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists, file: file, line: line)
+        XCTAssertFalse(app.buttons["Preview the first lesson"].exists, file: file, line: line)
         assertNoEarlyInterruption(in: app, file: file, line: line)
     }
 
@@ -437,7 +437,7 @@ final class OnboardingUITests: XCTestCase {
         line: UInt = #line
     ) {
         XCTAssertTrue(
-            app.buttons["Start the first lesson"].waitForExistence(timeout: 3),
+            app.buttons["Preview the first lesson"].waitForExistence(timeout: 3),
             file: file,
             line: line
         )
@@ -449,14 +449,48 @@ final class OnboardingUITests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        app.buttons["Start the first lesson"].tap()
+        assertNoEarlyInterruption(in: app, file: file, line: line)
+        app.buttons["Preview the first lesson"].tap()
+
+        let lessonPreview = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview")
+            .firstMatch
         XCTAssertTrue(
-            app.tabBars.buttons["Learn"].waitForExistence(timeout: 3),
+            lessonPreview.waitForExistence(timeout: 3),
             file: file,
             line: line
         )
-        XCTAssertTrue(app.navigationBars["Learn"].exists, file: file, line: line)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists, file: file, line: line)
+        XCTAssertTrue(
+            app.tabBars.buttons["Learn"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["curriculum.catalog"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.tabBars.buttons["Social"].isSelected,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(app.buttons["View plans"].exists, file: file, line: line)
+        XCTAssertFalse(
+            app.buttons["Upgrade to Pro"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.buttons["Turn on notifications"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.buttons["Preview the first lesson"].exists,
+            file: file,
+            line: line
+        )
     }
 
     private func assertProviderCancellationAttempt(
@@ -489,6 +523,11 @@ final class OnboardingUITests: XCTestCase {
         line: UInt = #line
     ) {
         XCTAssertFalse(app.tabBars.buttons["Social"].exists, file: file, line: line)
+        XCTAssertFalse(
+            app.descendants(matching: .any)["curriculum.catalog"].exists,
+            file: file,
+            line: line
+        )
         XCTAssertFalse(app.buttons["Browse programs"].exists, file: file, line: line)
         XCTAssertFalse(app.buttons["View catalog"].exists, file: file, line: line)
         XCTAssertFalse(app.buttons["View plans"].exists, file: file, line: line)
@@ -632,7 +671,7 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         reachAccountCreation(in: app)
         app.buttons["onboarding.auth.apple.fixture"].tap()
 
-        try audit(app, waitingFor: app.buttons["Start the first lesson"])
+        try audit(app, waitingFor: app.buttons["Preview the first lesson"])
     }
 
     func testSessionLoadingLayoutPassesAccessibilityAudits() throws {

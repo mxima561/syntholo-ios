@@ -83,38 +83,26 @@ struct ProgramCatalogRowPresentation: Identifiable, Equatable {
 }
 
 struct LearnHomeView: View {
-    private let store: CurriculumStore?
-    @State private var path: [LearnRoute]
+    let store: CurriculumStore
+    @Bindable var router: AppRouter
 
-    /// Temporary Task 8 compatibility seam. Task 9 supplies the real store
-    /// from root composition and moves path ownership into `AppRouter`.
-    init() {
-        store = nil
-        _path = State(initialValue: [])
-    }
-
-    init(store: CurriculumStore) {
+    init(store: CurriculumStore, router: AppRouter) {
         self.store = store
-        _path = State(initialValue: [])
+        self.router = router
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            if let store {
-                CurriculumStoreContent(store: store)
-                    .navigationDestination(for: LearnRoute.self) { route in
-                        destination(for: route, store: store)
-                    }
-            } else {
-                CurriculumStatusView(kind: .compositionPending)
-                    .navigationTitle("Learn")
-            }
+        NavigationStack(path: $router.learnPath) {
+            CurriculumStoreContent(store: store)
+                .navigationDestination(for: LearnRoute.self) { route in
+                    destination(for: route, store: store)
+                }
         }
         .task {
-            store?.load()
+            store.load()
         }
-        .onChange(of: path, initial: true) { _, newPath in
-            store?.setPinnedCatalogVersionIDs(
+        .onChange(of: router.learnPath, initial: true) { _, newPath in
+            store.setPinnedCatalogVersionIDs(
                 Set(newPath.map(\.catalogVersionID))
             )
         }
@@ -263,10 +251,15 @@ private struct CurriculumCatalogScreen: View {
                     )
                 }
 
-                Section("Programs") {
+                Section {
                     ForEach(presentation.programs) { program in
                         ProgramCatalogRow(presentation: program)
                     }
+                } header: {
+                    Text("Programs")
+                        .font(.headline)
+                        .foregroundStyle(SyntholoColor.ink)
+                        .textCase(nil)
                 }
             }
             .navigationTitle("Learn")
@@ -284,23 +277,34 @@ private struct CurriculumCatalogHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Label("Curriculum catalog", systemImage: "books.vertical.fill")
+            Image(systemName: "books.vertical.fill")
+                .font(.title2)
+                .foregroundStyle(SyntholoColor.accent)
+                .accessibilityHidden(true)
+
+            Text("Curriculum catalog")
                 .font(SyntholoTextStyle.pageTitle)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text("Choose an available program to preview its lessons.")
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
+                .fixedSize(horizontal: false, vertical: true)
 
-            LabeledContent("Language") {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text("Language")
+                    .font(.subheadline.weight(.semibold))
                 Text(locale)
+                    .font(.body)
             }
-            .font(.subheadline)
 
-            LabeledContent("Catalog version") {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text("Catalog version")
+                    .font(.subheadline.weight(.semibold))
                 Text(version, format: .number)
+                    .font(.body)
                     .monospacedDigit()
             }
-            .font(.subheadline)
         }
         .padding(.vertical, Space.sm)
         .accessibilityElement(children: .contain)
@@ -319,6 +323,9 @@ private struct ProgramCatalogRow: View {
                     isComingSoon: false
                 )
             }
+            .accessibilityIdentifier(
+                "curriculum.program.\(presentation.id.rawValue)"
+            )
 
         case .comingSoon:
             ProgramCatalogRowContent(
@@ -326,6 +333,9 @@ private struct ProgramCatalogRow: View {
                 isComingSoon: true
             )
             .accessibilityElement(children: .combine)
+            .accessibilityIdentifier(
+                "curriculum.program.\(presentation.id.rawValue)"
+            )
         }
     }
 }
@@ -342,26 +352,28 @@ private struct ProgramCatalogRowContent: View {
 
             Text(presentation.promise)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: Space.sm) {
-                HStack(spacing: Space.xs) {
-                    Text("Program version")
-                    Text(presentation.version, format: .number)
-                        .monospacedDigit()
-                }
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text("Program version")
+                    .font(.body)
+                Text(presentation.version, format: .number)
+                    .font(.body)
+                    .monospacedDigit()
 
                 if isComingSoon {
                     Label("More modules are arriving", systemImage: "clock")
+                        .font(.body)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .font(.caption)
-            .foregroundStyle(isComingSoon ? SyntholoColor.warning : .secondary)
+            .foregroundStyle(
+                isComingSoon
+                    ? SyntholoColor.warning
+                    : SyntholoColor.secondaryInk
+            )
         }
         .padding(.vertical, Space.xs)
-        .accessibilityIdentifier(
-            "curriculum.program.\(presentation.id.rawValue)"
-        )
     }
 }

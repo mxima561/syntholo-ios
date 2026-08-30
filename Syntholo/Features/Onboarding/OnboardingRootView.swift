@@ -3,11 +3,22 @@ import SwiftUI
 struct OnboardingRootView: View {
     @Bindable var store: OnboardingStore
     let coordinator: OnboardingCoordinator
+    let firstLessonHandoffPresentationState:
+        FirstLessonHandoffPresentationState
+    let onPreviewFirstLesson: () -> Void
 
     @State private var isEmailAuthPresented = false
 
-    init(coordinator: OnboardingCoordinator) {
+    init(
+        coordinator: OnboardingCoordinator,
+        firstLessonHandoffPresentationState:
+            FirstLessonHandoffPresentationState,
+        onPreviewFirstLesson: @escaping () -> Void
+    ) {
         self.coordinator = coordinator
+        self.firstLessonHandoffPresentationState =
+            firstLessonHandoffPresentationState
+        self.onPreviewFirstLesson = onPreviewFirstLesson
         store = coordinator.onboardingStore
     }
 
@@ -87,7 +98,8 @@ struct OnboardingRootView: View {
                 savingProfileView
             case .firstLessonHandoff:
                 FirstLessonHandoffView(
-                    onStartFirstLesson: coordinator.completeFirstLessonHandoff
+                    presentationState: firstLessonHandoffPresentationState,
+                    onPreviewFirstLesson: onPreviewFirstLesson
                 )
             }
         }
