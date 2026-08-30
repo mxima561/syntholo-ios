@@ -14,7 +14,7 @@ This goal is intentionally narrower than the Book II north star. Launch does **n
 
 Syntholo has a high-quality, freshly verified Phase 0 foundation and a substantially complete Phase 1 identity/onboarding slice. The current app is **not an internal alpha yet** because the learning product begins after the point where implementation stops.
 
-The repository is healthy enough to build on: the complete canonical test gate passes, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. The next move is not a visual rewrite. It is to build the missing content platform and learning engine behind the existing first-lesson handoff.
+The repository is healthy enough to build on: every enforced suite has current passing evidence, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. The next move is not a visual rewrite. It is to finish the content platform and then build the learning engine behind the existing first-lesson handoff.
 
 No Product Bible milestone is currently satisfied:
 
@@ -23,9 +23,54 @@ No Product Bible milestone is currently satisfied:
 - `GATE-TF-EXPANDED` requires operations, deletion/export, downloads, load evidence, and editorial QA.
 - `GATE-STORE` requires release operations, privacy/App Review assets, account management, monitoring, and launch-quality reliability.
 
-## Fresh verification evidence
+## Post-audit remediation checkpoint
 
-The canonical `./scripts/test.sh` gate passed on this machine using Xcode 26.6, iPhone 17 Pro / iOS 26.5, XcodeGen 2.46.0, Node 22.23.2, npm 10.9.8, Java 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0.
+The highest-priority Phase 1 reliability findings from the initial audit have now been remediated without changing the Product Bible scope:
+
+- Onboarding draft load, save, and clear failures now produce typed recoverable state instead of being silently discarded.
+- Retry preserves the learner's exact pending choices, blocks unsafe progress after a failed initial load, and remains available across the signed-in handoff when clearing fails.
+- Persistence recovery is announced accessibly, including an explicit retry control.
+- Fixed user-facing enum copy now uses compile-time-localizable resources, and intended uppercase copy is authored in the String Catalog rather than transformed at runtime.
+- The local repository now has a preserved baseline on `main` at commit `b0ce17d`; no remote is configured yet.
+
+The complete canonical `./scripts/test.sh` gate passed after those changes on August 30, 2026:
+
+| Gate | Post-remediation result |
+| --- | ---: |
+| Swift unit tests | 106 passed, 0 failed, 0 skipped |
+| Functional UI journeys | 18 passed, 0 failed, 0 skipped |
+| AppShell accessibility audits | 28 passed, 0 failed, 0 skipped |
+| Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
+| Firestore Rules | 20 passed, 0 failed, 0 cancelled, 0 skipped |
+
+The 28 AppShell accessibility methods run in isolated Xcode sessions/result bundles because grouped Xcode 26 UI-audit runs could terminate one worker and hang finalization. Every isolated method passed. The recurring LLDB debugger-version messages remained non-failing Xcode tooling noise.
+
+Phase 1 still requires daily-goal/settings completion, live development/staging Firebase configuration, live Apple/Google/email provider tests, minimum-iOS CI evidence, and physical-device accessibility sign-off.
+
+## Phase 2 validation-foundation checkpoint
+
+The synthetic-only schema and validation foundation is now implemented. It includes the normative authoring and pre-server publication shapes, RFC 8785 digest vectors, graph/DAG and scoring-contract validation, deterministic Firestore-shape conversion, exact limits and transaction-budget enforcement, safe CLI diagnostics, and a checksum-pinned Gitleaks 8.30.1 gate over full local history, ignored and non-ignored first-party worktree files, generated output, direct app contents, extracted binary strings, and normalized plists.
+
+The implementation checkpoint is preserved on `main` at commit `7b76f87`.
+
+Fresh aggregate evidence on August 30, 2026 is:
+
+| Gate | Current result |
+| --- | ---: |
+| Curriculum content contract | 73 passed, 0 failed, 0 cancelled, 0 skipped |
+| Swift unit tests | 106 passed, 0 failed, 0 skipped |
+| Functional UI journeys | 18 passed, 0 failed, 0 skipped |
+| AppShell accessibility audits | 28 passed, 0 failed, 0 skipped |
+| Onboarding accessibility audits | 11 passed, 0 failed, 0 skipped |
+| Firestore Rules | 20 passed, 0 failed, 0 cancelled, 0 skipped |
+
+The latest uninterrupted `./scripts/test.sh` invocation was interrupted when `testSocialHitRegionAudit` failed after an anomalous 112-second run. The same isolated test then passed three consecutive reruns in 23.7–26.9 seconds, and every remaining shell accessibility, onboarding accessibility, and Rules check passed in the resumed gate. This is recorded as a non-reproducing UI-test interruption, not hidden as a clean first attempt; require another uninterrupted canonical run before merge.
+
+This checkpoint does **not** complete Phase 2. Publisher/rollback transactions, curriculum Rules, Swift models/digests, cache/repository/store/UI, analytics, owner approval, and authorized staging proof remain open. No original learner-facing curriculum or Firebase content write was created.
+
+## Initial audit verification evidence (historical)
+
+Before the remediation checkpoint above, the canonical `./scripts/test.sh` gate passed on this machine using Xcode 26.6, iPhone 17 Pro / iOS 26.5, XcodeGen 2.46.0, Node 22.23.2, npm 10.9.8, Java 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0.
 
 | Gate | Fresh result |
 | --- | ---: |
@@ -37,15 +82,15 @@ The canonical `./scripts/test.sh` gate passed on this machine using Xcode 26.6, 
 
 The recurring `DebuggerLLDB.DebuggerVersionStore.StoreError` / `no debugger version` output is the repository's already-documented Xcode UI-test warning. It did not fail or skip tests.
 
-`npm ci` reported five moderate vulnerabilities in development tooling dependencies. They are not shipped in the iOS app, but must remain on the dependency-review ledger. Do not use the suggested forced downgrade without a separate compatibility review.
+After adding the pinned Phase 2 validator/Admin development dependencies, `npm audit` reports nine moderate vulnerabilities in development tooling dependency paths and zero high or critical findings. `npm audit --omit=dev` reports zero production vulnerabilities. These packages are not shipped in the iOS app, but must remain on the dependency-review ledger. Do not use a suggested forced downgrade without a separate compatibility review.
 
 ## Current standing against the Product Bible
 
 | Phase | Standing | What is real now | What blocks exit |
 | --- | --- | --- | --- |
 | 0 — Foundation | Verified | Swift 6, iOS 17, iPhone-only, XcodeGen, environments, design system, four tabs, CI/test gate | Physical-device checks still matter at release, but Phase 0 engineering is sound |
-| 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence and recovery | Live provider smoke tests, production Firebase configuration, physical VoiceOver evidence, daily-goal/settings completion |
-| 2 — Curriculum platform | Missing | Foundation/path IDs are only stored in preferences | Versioned programs/modules/lessons/rubrics, sync, publish, rollback, private operator path, chosen deep specialization |
+| 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence, typed local-persistence recovery, and localization hardening | Live provider smoke tests, development/staging Firebase configuration, minimum-iOS CI evidence, physical VoiceOver evidence, daily-goal/settings completion |
+| 2 — Curriculum platform | In progress | Frozen contract plus synthetic schema, deterministic validator/shape conversion, digest vectors, bounds/budget tests, and pinned history/worktree/generated/bundle secret scanning; 73 content tests pass | Owner approval; publisher/rollback, curriculum Rules, Swift domain/cache/repository/store/UI and staging proof; chosen specialization before original content authoring or staging load |
 | 3 — Learning engine | Missing | First-lesson handoff is only a seam | Player, required formats, deterministic scoring, attempts, start limits, durable queue, cache/offline recovery, progress semantics |
 | 4 — AI coach | Missing | Coach-mode preference only | Moderation, immutable rubric load, structured scoring, server validation, separate tone rendering, feedback/revision/follow-up, fail-soft recovery |
 | 5 — Engagement | Missing | Learn and Practice placeholders | Today mission, next action, XP, streak, daily challenge, objective review, persistence/reconciliation |
@@ -62,7 +107,7 @@ The audited user is a new adult learner choosing AI for School with beginner exp
 
 ### Step 1 — Welcome: healthy
 
-![Welcome](screenshots/01-welcome.png)
+![Welcome](2026-08-29-launch-audit/screenshots/01-welcome.png)
 
 The visual direction is original and appropriate for a school: editorial serif headline, academic ink, restrained diagram language, and one obvious action. The promise centers judgment rather than tricks, aligning with LAW-1. The screen is spacious without hiding the CTA.
 
@@ -70,7 +115,7 @@ Risk: “before your first lesson” creates a near-term promise the current bui
 
 ### Step 2 — Age confirmation: healthy
 
-![Age confirmation](screenshots/02-age.png)
+![Age confirmation](2026-08-29-launch-audit/screenshots/02-age.png)
 
 Eligibility is explicit, under-13 is not disguised, and no birth date is requested. Teen and adult choices have large targets and readable descriptions. This is strong SHIP-AGE / LAW-15 behavior.
 
@@ -78,7 +123,7 @@ Risk: both allowed choices use identical descriptions, so the visible reason for
 
 ### Step 3 — Goal selection: healthy
 
-![Goal selection](screenshots/03-goal.png)
+![Goal selection](2026-08-29-launch-audit/screenshots/03-goal.png)
 
 The four goals map cleanly to the Product Bible paths. Labels are plain, the examples clarify scope, and the information density remains manageable.
 
@@ -86,13 +131,13 @@ Risk: every row advances immediately. This is efficient, but VoiceOver focus mov
 
 ### Step 4 — Experience selection: healthy
 
-![Experience selection](screenshots/04-experience.png)
+![Experience selection](2026-08-29-launch-audit/screenshots/04-experience.png)
 
 Experience is correctly framed as pace/explanation level rather than coach personality. This preserves DEC-7 and avoids implying that advanced learners are graded differently.
 
 ### Step 5 — Path recommendation: healthy with a terminology issue
 
-![Path recommendation](screenshots/05-path.png)
+![Path recommendation](2026-08-29-launch-audit/screenshots/05-path.png)
 
 Foundations-first sequencing is prominent, the recommendation is editable, and the route graphic is meaningfully labeled for assistive technology. The hierarchy makes the primary recommendation easy to accept without hiding alternatives.
 
@@ -100,13 +145,13 @@ Risk: this screen drops the numbered “Orientation” convention and uses “Yo
 
 ### Step 6 — Coach selection: healthy
 
-![Coach selection](screenshots/06-coach.png)
+![Coach selection](2026-08-29-launch-audit/screenshots/06-coach.png)
 
 All five modes are visible, Supportive defaults correctly, and selection uses border, checkmark, accessibility selected trait/value, and color together. The copy clearly states that tone does not change grading, supporting LAW-3.
 
 ### Step 7 — Account creation: healthy at fixture level
 
-![Account creation](screenshots/07-account.png)
+![Account creation](2026-08-29-launch-audit/screenshots/07-account.png)
 
 Apple, Google, and email are given comparable prominence and Apple remains present beside third-party login. The screen arrives after learner value/preferences have been established and before progress sync, aligning with SHIP-AUTH and SHIP-FIRST-LESSON ordering.
 
@@ -114,7 +159,7 @@ Limit: this audit used the repository's non-secret authentication fixture. Live 
 
 ### Step 8 — First-lesson handoff: visually healthy, functionally critical
 
-![First-lesson handoff](screenshots/08-first-lesson-handoff.png)
+![First-lesson handoff](2026-08-29-launch-audit/screenshots/08-first-lesson-handoff.png)
 
 The handoff is specific and motivating: named program, lesson number, concrete skill, and one action. Visually, this is the right bridge into the product.
 
@@ -122,7 +167,7 @@ Critical defect: the CTA promises “Start the first lesson,” but no lesson is
 
 ### Step 9 — Actual destination: blocked product loop
 
-![Learn placeholder](screenshots/09-learn-placeholder.png)
+![Learn placeholder](2026-08-29-launch-audit/screenshots/09-learn-placeholder.png)
 
 The action lands on a placeholder campus screen saying the lesson and progress “will appear here.” This is direct evidence that SHIP-FIRST-LESSON and the Book III new-learner loop are not implemented. It is the highest-priority product gap because it breaks the exact moment where onboarding must convert into learning value.
 
@@ -142,9 +187,9 @@ The tab shell itself is visually clean and readable, but Practice, Social, and P
 
 ### SwiftUI and reliability improvements
 
-1. **Do not silently discard onboarding-draft persistence errors.** `OnboardingStore` uses `try?` for save/clear operations. The UI then says choices are safe on the device even when persistence may have failed. Introduce a typed recoverable persistence state and test it before expanding the learning queue. This is an early version of LAW-11.
-2. **Replace runtime localization conversion for enum copy.** Path and choice models carry `String`/`LocalizedStringKey` mixtures and sometimes construct `LocalizedStringKey` from runtime strings. The current catalog happens to contain those values, but extraction is brittle. Model fixed user-facing enum copy as `LocalizedStringResource` and pass it directly to SwiftUI.
-3. **Remove runtime `.textCase(.uppercase)` for localizable headings.** Put the intended casing in the catalog so translators control it.
+1. **Resolved — onboarding-draft persistence errors are recoverable.** Typed load/save/clear failures, exact retry snapshots, relaunch recovery, handoff recovery, and accessible retry behavior are now covered by unit, functional UI, and accessibility tests.
+2. **Resolved — fixed enum copy uses compile-time localization resources.** Fixed user-facing enum content is modeled as `LocalizedStringResource` and passed directly to SwiftUI.
+3. **Resolved — localized uppercase copy is authored in the catalog.** Runtime `.textCase(.uppercase)` is no longer used for those headings.
 4. **Keep state ownership private where possible.** Current local `@State` properties are private, which is good. Continue that rule in new lesson/player views.
 5. **Do not adopt iOS 26-only visual APIs for launch.** The minimum remains iOS 17. Any future iOS 26 polish must be availability-gated with an iOS 17 fallback and must not fork the product's core interaction model.
 6. **Do not over-centralize the future player in one observable object.** Separate narrow observable state for content, current activity, attempt/sync status, and entitlement/allowance so unrelated network or queue changes do not invalidate the whole lesson tree.
@@ -230,7 +275,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 
 ## Immediate next implementation slice
 
-Author the Phase 2 curriculum-platform plan against Book III and the current codebase. Its first vertical checkpoint should be:
+Continue the approved synthetic Phase 2 sequence. The next engineering checkpoint is the emulator-only idempotent publisher and rollback transaction, followed by curriculum Rules and the Swift domain/cache/repository. The first staging vertical checkpoint remains:
 
 > A privately published, immutable Foundations fixture containing a program, module, lesson version, objective, expected duration, completion rule, still-diagram/concept content, one deterministic question, and rubric/version references syncs into the app and renders read-only from the existing first-lesson handoff.
 
@@ -241,4 +286,4 @@ Do not add AI, StoreKit, leagues, or a broader redesign to that checkpoint. Prov
 - Simulator captures verify visible layout and navigation behavior for the audited fixture, not live provider/network behavior.
 - Automated accessibility audits passed, but screenshots and XCTest do not prove spoken VoiceOver focus/announcements on physical hardware.
 - Only iOS 26.5 ran locally. The configured iOS 17.5 CI job remains required for minimum-OS evidence.
-- This folder currently lacks `.git` metadata, so commit provenance and a clean working-tree comparison could not be verified.
+- Local Git provenance now begins at preserved baseline commit `b0ce17d` on `main`. No remote is configured, so upstream history, branch protection, and remote CI provenance still cannot be verified.

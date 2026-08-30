@@ -33,7 +33,7 @@ These rules apply to every task below.
 - Build loading, empty, error, offline, retry, interruption, and accessibility states with the happy path.
 - Use stable identifiers. Never identify an attempt, reward, allowance mutation, transaction, or content version by screen position.
 - Keep allowance, reward, mastery, entitlement, and publication decisions server-authoritative and idempotent.
-- Do not ship OpenAI keys, Firebase service credentials, App Store secrets, or other server secrets in the client or repository.
+- Do not ship OpenAI keys, Firebase service credentials, App Store secrets, or other server secrets in the client or repository. Prove this with a scanner over Git history, the worktree, generated logs/reports, and the release bundle; filename checks alone are not evidence.
 - Do not log lesson answers, submissions, prompts, raw coach transcripts, email, or private profile text (`LAW-19`).
 - Store all learner-facing text in String Catalogs. Do not rely on runtime conversion of fixed enum strings.
 - Support iPhone and iOS 17. Any newer visual API needs an availability-gated iOS 17 fallback.
@@ -46,7 +46,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 | Decision or access | Required result | Blocks |
 | --- | --- | --- |
-| Deep launch specialization | Choose School, Work, Creation, or Build. **Recommended: AI for School**, because it matches the current audited onboarding path and the online-school product context. | Phase 2 production content |
+| Deep launch specialization | Product chooses School, Work, Creation, or Build and records it through Product Bible change control. No plan, onboarding default, or adjacent web product may infer the answer. | Any original Phase 2 learner-facing content authoring/load, staging or production content write, staging-device content load, and Phase 2 exit |
 | Firebase environments | Separate development, staging, and production projects; approved bundle/app records; provider credentials; least-privilege service access. | Live Phase 1 tests and every backend phase |
 | Apple Developer access | Team, signing, App ID, capabilities, Sign in with Apple, App Store Connect app, sandbox testers. | Device auth, StoreKit, TestFlight |
 | Google auth setup | Production iOS OAuth client and approved callback/configuration. | Phase 1 exit |
@@ -64,30 +64,33 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.1 — Establish source-control provenance
 
-- [ ] Restore or initialize the intended Git repository without overwriting current files.
-- [ ] Confirm the correct remote, default branch, ignore rules, and secret-scanning policy.
-- [ ] Commit or otherwise preserve the audited baseline before feature work.
+- [x] Initialize the local Git repository without overwriting audited files.
+- [ ] Confirm and configure the intended remote and default remote branch; no remote is currently configured.
+- [x] Confirm ignore rules exclude the known local Firebase configuration files from tracking.
+- [x] Adopt and enforce the history/worktree/generated-output/app-bundle secret-scanning policy.
+- [x] Preserve the audited baseline in local commit `b0ce17d` before feature work.
 - [ ] Protect CI-required branches and require the canonical gate.
 
 **Proof:** A clean, traceable baseline exists and secrets are not tracked.
 
 #### Step 0.2 — Lock the canonical quality baseline
 
-- [ ] Keep `./scripts/test.sh` green: 98 unit, 16 functional UI, 28 AppShell accessibility, 10 onboarding accessibility, and 20 Firestore Rules tests at the current baseline.
-- [ ] Run the suite on the minimum iOS 17 simulator in CI and the current iOS simulator.
-- [ ] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
-- [ ] Review the five moderate npm development-tool vulnerabilities without using a forced incompatible downgrade.
+- [x] Keep the script-enforced baseline green: 73 curriculum-content, 106 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 20 Firestore Rules tests. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The August 30 Phase 2 checkpoint records one non-reproducing Social hit-region interruption, three consecutive passing reruns, and a resumed green gate; require one uninterrupted run before merge.
+- [x] Run the suite on the current iOS simulator.
+- [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
+- [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
+- [x] Review the nine current moderate npm development-tool vulnerabilities without using a forced incompatible downgrade; production dependencies report zero vulnerabilities.
 
 **Proof:** A dated baseline report includes test counts, OS/runtime versions, and zero failed/skipped/cancelled tests.
 
 #### Step 0.3 — Remove Phase 1 reliability debt
 
-- [ ] Replace silent `try?` onboarding draft save/clear behavior with typed, recoverable persistence state.
-- [ ] Tell the learner when a local choice could not be saved and offer retry without losing selections.
-- [ ] Replace runtime localization conversion for fixed enum copy with `LocalizedStringResource` or equivalent compile-time catalog entries.
-- [ ] Move intended uppercase presentation into localized catalog copy instead of runtime `.textCase(.uppercase)`.
+- [x] Replace silent `try?` onboarding draft save/clear behavior with typed, recoverable persistence state.
+- [x] Tell the learner when a local choice could not be saved and offer retry without losing selections.
+- [x] Replace runtime localization conversion for fixed enum copy with `LocalizedStringResource` or equivalent compile-time catalog entries.
+- [x] Move intended uppercase presentation into localized catalog copy instead of runtime `.textCase(.uppercase)`.
 - [ ] Add daily-goal selection/default and an editable settings destination.
-- [ ] Keep experience level separate from coach personality and grading.
+- [x] Keep experience level separate from coach personality and grading.
 
 **Proof:** Persistence-failure, relaunch, localization, and daily-goal tests pass.
 
@@ -109,33 +112,35 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 1.1 — Author and approve the Phase 2 contract
 
-- [ ] Write `docs/superpowers/plans/2026-08-30-syntholo-curriculum-platform.md`.
-- [ ] Trace every schema and workflow to `SHIP-CONTENT`, `SHIP-FOUNDATIONS`, `SHIP-ONE-PATH`, `SHIP-SHELLS`, `SHIP-FORMATS`, and the Product Bible data model.
-- [ ] Record the chosen deep specialization.
-- [ ] Define content identity, publication state, compatibility version, completion rule, prerequisite, asset, objective, rubric, and rollback semantics.
+- [x] Write `docs/superpowers/plans/2026-08-30-syntholo-curriculum-platform.md`.
+- [x] Trace every schema and workflow to `SHIP-FOUNDATIONS`, `SHIP-ONE-PATH`, `SHIP-SHELLS`, `SHIP-VERSIONS`, `SHIP-PUBLISH`, `SHIP-FORMATS`, `SHIP-OBJECTIVE`, `SHIP-PLAYER`, `SHIP-ANALYTICS`, and the Product Bible data model.
+- [x] Freeze exact content identity, locale-addressed catalog/order, publication state, compatibility version, completion rule, prerequisite DAG, asset/rights, objective, public rubric/client scoring data, protected evaluation data, canonical digest, operator identity, idempotency, and rollback semantics.
+- [x] Permit only synthetic non-editorial unit/emulator fixtures until Product records the chosen deep specialization in the Product Bible; then require a matching tracked decision-gate record before original draft authoring or staging load.
+- [ ] Obtain Product, curriculum, iOS, backend, privacy, and accessibility owner approval of the frozen Phase 2 contract without inferring the unresolved specialization.
 
-**Proof:** Product, curriculum, iOS, and backend owners approve the contract before production content entry.
+**Proof:** Product, curriculum, iOS, backend, privacy, and accessibility owners approve the contract. The unresolved specialization is a hard content-load/Phase 2-exit blocker, not a value this plan chooses.
 
 #### Step 1.2 — Implement immutable versioned content
 
-- [ ] Add domain and backend models for `programs`, `programVersions`, `modules`, `lessonVersions`, rubrics, objectives, assets, and feature configuration.
+- [ ] Add locale catalog/pointer models plus `programs`, `programVersions`, `modules`, `lessonVersions`, learner-readable rubric/client-scoring data, protected evaluation contracts, immutable assets/rights, objectives, and constrained feature configuration.
 - [ ] Make published lesson and rubric versions immutable.
 - [ ] Make edits create a new draft/version rather than mutating published learner history.
-- [ ] Store explicit schema and minimum-client compatibility versions.
-- [ ] Define stable ordering without using array offsets as identity.
-- [ ] Validate broken references, missing objectives/rubrics, inaccessible prerequisites, invalid completion rules, and unsupported block types before publication.
+- [ ] Store explicit locale, schema, minimum-client compatibility, publication-state, and canonical SHA-256 digest fields on every learner-facing immutable document.
+- [ ] Define stable catalog/content ordering without using array offsets as identity. Each immutable catalog entry pins an exact program version, and the client resolves that immutable graph through authenticated exact gets rather than dereferencing mutable program pointers or using a broad Rules-protected list query.
+- [ ] Validate broken references, missing objectives/rubrics/assets, inaccessible/cyclic prerequisites, invalid completion/scoring contracts, unsupported blocks, document/transaction bounds, and public/protected scoring mismatch before publication.
 
 #### Step 1.3 — Build the private operator path
 
-- [ ] Create a constrained private workflow to draft, validate, preview, publish, deprecate, and roll back content.
-- [ ] Restrict all publication operations to authorized operator roles.
-- [ ] Add an audit trail containing actor, timestamp, version, and action.
-- [ ] Ensure rollback selects an already-valid immutable version rather than rewriting history.
-- [ ] Add Firestore Rules and server tests proving learners cannot publish or alter protected content.
+- [ ] Create a constrained private workflow to draft, validate, dry-run preview, publish, and roll back content. Scheduling/archive/deprecation remain north-star admin work, not Phase 2 scope.
+- [ ] Bind every non-emulator operation to an allowlisted environment project ID/number and keyless ADC impersonation of an approved least-privilege publisher service account; reject direct user ADC and service-account key JSON. A caller-supplied display name cannot authorize or impersonate an actor, while Cloud audit logs retain the underlying impersonator.
+- [ ] Require an operation ID and immutable audit trail containing derived principal, actual project/environment, timestamp, full catalog/program transition, applied/no-op outcome, request digest, and publication digest. Every accepted operation, including a no-op, is audited; exact retries replay their recorded result and collisions fail.
+- [ ] Atomically maintain private version heads and require every newly created immutable version to exceed that stable identity/locale's historical maximum, including after rollback. Publishing an existing non-live catalog/program selection is rejected with “use rollback”; locale-catalog rollback restores one already-valid immutable manifest and its pinned program selections without rewriting history or lowering heads.
+- [ ] Add Firestore Rules and server tests proving learners cannot publish or alter protected content. Rules prove only authenticated exact-get, shallow top-level shape/type/simple bounds, publication marker, private-read denial, and write denial; Node and Swift prove nested unions, ordering/uniqueness, graph, and digest integrity.
 
 #### Step 1.4 — Implement iOS curriculum sync
 
-- [ ] Add narrow repositories/services for catalog metadata, content versions, assets, and sync state.
+- [ ] Add one `AsyncStream`-based repository contract that yields validated saved content immediately and then one terminal fresh/empty/update-required/unavailable result.
+- [ ] Resolve a locale-addressed immutable catalog and every referenced program/content/asset version using authenticated exact gets; never fetch protected evaluation contracts in the client.
 - [ ] Cache the last valid compatible version and preserve it when sync fails.
 - [ ] Surface loading, empty, stale, incompatible-version, offline, and retry states.
 - [ ] Make version mismatch recovery explicit; never silently score one version against another rubric.
@@ -143,12 +148,12 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 1.5 — Publish the first vertical fixture
 
-- [ ] Publish one immutable Foundations program containing a module and a complete first lesson.
-- [ ] Include objective, expected duration, completion rule, concept/still diagram, one deterministic question, asset references, and rubric/version references.
-- [ ] Sync that fixture into the app and open it from the existing first-lesson handoff.
+- [ ] Only after the Product Bible decision gate, publish one immutable Foundations program containing a module and a structurally valid read-only first-lesson preview fixture to staging. Do not claim the Product Bible's complete-lesson loop until Phase 3 adds interaction, feedback/revision, and outcomes.
+- [ ] Include objective, expected duration, prerequisite semantics, completion rule, concept/still diagram, immutable asset/rights metadata, an applied deterministic question/feedback, learner-readable client scoring metadata, and a matching protected server evaluation contract.
+- [ ] Sync that fixture into the app and open a clearly labeled read-only **Preview the first lesson** route from the existing handoff. Phase 3 restores **Start the first lesson** when a real start mutation exists.
 - [ ] Track safe content-sync and lesson-view events without learner answers.
 
-**Exit — Phase 2 complete:** The private publisher can publish and roll back a validated fixture, unauthorized writes fail, and the app renders the correct compatible immutable version online and from cache.
+**Exit — Phase 2 complete:** The specialization decision is recorded; the allowlisted private publisher can idempotently publish and roll back a validated staging fixture with derived-principal audit; unauthorized writes/private reads fail; and the app renders the correct compatible locale catalog/version online and from cache. This preview seam does not complete `SHIP-FIRST-LESSON`; Phase 3 does.
 
 ---
 
@@ -498,13 +503,14 @@ Create one dated evidence report per gate. Each report must link reproducible te
 
 Start with this exact package and do not add AI, StoreKit, or social to it:
 
-1. Resolve the deep-specialization owner decision; use AI for School if approved.
-2. Configure development/staging Firebase access needed for the content platform.
-3. Author the Phase 2 curriculum-platform implementation plan.
-4. Implement the immutable content/rubric schema and publication validation.
-5. Publish one Foundations fixture lesson through the private operator path.
-6. Sync and render it read-only from the existing first-lesson handoff.
-7. Prove online, cached, stale, incompatible-version, unauthorized-write, publish, and rollback behavior with tests.
-8. Record the Phase 2 checkpoint evidence before beginning the full learning engine.
+1. Approve the frozen Phase 2 curriculum-platform contract.
+2. Preserve the completed schema, digest-vector, validator/shape, and pinned secret-scanner checkpoint; its 73-test synthetic gate is the contract baseline.
+3. Implement the emulator-only idempotent publisher/rollback transaction and curriculum Rules, then build the Swift domain, digest parity, cache, repository, store, and read-only preview UI.
+4. In parallel, close Phase 1 daily-goal/settings, live staging identity, minimum-iOS 17 CI, and physical accessibility evidence.
+5. Product records the deep launch specialization in the Product Bible; do not infer or recommend the answer in implementation work.
+6. Configure and allowlist the staging Firebase project ID/number and approved keyless impersonated publisher principal, then record the matching tracked decision gate.
+7. Author and validate one original Foundations fixture only after that gate.
+8. Publish it to staging, sync it, and render it as a read-only preview from the existing first-lesson handoff.
+9. Prove online, cached, stale, incompatible-version, exact-read/unauthorized-write, audited no-op, replay/collision, historical-max/new-version enforcement, existing-non-live selection rejection, roll-forward, catalog rollback, accessibility, analytics, and final generated/release-bundle scans.
 
 That checkpoint turns the current onboarding demonstration into the first real vertical slice and establishes the content identity required by attempts, scoring, offline recovery, AI rubrics, progress, and analytics.
