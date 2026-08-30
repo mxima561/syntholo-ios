@@ -69,6 +69,37 @@ final class CurriculumCacheTests: XCTestCase {
         )
     }
 
+    func testCancellationAfterCommitGateLinearizesCannotInterruptTheWrite() async throws {
+        let rootURL = try temporaryRoot()
+        let scope = try launchScope()
+        let first = try CurriculumTestSupport.snapshot()
+        let second = try snapshot(programTitle: "Linearized replacement title")
+        let fileSystem = FaultInjectingCurriculumCacheFileSystem()
+        let cache = FileCurriculumCache(
+            rootURL: rootURL,
+            now: { Self.fixedNow },
+            fileSystem: fileSystem
+        )
+        try await cache.replace(with: first, for: scope)
+        fileSystem.blockAtomicWrites = true
+
+        let replacement = Task {
+            try await cache.replace(with: second, for: scope)
+        }
+        XCTAssertTrue(
+            fileSystem.waitUntilAtomicWriteIsBlocked(),
+            "The cache never reached its atomic commit point"
+        )
+
+        replacement.cancel()
+        XCTAssertTrue(replacement.isCancelled)
+        fileSystem.releaseAtomicWrites()
+
+        try await replacement.value
+        let loaded = try await cache.load(for: scope)
+        XCTAssertEqual(loaded, second)
+    }
+
     func testEnvironmentProjectAndLocaleNamespacesNeverCross() async throws {
         let rootURL = try temporaryRoot()
         let primary = try launchScope()
@@ -852,6 +883,9 @@ private final class FaultInjectingCurriculumCacheFileSystem:
     private var shouldFailReads = false
     private var shouldFailWrites = false
     private var shouldFailQuarantines = false
+    private var shouldBlockAtomicWrites = false
+    private let atomicWriteEntered = DispatchSemaphore(value: 0)
+    private let atomicWriteRelease = DispatchSemaphore(value: 0)
 
     var failReads: Bool {
         get { lock.withLock { shouldFailReads } }
@@ -866,6 +900,19 @@ private final class FaultInjectingCurriculumCacheFileSystem:
     var failQuarantines: Bool {
         get { lock.withLock { shouldFailQuarantines } }
         set { lock.withLock { shouldFailQuarantines = newValue } }
+    }
+
+    var blockAtomicWrites: Bool {
+        get { lock.withLock { shouldBlockAtomicWrites } }
+        set { lock.withLock { shouldBlockAtomicWrites = newValue } }
+    }
+
+    func waitUntilAtomicWriteIsBlocked() -> Bool {
+        atomicWriteEntered.wait(timeout: .now() + 2) == .success
+    }
+
+    func releaseAtomicWrites() {
+        atomicWriteRelease.signal()
     }
 
     func fileExists(at url: URL) -> Bool {
@@ -891,6 +938,10 @@ private final class FaultInjectingCurriculumCacheFileSystem:
     }
 
     func atomicallyReplace(with data: Data, at url: URL) throws {
+        if blockAtomicWrites {
+            atomicWriteEntered.signal()
+            atomicWriteRelease.wait()
+        }
         if failWrites {
             throw Failure.injected
         }

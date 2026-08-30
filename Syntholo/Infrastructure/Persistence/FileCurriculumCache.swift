@@ -119,47 +119,60 @@ actor FileCurriculumCache: CurriculumCache {
         with snapshot: CurriculumSnapshot,
         for scope: CurriculumCacheScope
     ) async throws {
-        try validate(snapshot, for: scope)
+        let commitGate = CurriculumCacheCommitGate()
+        try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            try validate(snapshot, for: scope)
 
-        let savedAtUTCMilliseconds = try cacheMilliseconds(now())
-        let envelope = CurriculumCacheEnvelopeV1(
-            envelopeVersion: Self.envelopeVersion,
-            savedAtUTCMilliseconds: savedAtUTCMilliseconds,
-            source: CurriculumCacheSourceV1(
-                environment: scope.environment,
-                projectID: scope.projectID,
-                projectNumber: scope.projectNumber
-            ),
-            locale: scope.locale,
-            catalogPointerID: snapshot.catalogPointerID,
-            catalogVersionID: snapshot.catalogVersion.catalogVersionID,
-            programEntries: snapshot.catalogVersion.programEntries,
-            documentDigests: CurriculumCacheDocumentDigestV1.manifest(
-                for: snapshot
-            ),
-            snapshot: snapshot
-        )
+            let savedAtUTCMilliseconds = try cacheMilliseconds(now())
+            let envelope = CurriculumCacheEnvelopeV1(
+                envelopeVersion: Self.envelopeVersion,
+                savedAtUTCMilliseconds: savedAtUTCMilliseconds,
+                source: CurriculumCacheSourceV1(
+                    environment: scope.environment,
+                    projectID: scope.projectID,
+                    projectNumber: scope.projectNumber
+                ),
+                locale: scope.locale,
+                catalogPointerID: snapshot.catalogPointerID,
+                catalogVersionID: snapshot.catalogVersion.catalogVersionID,
+                programEntries: snapshot.catalogVersion.programEntries,
+                documentDigests: CurriculumCacheDocumentDigestV1.manifest(
+                    for: snapshot
+                ),
+                snapshot: snapshot
+            )
 
-        let data: Data
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-            data = try encoder.encode(envelope)
-            guard data.count <= Self.maximumEnvelopeBytes else {
+            let data: Data
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+                data = try encoder.encode(envelope)
+                guard data.count <= Self.maximumEnvelopeBytes else {
+                    throw CurriculumCacheError.writeFailed
+                }
+            } catch let error as CurriculumCacheError {
+                throw error
+            } catch {
                 throw CurriculumCacheError.writeFailed
             }
-        } catch let error as CurriculumCacheError {
-            throw error
-        } catch {
-            throw CurriculumCacheError.writeFailed
-        }
 
-        let url = Self.cacheFileURL(rootURL: rootURL, scope: scope)
-        do {
-            try fileSystem.createDirectory(at: url.deletingLastPathComponent())
-            try fileSystem.atomicallyReplace(with: data, at: url)
-        } catch {
-            throw CurriculumCacheError.writeFailed
+            let url = Self.cacheFileURL(rootURL: rootURL, scope: scope)
+            try Task.checkCancellation()
+            do {
+                try commitGate.commit {
+                    try fileSystem.createDirectory(
+                        at: url.deletingLastPathComponent()
+                    )
+                    try fileSystem.atomicallyReplace(with: data, at: url)
+                }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw CurriculumCacheError.writeFailed
+            }
+        } onCancel: {
+            commitGate.cancel()
         }
     }
 
@@ -286,6 +299,39 @@ actor FileCurriculumCache: CurriculumCache {
 
     private func quarantineMilliseconds(_ date: Date) -> Int64 {
         (try? cacheMilliseconds(date)) ?? 0
+    }
+}
+
+private final class CurriculumCacheCommitGate: @unchecked Sendable {
+    private enum State: Equatable {
+        case ready
+        case cancelled
+        case committing
+    }
+
+    private let lock = NSLock()
+    private var state = State.ready
+
+    func cancel() {
+        lock.withLock {
+            if state == .ready {
+                state = .cancelled
+            }
+        }
+    }
+
+    func commit(_ operation: () throws -> Void) throws {
+        try lock.withLock {
+            switch state {
+            case .ready:
+                state = .committing
+            case .cancelled:
+                throw CancellationError()
+            case .committing:
+                preconditionFailure("A cache commit gate may be entered only once")
+            }
+        }
+        try operation()
     }
 }
 
