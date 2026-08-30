@@ -1,0 +1,334 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userID) {
+      return isSignedIn() && request.auth.uid == userID;
+    }
+
+    function isValidHandle(handle) {
+      return handle is string
+        && handle.matches('^learner-[a-f0-9]{20}$');
+    }
+
+    function isValidAgeBand(ageBand) {
+      return ageBand in ['13-17', '18+'];
+    }
+
+    function isValidUserDocument(data, userID) {
+      return data.keys().hasOnly([
+          'userID',
+          'email',
+          'displayName',
+          'ageBand',
+          'schemaVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'userID',
+          'email',
+          'displayName',
+          'ageBand',
+          'schemaVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.userID == userID
+        && data.userID is string
+        && (data.email == null || data.email is string)
+        && (data.displayName == null || data.displayName is string)
+        && data.ageBand is string
+        && isValidAgeBand(data.ageBand)
+        && data.schemaVersion == 1
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGoal(goal) {
+      return goal in [
+        'studySmarter',
+        'workProductivity',
+        'createContent',
+        'buildWithAI'
+      ];
+    }
+
+    function isValidExperience(experience) {
+      return experience in ['beginner', 'intermediate', 'advanced'];
+    }
+
+    function isValidPath(path) {
+      return path in ['school', 'work', 'creation', 'build'];
+    }
+
+    function isValidCoachMode(coachMode) {
+      return coachMode in ['supportive', 'funny', 'strict', 'chill', 'socratic'];
+    }
+
+    function specializationProgramID(path) {
+      return path == 'school'
+        ? 'ai-school'
+        : path == 'work'
+          ? 'ai-work'
+          : path == 'creation'
+            ? 'ai-creation'
+            : 'ai-build';
+    }
+
+    function hasRequiredPrograms(data) {
+      return data.enrolledProgramIDs is list
+        && data.enrolledProgramIDs.size() == 2
+        && data.enrolledProgramIDs[0] == 'ai-foundations'
+        && data.enrolledProgramIDs[1]
+          == specializationProgramID(data.selectedPath);
+    }
+
+    function isValidPreferencesDocument(data, userID) {
+      return data.keys().hasOnly([
+          'userID',
+          'goal',
+          'experience',
+          'selectedPath',
+          'coachMode',
+          'enrolledProgramIDs',
+          'schemaVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'userID',
+          'goal',
+          'experience',
+          'selectedPath',
+          'coachMode',
+          'enrolledProgramIDs',
+          'schemaVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.userID == userID
+        && data.userID is string
+        && isValidGoal(data.goal)
+        && isValidExperience(data.experience)
+        && isValidPath(data.selectedPath)
+        && isValidCoachMode(data.coachMode)
+        && hasRequiredPrograms(data)
+        && data.schemaVersion == 1
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPublicProfile(data, handle) {
+      return data.keys().hasOnly(['handle', 'isDiscoverable'])
+        && data.keys().hasAll(['handle', 'isDiscoverable'])
+        && data.handle == handle
+        && isValidHandle(data.handle)
+        && data.isDiscoverable is bool;
+    }
+
+    function isValidHandleClaim(data, handle, userID) {
+      return data.keys().hasOnly(['handle', 'ownerUID'])
+        && data.keys().hasAll(['handle', 'ownerUID'])
+        && data.handle == handle
+        && isValidHandle(data.handle)
+        && data.ownerUID == userID
+        && data.ownerUID is string;
+    }
+
+    function hasCompleteInitialProfile(userID, handle) {
+      let user = getAfter(
+        /databases/$(database)/documents/users/$(userID)
+      ).data;
+      let preferences = getAfter(
+        /databases/$(database)/documents/preferences/$(userID)
+      ).data;
+      let publicProfile = getAfter(
+        /databases/$(database)/documents/publicProfiles/$(userID)
+      ).data;
+      let claim = getAfter(
+        /databases/$(database)/documents/profileHandleClaims/$(handle)
+      ).data;
+      let directory = getAfter(
+        /databases/$(database)/documents/publicProfileDirectory/$(handle)
+      ).data;
+      return isValidUserDocument(user, userID)
+        && isValidPreferencesDocument(preferences, userID)
+        && isValidPublicProfile(publicProfile, handle)
+        && isValidHandleClaim(claim, handle, userID)
+        && isValidPublicProfile(directory, handle)
+        && publicProfile.isDiscoverable == false
+        && directory.isDiscoverable == false
+        && user.createdAt == request.time
+        && user.updatedAt == request.time
+        && preferences.createdAt == request.time
+        && preferences.updatedAt == request.time;
+    }
+
+    function pairedPublicStateIsValid(userID, handle) {
+      let publicProfile = getAfter(
+        /databases/$(database)/documents/publicProfiles/$(userID)
+      ).data;
+      let directory = getAfter(
+        /databases/$(database)/documents/publicProfileDirectory/$(handle)
+      ).data;
+      let claim = getAfter(
+        /databases/$(database)/documents/profileHandleClaims/$(handle)
+      ).data;
+      return isValidPublicProfile(publicProfile, handle)
+        && isValidPublicProfile(directory, handle)
+        && publicProfile.isDiscoverable == directory.isDiscoverable
+        && isValidHandleClaim(claim, handle, userID);
+    }
+
+    function adultOrHidden(userID, isDiscoverable) {
+      return isDiscoverable == false
+        || get(
+          /databases/$(database)/documents/users/$(userID)
+        ).data.ageBand == '18+';
+    }
+
+    match /users/{userID} {
+      allow get: if isOwner(userID);
+      allow list: if false;
+
+      allow create: if isOwner(userID)
+        && isValidUserDocument(request.resource.data, userID)
+        && hasCompleteInitialProfile(
+          userID,
+          getAfter(
+            /databases/$(database)/documents/publicProfiles/$(userID)
+          ).data.handle
+        );
+
+      allow update: if isOwner(userID)
+        && isValidUserDocument(request.resource.data, userID)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email',
+          'displayName',
+          'updatedAt'
+        ])
+        && request.resource.data.ageBand == resource.data.ageBand
+        && request.resource.data.userID == resource.data.userID
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /preferences/{userID} {
+      allow get: if isOwner(userID);
+      allow list: if false;
+
+      allow create: if isOwner(userID)
+        && isValidPreferencesDocument(request.resource.data, userID)
+        && hasCompleteInitialProfile(
+          userID,
+          getAfter(
+            /databases/$(database)/documents/publicProfiles/$(userID)
+          ).data.handle
+        );
+
+      allow update: if isOwner(userID)
+        && isValidPreferencesDocument(request.resource.data, userID)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'goal',
+          'experience',
+          'selectedPath',
+          'coachMode',
+          'enrolledProgramIDs',
+          'updatedAt'
+        ])
+        && request.resource.data.userID == resource.data.userID
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /publicProfiles/{userID} {
+      allow get: if isOwner(userID)
+        && isValidPublicProfile(resource.data, resource.data.handle);
+      allow list: if false;
+
+      allow create: if isOwner(userID)
+        && isValidPublicProfile(request.resource.data, request.resource.data.handle)
+        && hasCompleteInitialProfile(userID, request.resource.data.handle);
+
+      allow update: if isOwner(userID)
+        && isValidPublicProfile(request.resource.data, resource.data.handle)
+        && request.resource.data.handle == resource.data.handle
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'isDiscoverable'
+        ])
+        && pairedPublicStateIsValid(userID, resource.data.handle)
+        && adultOrHidden(userID, request.resource.data.isDiscoverable);
+
+      allow delete: if false;
+    }
+
+    match /profileHandleClaims/{handle} {
+      allow get: if isSignedIn()
+        && isValidHandleClaim(resource.data, handle, request.auth.uid);
+      allow list: if false;
+
+      allow create: if isSignedIn()
+        && isValidHandleClaim(request.resource.data, handle, request.auth.uid)
+        && hasCompleteInitialProfile(request.auth.uid, handle);
+
+      allow update: if isSignedIn()
+        && isValidHandleClaim(resource.data, handle, request.auth.uid)
+        && request.resource.data == resource.data
+        && pairedPublicStateIsValid(request.auth.uid, handle);
+
+      allow delete: if false;
+    }
+
+    match /publicProfileDirectory/{handle} {
+      allow get: if isSignedIn()
+        && (
+          resource == null
+          || isValidPublicProfile(resource.data, handle)
+        );
+      allow list: if false;
+
+      allow create: if isSignedIn()
+        && isValidPublicProfile(request.resource.data, handle)
+        && getAfter(
+          /databases/$(database)/documents/profileHandleClaims/$(handle)
+        ).data.ownerUID == request.auth.uid
+        && hasCompleteInitialProfile(request.auth.uid, handle);
+
+      allow update: if isSignedIn()
+        && isValidPublicProfile(request.resource.data, handle)
+        && isValidHandleClaim(
+          get(
+            /databases/$(database)/documents/profileHandleClaims/$(handle)
+          ).data,
+          handle,
+          request.auth.uid
+        )
+        && request.resource.data.handle == resource.data.handle
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'isDiscoverable'
+        ])
+        && pairedPublicStateIsValid(request.auth.uid, handle)
+        && adultOrHidden(
+          request.auth.uid,
+          request.resource.data.isDiscoverable
+        );
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
