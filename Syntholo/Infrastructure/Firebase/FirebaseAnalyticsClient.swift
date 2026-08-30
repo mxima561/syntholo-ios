@@ -2,13 +2,13 @@
 
 enum FirebaseAnalyticsValue: Equatable, Sendable {
     case string(String)
-    case bool(Bool)
+    case integer(Int)
 
     fileprivate var firebaseValue: Any {
         switch self {
         case let .string(value):
             value
-        case let .bool(value):
+        case let .integer(value):
             value
         }
     }
@@ -59,7 +59,33 @@ struct FirebaseAnalyticsClient: AnalyticsClient {
         case let .authenticationProvider(provider):
             .string(provider.rawValue)
         case let .restoredSession(isRestored):
-            .bool(isRestored)
+            .integer(isRestored ? 1 : 0)
+        case let .locale(locale):
+            .string(locale.rawValue)
+        // Stable IDs and numeric versions stay separate because a complete
+        // local version ID can exceed Firebase's standard string-value limit.
+        case let .catalogVersion(version):
+            .integer(version.rawValue)
+        case let .programID(identifier):
+            .string(identifier.rawValue)
+        case let .programVersion(version):
+            .integer(version.rawValue)
+        case let .moduleID(identifier):
+            .string(identifier.rawValue)
+        case let .moduleVersion(version):
+            .integer(version.rawValue)
+        case let .lessonID(identifier):
+            .string(identifier.rawValue)
+        case let .lessonVersion(version):
+            .integer(version.rawValue)
+        case let .rubricID(identifier):
+            .string(identifier.rawValue)
+        case let .rubricVersion(version):
+            .integer(version.rawValue)
+        case let .curriculumSource(source):
+            .string(source.rawValue)
+        case let .durationBucket(bucket):
+            .string(bucket.rawValue)
         }
     }
 }

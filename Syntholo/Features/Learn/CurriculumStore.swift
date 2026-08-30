@@ -26,6 +26,8 @@ final class CurriculumStore {
     @ObservationIgnored
     private var repository: any CurriculumRepository
     @ObservationIgnored
+    private let analytics: any AnalyticsClient
+    @ObservationIgnored
     private var loadTask: Task<Void, Never>?
     @ObservationIgnored
     private var loadGeneration: UInt64
@@ -36,22 +38,29 @@ final class CurriculumStore {
         CurriculumCatalogVersionID: CurriculumSnapshot
     ]
     @ObservationIgnored
+    private var retainedFreshness: [
+        CurriculumCatalogVersionID: CurriculumFreshness
+    ]
+    @ObservationIgnored
     private var retainedCatalogOrder: [CurriculumCatalogVersionID]
     @ObservationIgnored
     private var pinnedCatalogVersionIDs: Set<CurriculumCatalogVersionID>
 
     init(
         repository: any CurriculumRepository,
-        locale: CurriculumLocale
+        locale: CurriculumLocale,
+        analytics: any AnalyticsClient
     ) {
         self.repository = repository
         self.locale = locale
+        self.analytics = analytics
         state = .loading
         isLoadActive = false
         loadTask = nil
         loadGeneration = 0
         didRequestInitialLoad = false
         retainedSnapshots = [:]
+        retainedFreshness = [:]
         retainedCatalogOrder = []
         pinnedCatalogVersionIDs = []
     }
@@ -124,6 +133,116 @@ final class CurriculumStore {
         pruneRetainedSnapshots()
     }
 
+    @discardableResult
+    func recordPresentation(of route: LearnRoute) -> Bool {
+        guard let snapshot = retainedSnapshots[route.catalogVersionID],
+              let freshness = retainedFreshness[route.catalogVersionID],
+              snapshot.locale == route.locale else {
+            return false
+        }
+        let source: CurriculumAnalyticsSource = switch freshness {
+        case .saved:
+            .saved
+        case .fresh:
+            .fresh
+        }
+
+        switch route {
+        case let .program(reference):
+            guard ProgramDetailPresentation(
+                snapshot: snapshot,
+                reference: reference
+            ) != nil,
+            let program = snapshot.programVersions.first(where: {
+                $0.programVersionID == reference.programVersionID
+            }) else {
+                return false
+            }
+            analytics.log(
+                .programViewed(
+                    ProgramViewAnalyticsContext(
+                        locale: snapshot.locale,
+                        catalogVersion: snapshot.catalogVersion.version,
+                        programID: program.programID,
+                        programVersion: program.version,
+                        source: source
+                    )
+                )
+            )
+            return true
+
+        case let .module(reference):
+            guard ModuleDetailPresentation(
+                snapshot: snapshot,
+                reference: reference
+            ) != nil,
+            let program = snapshot.programVersions.first(where: {
+                $0.programVersionID == reference.programVersionID
+            }),
+            let module = snapshot.moduleVersions.first(where: {
+                $0.moduleVersionID == reference.moduleVersionID
+            }) else {
+                return false
+            }
+            analytics.log(
+                .moduleViewed(
+                    ModuleViewAnalyticsContext(
+                        locale: snapshot.locale,
+                        catalogVersion: snapshot.catalogVersion.version,
+                        programID: program.programID,
+                        programVersion: program.version,
+                        moduleID: module.moduleID,
+                        moduleVersion: module.version,
+                        source: source
+                    )
+                )
+            )
+            return true
+
+        case let .lesson(reference):
+            guard LessonPreviewPresentation(
+                snapshot: snapshot,
+                reference: reference
+            ) != nil,
+            let program = snapshot.programVersions.first(where: {
+                $0.programVersionID == reference.programVersionID
+            }),
+            let module = snapshot.moduleVersions.first(where: {
+                $0.moduleVersionID == reference.moduleVersionID
+            }),
+            let lesson = snapshot.lessonVersions.first(where: {
+                $0.lessonVersionID == reference.lessonVersionID
+            }),
+            let rubric = snapshot.rubricVersions.first(where: {
+                $0.rubricVersionID == reference.rubricVersionID
+            }),
+            let durationBucket = CurriculumDurationBucket(
+                expectedMinutes: lesson.expectedDurationMinutes
+            ) else {
+                return false
+            }
+            analytics.log(
+                .lessonViewed(
+                    LessonViewAnalyticsContext(
+                        locale: snapshot.locale,
+                        catalogVersion: snapshot.catalogVersion.version,
+                        programID: program.programID,
+                        programVersion: program.version,
+                        moduleID: module.moduleID,
+                        moduleVersion: module.version,
+                        lessonID: lesson.lessonID,
+                        lessonVersion: lesson.version,
+                        rubricID: rubric.rubricID,
+                        rubricVersion: rubric.version,
+                        source: source,
+                        durationBucket: durationBucket
+                    )
+                )
+            )
+            return true
+        }
+    }
+
     private func beginLoad() {
         if displayedSnapshot == nil {
             state = .loading
@@ -162,12 +281,12 @@ final class CurriculumStore {
     private func receive(_ event: CurriculumLoadEvent) -> Bool {
         switch event {
         case let .saved(snapshot):
-            retain(snapshot)
+            retain(snapshot, freshness: .saved)
             state = .ready(snapshot, freshness: .saved)
             return false
 
         case let .fresh(snapshot):
-            retain(snapshot)
+            retain(snapshot, freshness: .fresh)
             state = .ready(snapshot, freshness: .fresh)
             return true
 
@@ -178,7 +297,12 @@ final class CurriculumStore {
         case let .updateRequired(requiredSchema, saved):
             let fallback = saved ?? displayedSnapshot
             if let fallback {
-                retain(fallback)
+                let freshness = saved == nil
+                    ? retainedFreshness[
+                        fallback.catalogVersion.catalogVersionID
+                    ] ?? .saved
+                    : .saved
+                retain(fallback, freshness: freshness)
             }
             state = .updateRequired(
                 requiredVersion: requiredSchema,
@@ -188,7 +312,7 @@ final class CurriculumStore {
 
         case let .unavailable(_, saved):
             if let fallback = saved ?? displayedSnapshot {
-                retain(fallback)
+                retain(fallback, freshness: .saved)
                 state = .ready(fallback, freshness: .saved)
             } else {
                 state = .unavailable(retryable: true)
@@ -208,11 +332,15 @@ final class CurriculumStore {
         }
     }
 
-    private func retain(_ snapshot: CurriculumSnapshot) {
+    private func retain(
+        _ snapshot: CurriculumSnapshot,
+        freshness: CurriculumFreshness
+    ) {
         let catalogVersionID = snapshot.catalogVersion.catalogVersionID
         retainedCatalogOrder.removeAll { $0 == catalogVersionID }
         retainedCatalogOrder.append(catalogVersionID)
         retainedSnapshots[catalogVersionID] = snapshot
+        retainedFreshness[catalogVersionID] = freshness
 
         pruneRetainedSnapshots()
     }
@@ -224,12 +352,14 @@ final class CurriculumStore {
         retainedCatalogOrder.removeAll { !keepIDs.contains($0) }
         for removedID in removedIDs {
             retainedSnapshots.removeValue(forKey: removedID)
+            retainedFreshness.removeValue(forKey: removedID)
         }
     }
 
     private func resetRetainedSnapshots() {
         pinnedCatalogVersionIDs.removeAll(keepingCapacity: true)
         retainedSnapshots.removeAll(keepingCapacity: true)
+        retainedFreshness.removeAll(keepingCapacity: true)
         retainedCatalogOrder.removeAll(keepingCapacity: true)
     }
 

@@ -150,20 +150,26 @@ final class AppDependencies {
 
         let onboardingCoordinator: OnboardingCoordinator
         let curriculumRepository: any CurriculumRepository
+        let analytics: any AnalyticsClient
 
         if !isFirebaseConfigured {
+            analytics = NoOpAnalyticsClient()
             onboardingCoordinator = OnboardingCoordinator(
                 session: session,
                 onboardingStore: OnboardingStore(repository: .memory()),
                 authClient: UnavailableAuthClient(),
                 profileRepository: UnavailableProfileRepository(),
-                analytics: NoOpAnalyticsClient()
+                analytics: analytics
             )
             curriculumRepository = UnavailableCurriculumRepository(
                 error: .wrongEnvironment
             )
         } else {
-            onboardingCoordinator = makeLiveCoordinator(session: session)
+            analytics = FirebaseAnalyticsClient()
+            onboardingCoordinator = makeLiveCoordinator(
+                session: session,
+                analytics: analytics
+            )
             curriculumRepository = makeLiveCurriculumRepository(
                 configuration: configuration
             )
@@ -171,7 +177,8 @@ final class AppDependencies {
 
         let curriculumStore = CurriculumStore(
             repository: curriculumRepository,
-            locale: launchLocale
+            locale: launchLocale,
+            analytics: analytics
         )
         return AppDependencies(
             router: router,
@@ -184,15 +191,18 @@ final class AppDependencies {
     static func makeUITesting(arguments: [String]) -> AppDependencies {
         let router = AppRouter()
         let session = AppSession(configurationAvailable: true)
+        let analytics = NoOpAnalyticsClient()
         let onboardingCoordinator = makeUITestCoordinator(
             session: session,
-            arguments: arguments
+            arguments: arguments,
+            analytics: analytics
         )
         let curriculumStore = CurriculumStore(
             repository: DebugCurriculumFixtures.repository(
                 arguments: arguments
             ),
-            locale: launchLocale
+            locale: launchLocale,
+            analytics: analytics
         )
         return AppDependencies(
             router: router,
@@ -211,9 +221,9 @@ final class AppDependencies {
     }()
 
     private static func makeLiveCoordinator(
-        session: AppSession
+        session: AppSession,
+        analytics: any AnalyticsClient
     ) -> OnboardingCoordinator {
-        let analytics = FirebaseAnalyticsClient()
         return OnboardingCoordinator(
             session: session,
             onboardingStore: OnboardingStore(repository: .userDefaults()),
@@ -242,7 +252,8 @@ final class AppDependencies {
     #if DEBUG
     private static func makeUITestCoordinator(
         session: AppSession,
-        arguments: [String]
+        arguments: [String],
+        analytics: any AnalyticsClient
     ) -> OnboardingCoordinator {
         let user = AuthenticatedUser(
             id: "ui-test-user",
@@ -333,7 +344,7 @@ final class AppDependencies {
                     ? holdNanoseconds
                     : 0
             ),
-            analytics: NoOpAnalyticsClient(),
+            analytics: analytics,
             now: { Date(timeIntervalSince1970: 1_800_000_000) }
         )
     }

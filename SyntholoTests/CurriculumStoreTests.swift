@@ -2,6 +2,22 @@ import Foundation
 import XCTest
 @testable import Syntholo
 
+// Production has no default analytics dependency. This convenience exists
+// only in the unit-test target for store tests unrelated to telemetry.
+@MainActor
+extension CurriculumStore {
+    convenience init(
+        repository: any CurriculumRepository,
+        locale: CurriculumLocale
+    ) {
+        self.init(
+            repository: repository,
+            locale: locale,
+            analytics: NoOpAnalyticsClient()
+        )
+    }
+}
+
 @MainActor
 final class CurriculumStoreTests: XCTestCase {
     func testInitialStateIsLoadingButWorkDoesNotBeginUntilExplicitLoad() throws {

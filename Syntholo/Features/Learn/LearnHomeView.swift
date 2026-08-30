@@ -121,6 +121,10 @@ struct LearnHomeView: View {
                     reference: reference
                 ) {
                     ProgramDetailView(presentation: presentation)
+                        .recordCurriculumPresentation(
+                            route: route,
+                            store: store
+                        )
                 } else {
                     CurriculumStatusView(kind: .routeUnavailable)
                 }
@@ -131,6 +135,10 @@ struct LearnHomeView: View {
                     reference: reference
                 ) {
                     ModuleDetailView(presentation: presentation)
+                        .recordCurriculumPresentation(
+                            route: route,
+                            store: store
+                        )
                 } else {
                     CurriculumStatusView(kind: .routeUnavailable)
                 }
@@ -141,6 +149,10 @@ struct LearnHomeView: View {
                     reference: reference
                 ) {
                     LessonPreviewView(presentation: presentation)
+                        .recordCurriculumPresentation(
+                            route: route,
+                            store: store
+                        )
                 } else {
                     CurriculumStatusView(kind: .routeUnavailable)
                 }
@@ -377,5 +389,38 @@ private struct ProgramCatalogRowContent: View {
             )
         }
         .padding(.vertical, Space.xs)
+    }
+}
+
+private struct CurriculumAnalyticsPresentationModifier: ViewModifier {
+    let route: LearnRoute
+    let store: CurriculumStore
+
+    @State private var didRecordPresentation = false
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            guard !didRecordPresentation else {
+                return
+            }
+            didRecordPresentation = true
+            if !store.recordPresentation(of: route) {
+                didRecordPresentation = false
+            }
+        }
+    }
+}
+
+private extension View {
+    func recordCurriculumPresentation(
+        route: LearnRoute,
+        store: CurriculumStore
+    ) -> some View {
+        modifier(
+            CurriculumAnalyticsPresentationModifier(
+                route: route,
+                store: store
+            )
+        )
     }
 }
