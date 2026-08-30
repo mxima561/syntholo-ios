@@ -143,6 +143,78 @@ final class OnboardingUITests: XCTestCase {
         assertNoEarlyInterruption(in: relaunchedApp)
     }
 
+    func testLocalSaveFailureRetainsStepAndRetrySurvivesRelaunch() {
+        let storageKey = "persistence-retry-\(UUID().uuidString)"
+        let app = launchOnboarding(
+            storageKey: storageKey,
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-save",
+            ]
+        )
+
+        app.buttons["Start learning"].tap()
+
+        let retry = app.buttons["onboarding.persistence.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["I’m 18 or older"].exists)
+        XCTAssertFalse(app.buttons["Start learning"].exists)
+
+        retry.tap()
+        XCTAssertTrue(retry.waitForNonExistence(timeout: 2))
+        app.terminate()
+
+        let relaunchedApp = launchOnboarding(
+            reset: false,
+            storageKey: storageKey
+        )
+        XCTAssertTrue(
+            relaunchedApp.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertFalse(relaunchedApp.buttons["Start learning"].exists)
+    }
+
+    func testLocalLoadFailurePausesRestoreUntilRetryWithoutLosingDraft() {
+        let storageKey = "load-retry-\(UUID().uuidString)"
+        let app = launchOnboarding(storageKey: storageKey)
+        app.buttons["Start learning"].tap()
+        XCTAssertTrue(app.buttons["I’m 18 or older"].waitForExistence(timeout: 2))
+        app.terminate()
+
+        let relaunchedApp = launchOnboarding(
+            reset: false,
+            storageKey: storageKey,
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-load",
+            ]
+        )
+
+        let retry = relaunchedApp.buttons["onboarding.persistence.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 3))
+        XCTAssertTrue(relaunchedApp.staticTexts["Loading Syntholo…"].exists)
+        XCTAssertFalse(relaunchedApp.buttons["Start learning"].exists)
+        XCTAssertFalse(relaunchedApp.buttons["I’m 18 or older"].exists)
+
+        retry.tap()
+
+        XCTAssertTrue(
+            relaunchedApp.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertTrue(retry.waitForNonExistence(timeout: 2))
+        relaunchedApp.terminate()
+
+        let verifiedRelaunch = launchOnboarding(
+            reset: false,
+            storageKey: storageKey
+        )
+        XCTAssertTrue(
+            verifiedRelaunch.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertFalse(verifiedRelaunch.buttons["Start learning"].exists)
+    }
+
     func testCompletedProfileRestoresDirectlyToLearn() {
         let app = launchSession(arguments: [])
 
@@ -569,6 +641,20 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         )
 
         try audit(app, waitingFor: app.staticTexts["Loading Syntholo…"])
+    }
+
+    func testPersistenceRecoveryLayoutPassesAccessibilityAudits() throws {
+        let app = launchOnboarding(
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-save",
+            ]
+        )
+        app.buttons["Start learning"].tap()
+
+        try audit(
+            app,
+            waitingFor: app.buttons["onboarding.persistence.retry"]
+        )
     }
 
     private func reachAccountCreation(in app: XCUIApplication) {

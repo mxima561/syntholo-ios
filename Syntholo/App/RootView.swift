@@ -36,6 +36,18 @@ struct RootView: View {
             }
         }
         .tint(SyntholoColor.accent)
+        .safeAreaInset(edge: .bottom) {
+            if let persistenceFailure = coordinator.onboardingStore.persistenceFailure {
+                OnboardingPersistenceRecoveryView(
+                    failure: persistenceFailure,
+                    onRetry: {
+                        Task { @MainActor in
+                            await coordinator.retryOnboardingPersistence()
+                        }
+                    }
+                )
+            }
+        }
         .task {
             await coordinator.restore()
         }
@@ -146,7 +158,7 @@ private enum RootRuntime {
         let onboardingStorageKey = arguments
             .first { $0.hasPrefix("--onboarding-storage-key=") }
             .map { String($0.dropFirst("--onboarding-storage-key=".count)) }
-        let onboardingRepository = onboardingStorageKey.map {
+        var onboardingRepository = onboardingStorageKey.map {
             OnboardingDraftRepository.userDefaults(
                 .standard,
                 key: "com.syntholo.ui-testing.onboarding.\($0)"
@@ -154,6 +166,12 @@ private enum RootRuntime {
         } ?? .memory()
         if isOnboardingReset {
             try? onboardingRepository.clear()
+        }
+        if arguments.contains("--onboarding-persistence-fixture=fail-first-save") {
+            onboardingRepository = onboardingRepository.failingFirstSave()
+        }
+        if arguments.contains("--onboarding-persistence-fixture=fail-first-load") {
+            onboardingRepository = onboardingRepository.failingFirstLoad()
         }
         let restoredUser = onboardingStorageKey != nil
             || hasDelayedSignedOutSession

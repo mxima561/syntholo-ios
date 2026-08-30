@@ -5,7 +5,7 @@ struct FirstLessonHandoffView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Route ready",
+            eyebrow: "ROUTE READY",
             progress: 6,
             title: "Foundations starts with better prompts",
             introduction: "Your first lesson practices a clear request, useful context, and a check for weak output.",

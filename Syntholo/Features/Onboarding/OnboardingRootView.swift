@@ -48,7 +48,10 @@ struct OnboardingRootView: View {
         } else {
             switch store.step {
             case .welcome:
-                WelcomeView(onStart: coordinator.startOnboarding)
+                WelcomeView(
+                    isStartEnabled: store.canAdvance,
+                    onStart: coordinator.startOnboarding
+                )
             case .age:
                 AgeConfirmationView(
                     selectedAgeBand: store.draft.ageBand,
@@ -116,7 +119,7 @@ struct OnboardingRootView: View {
 
     private var goalView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 3/6",
+            eyebrow: "ORIENTATION · 3/6",
             progress: 3,
             title: "What do you want to use AI for?",
             introduction: "Choose the work you want to practice first.",
@@ -128,25 +131,29 @@ struct OnboardingRootView: View {
                         id: LearnerGoal.studySmarter,
                         title: "Study smarter",
                         detail: "Research, organize notes, and check AI outputs.",
-                        systemImage: "book.pages"
+                        systemImage: "book.pages",
+                        accessibilityIdentifier: "Study smarter"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.workProductivity,
                         title: "Improve my workflow",
                         detail: "Draft, summarize, and build repeatable work steps.",
-                        systemImage: "checklist"
+                        systemImage: "checklist",
+                        accessibilityIdentifier: "Improve my workflow"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.createContent,
                         title: "Create with AI",
                         detail: "Plan and revise writing, images, and media.",
-                        systemImage: "pencil.and.outline"
+                        systemImage: "pencil.and.outline",
+                        accessibilityIdentifier: "Create with AI"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.buildWithAI,
                         title: "Build with AI",
                         detail: "Turn an idea into a working tool or prototype.",
-                        systemImage: "hammer"
+                        systemImage: "hammer",
+                        accessibilityIdentifier: "Build with AI"
                     )
                 ],
                 selectedID: store.draft.goal,
@@ -157,7 +164,7 @@ struct OnboardingRootView: View {
 
     private var experienceView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 4/6",
+            eyebrow: "ORIENTATION · 4/6",
             progress: 4,
             title: "How much AI practice have you had?",
             introduction: "This sets the starting pace for Foundations.",
@@ -169,19 +176,22 @@ struct OnboardingRootView: View {
                         id: ExperienceLevel.beginner,
                         title: "Beginner-friendly",
                         detail: "Start with prompting, checking, and responsible use.",
-                        systemImage: "figure.walk"
+                        systemImage: "figure.walk",
+                        accessibilityIdentifier: "Beginner-friendly"
                     ),
                     ChoiceListItem(
                         id: ExperienceLevel.intermediate,
                         title: "Some experience",
                         detail: "Practice stronger prompts and multi-step workflows.",
-                        systemImage: "arrow.triangle.2.circlepath"
+                        systemImage: "arrow.triangle.2.circlepath",
+                        accessibilityIdentifier: "Some experience"
                     ),
                     ChoiceListItem(
                         id: ExperienceLevel.advanced,
                         title: "Regular practice",
                         detail: "Focus on evaluation, automation, and building.",
-                        systemImage: "wrench.and.screwdriver"
+                        systemImage: "wrench.and.screwdriver",
+                        accessibilityIdentifier: "Regular practice"
                     )
                 ],
                 selectedID: store.draft.experience,
@@ -192,7 +202,7 @@ struct OnboardingRootView: View {
 
     private var checkingProfileView: some View {
         OnboardingPage(
-            eyebrow: "Profile check",
+            eyebrow: "PROFILE CHECK",
             progress: 6,
             title: "Checking your profile",
             introduction: "Making sure your saved profile is ready.",
@@ -207,7 +217,7 @@ struct OnboardingRootView: View {
 
     private var savingProfileView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 6/6",
+            eyebrow: "ORIENTATION · 6/6",
             progress: 6,
             title: "Saving your route",
             introduction: nil,
@@ -235,7 +245,7 @@ private struct ProfileSaveRetryView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Account saved",
+            eyebrow: "ACCOUNT SAVED",
             progress: 6,
             title: "Finish saving your route",
             introduction: "Your account is ready, but your learning route didn’t save.",
@@ -263,7 +273,7 @@ private struct ProfileCheckRetryView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Profile check",
+            eyebrow: "PROFILE CHECK",
             progress: 6,
             title: "We couldn’t check your profile",
             introduction: "Your account is signed in. Check again before we save your learning route.",

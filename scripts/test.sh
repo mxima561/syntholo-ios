@@ -93,7 +93,7 @@ echo "Running unit tests."
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 98 unit-tests
+assert_test_result "$unit_result" 106 unit-tests
 
 functional_ui_result="$result_directory/FunctionalUI.xcresult"
 echo "Running functional UI tests."
@@ -114,7 +114,7 @@ functional_ui_command_status=0
 
 functional_ui_assertion_status=0
 if [[ -d "$functional_ui_result" ]]; then
-  assert_test_result "$functional_ui_result" 16 functional-ui-tests 1 \
+  assert_test_result "$functional_ui_result" 18 functional-ui-tests 1 \
     || functional_ui_assertion_status=$?
 else
   echo "functional-ui-tests did not produce an xcresult bundle." >&2
@@ -131,19 +131,53 @@ fi
 if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
   echo "Skipping accessibility audits by explicit diagnostic request."
 else
-  shell_accessibility_result="$result_directory/ShellAccessibility.xcresult"
-  echo "Running AppShell accessibility audit tests sequentially."
-  ./scripts/run_with_timeout.sh 600 \
-    xcodebuild -quiet test-without-building \
-      -project Syntholo.xcodeproj \
-      -scheme Syntholo \
-      -destination "$destination" \
-      -derivedDataPath DerivedData \
-      -parallel-testing-enabled NO \
-      CODE_SIGNING_ALLOWED=NO \
-      -resultBundlePath "$shell_accessibility_result" \
-      -only-testing:SyntholoUITests/AccessibilityAuditUITests
-  assert_test_result "$shell_accessibility_result" 28 shell-accessibility-tests
+  shell_accessibility_tests=(
+    testLearnContrastAudit
+    testLearnElementDetectionAudit
+    testLearnHitRegionAudit
+    testLearnSufficientElementDescriptionAudit
+    testLearnDynamicTypeAudit
+    testLearnTextClippedAudit
+    testLearnTraitAudit
+    testPracticeContrastAudit
+    testPracticeElementDetectionAudit
+    testPracticeHitRegionAudit
+    testPracticeSufficientElementDescriptionAudit
+    testPracticeDynamicTypeAudit
+    testPracticeTextClippedAudit
+    testPracticeTraitAudit
+    testSocialContrastAudit
+    testSocialElementDetectionAudit
+    testSocialHitRegionAudit
+    testSocialSufficientElementDescriptionAudit
+    testSocialDynamicTypeAudit
+    testSocialTextClippedAudit
+    testSocialTraitAudit
+    testProfileContrastAudit
+    testProfileElementDetectionAudit
+    testProfileHitRegionAudit
+    testProfileSufficientElementDescriptionAudit
+    testProfileDynamicTypeAudit
+    testProfileTextClippedAudit
+    testProfileTraitAudit
+  )
+  echo "Running 28 AppShell accessibility audits in isolated Xcode sessions."
+  for shell_accessibility_test in "${shell_accessibility_tests[@]}"; do
+    shell_accessibility_result="$result_directory/${shell_accessibility_test}.xcresult"
+    echo "Running isolated AppShell audit: $shell_accessibility_test."
+    ./scripts/run_with_timeout.sh 180 \
+      xcodebuild -quiet test-without-building \
+        -project Syntholo.xcodeproj \
+        -scheme Syntholo \
+        -destination "$destination" \
+        -derivedDataPath DerivedData \
+        -parallel-testing-enabled NO \
+        CODE_SIGNING_ALLOWED=NO \
+        -resultBundlePath "$shell_accessibility_result" \
+        -only-testing:"SyntholoUITests/AccessibilityAuditUITests/$shell_accessibility_test"
+    assert_test_result "$shell_accessibility_result" 1 "$shell_accessibility_test"
+  done
+  echo "shell-accessibility-tests: 28 passed, 0 failed, 0 skipped."
 
   onboarding_accessibility_result="$result_directory/OnboardingAccessibility.xcresult"
   echo "Running onboarding accessibility audit tests sequentially."
@@ -157,7 +191,7 @@ else
       CODE_SIGNING_ALLOWED=NO \
       -resultBundlePath "$onboarding_accessibility_result" \
       -only-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
-  assert_test_result "$onboarding_accessibility_result" 10 onboarding-accessibility-tests
+  assert_test_result "$onboarding_accessibility_result" 11 onboarding-accessibility-tests
 fi
 
 ./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh

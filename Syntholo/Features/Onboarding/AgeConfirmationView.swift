@@ -7,7 +7,7 @@ struct AgeConfirmationView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 2/6",
+            eyebrow: "ORIENTATION · 2/6",
             progress: 2,
             title: "Which age range are you in?",
             introduction: "Syntholo is for learners age 13 and older.",
@@ -19,13 +19,15 @@ struct AgeConfirmationView: View {
                         id: AgeBand.teen,
                         title: "I’m 13–17",
                         detail: "Continue with the learner experience.",
-                        systemImage: "person"
+                        systemImage: "person",
+                        accessibilityIdentifier: "I’m 13–17"
                     ),
                     ChoiceListItem(
                         id: AgeBand.adult,
                         title: "I’m 18 or older",
                         detail: "Continue with the learner experience.",
-                        systemImage: "person"
+                        systemImage: "person",
+                        accessibilityIdentifier: "I’m 18 or older"
                     )
                 ],
                 selectedID: selectedAgeBand,
@@ -48,7 +50,7 @@ struct AgeConfirmationView: View {
 struct AgeRestrictedView: View {
     var body: some View {
         OnboardingPage(
-            eyebrow: "Age requirement",
+            eyebrow: "AGE REQUIREMENT",
             progress: 2,
             title: "Close Syntholo",
             introduction: "Syntholo is available to learners age 13 and older. No information was saved.",

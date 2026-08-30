@@ -1,24 +1,35 @@
 import Observation
 
+enum OnboardingPersistenceFailure: Equatable, Sendable {
+    case load
+    case save
+    case clear
+}
+
 @MainActor
 @Observable
 final class OnboardingStore {
     private(set) var step: OnboardingStep
     private(set) var draft: OnboardingDraft
     private(set) var error: OnboardingError?
+    private(set) var persistenceFailure: OnboardingPersistenceFailure?
 
     @ObservationIgnored
     private let repository: OnboardingDraftRepository
+    @ObservationIgnored
+    private var pendingPersistenceAction: PendingPersistenceAction?
 
     init(repository: OnboardingDraftRepository) {
         self.repository = repository
         step = .welcome
         draft = OnboardingDraft()
         error = nil
+        persistenceFailure = nil
+        pendingPersistenceAction = nil
     }
 
     var canAdvance: Bool {
-        step == .welcome
+        step == .welcome && persistenceFailure != .load
     }
 
     var canGoBack: Bool {
@@ -46,7 +57,7 @@ final class OnboardingStore {
     }
 
     func advance() {
-        guard step == .welcome else {
+        guard canAdvance else {
             return
         }
         step = .age
@@ -190,29 +201,87 @@ final class OnboardingStore {
         }
         step = .firstLessonHandoff
         error = nil
-        try? repository.clear()
+        clearPersistedDraft()
     }
 
     func reset() {
         step = .welcome
         draft = OnboardingDraft()
         error = nil
-        try? repository.clear()
+        clearPersistedDraft()
+    }
+
+    func retryPersistence() {
+        guard let pendingPersistenceAction else {
+            return
+        }
+
+        switch pendingPersistenceAction {
+        case .load:
+            restoreSavedState()
+        case let .save(state):
+            save(state)
+        case .clear:
+            clearPersistedDraft()
+        }
     }
 
     private func restoreSavedState() {
-        guard let saved = try? repository.load(),
-              Self.isValid(saved) else {
-            reset()
-            return
+        do {
+            guard let saved = try repository.load() else {
+                step = .welcome
+                draft = OnboardingDraft()
+                error = nil
+                clearPersistenceFailure()
+                return
+            }
+            guard Self.isValid(saved) else {
+                step = .welcome
+                draft = OnboardingDraft()
+                error = nil
+                clearPersistedDraft()
+                return
+            }
+            step = saved.step
+            draft = saved.draft
+            error = nil
+            clearPersistenceFailure()
+        } catch {
+            step = .welcome
+            draft = OnboardingDraft()
+            self.error = nil
+            pendingPersistenceAction = .load
+            persistenceFailure = .load
         }
-        step = saved.step
-        draft = saved.draft
-        error = nil
     }
 
     private func persist() {
-        try? repository.save(step: step, draft: draft)
+        save(.init(step: step, draft: draft))
+    }
+
+    private func save(_ state: OnboardingDraftRepository.State) {
+        do {
+            try repository.save(state)
+            clearPersistenceFailure()
+        } catch {
+            pendingPersistenceAction = .save(state)
+            persistenceFailure = .save
+        }
+    }
+
+    private func clearPersistedDraft() {
+        do {
+            try repository.clear()
+            clearPersistenceFailure()
+        } catch {
+            pendingPersistenceAction = .clear
+            persistenceFailure = .clear
+        }
+    }
+
+    private func clearPersistenceFailure() {
+        pendingPersistenceAction = nil
+        persistenceFailure = nil
     }
 
     private static func isValid(_ state: OnboardingDraftRepository.State) -> Bool {
@@ -239,5 +308,13 @@ final class OnboardingStore {
         case .account, .savingProfile, .firstLessonHandoff:
             draft.isReadyForAccount
         }
+    }
+}
+
+private extension OnboardingStore {
+    enum PendingPersistenceAction {
+        case load
+        case save(OnboardingDraftRepository.State)
+        case clear
     }
 }

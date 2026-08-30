@@ -416,6 +416,121 @@ final class OnboardingStoreTests: XCTestCase {
         }
     }
 
+    func testSaveFailureRetainsSelectionAndRetriesExactSnapshot() throws {
+        let storage = ScriptedOnboardingDraftStorage()
+        let repository = storage.repository
+        let store = OnboardingStore(repository: repository)
+        storage.failNextSave()
+
+        store.advance()
+
+        XCTAssertEqual(store.step, .age)
+        XCTAssertEqual(store.draft, OnboardingDraft())
+        XCTAssertEqual(store.persistenceFailure, .save)
+        XCTAssertNil(try repository.load())
+
+        store.retryPersistence()
+
+        XCTAssertNil(store.persistenceFailure)
+        XCTAssertEqual(try repository.load()?.step, .age)
+        XCTAssertEqual(try repository.load()?.draft, OnboardingDraft())
+    }
+
+    func testNewestFailedTransitionReplacesPendingSaveSnapshot() throws {
+        let storage = ScriptedOnboardingDraftStorage()
+        let repository = storage.repository
+        let store = OnboardingStore(repository: repository)
+        storage.failNextSaves(2)
+
+        store.advance()
+        store.selectAgeBand(.adult)
+
+        XCTAssertEqual(store.step, .goal)
+        XCTAssertEqual(store.draft, OnboardingDraft(ageBand: .adult))
+        XCTAssertEqual(store.persistenceFailure, .save)
+
+        store.retryPersistence()
+
+        XCTAssertNil(store.persistenceFailure)
+        let saved = try XCTUnwrap(repository.load())
+        XCTAssertEqual(saved.step, .goal)
+        XCTAssertEqual(saved.draft, OnboardingDraft(ageBand: .adult))
+    }
+
+    func testLoadFailurePreservesStoredDraftAndRetryRestoresIt() async throws {
+        let storage = ScriptedOnboardingDraftStorage()
+        let repository = storage.repository
+        let expected = OnboardingDraftRepository.State(
+            step: .savingProfile,
+            draft: completeDraft
+        )
+        try repository.save(expected)
+        storage.failNextLoad()
+        let store = OnboardingStore(repository: repository)
+
+        await store.restore()
+
+        XCTAssertEqual(store.step, .welcome)
+        XCTAssertEqual(store.draft, OnboardingDraft())
+        XCTAssertEqual(store.persistenceFailure, .load)
+
+        store.retryPersistence()
+
+        XCTAssertNil(store.persistenceFailure)
+        XCTAssertEqual(store.step, expected.step)
+        XCTAssertEqual(store.draft, expected.draft)
+        XCTAssertEqual(try repository.load(), expected)
+    }
+
+    func testLoadFailureBlocksStartingOverUntilStoredDraftIsRetried() async throws {
+        let storage = ScriptedOnboardingDraftStorage()
+        let repository = storage.repository
+        let expected = OnboardingDraftRepository.State(
+            step: .savingProfile,
+            draft: completeDraft
+        )
+        try repository.save(expected)
+        storage.failNextLoad()
+        let store = OnboardingStore(repository: repository)
+
+        await store.restore()
+        store.advance()
+
+        XCTAssertEqual(store.step, .welcome)
+        XCTAssertEqual(store.draft, OnboardingDraft())
+        XCTAssertEqual(store.persistenceFailure, .load)
+        XCTAssertEqual(try repository.load(), expected)
+
+        store.retryPersistence()
+
+        XCTAssertNil(store.persistenceFailure)
+        XCTAssertEqual(store.step, expected.step)
+        XCTAssertEqual(store.draft, expected.draft)
+    }
+
+    func testClearFailureAtHandoffCanRetryWithoutLosingDraft() async throws {
+        let storage = ScriptedOnboardingDraftStorage()
+        let repository = storage.repository
+        try repository.save(step: .savingProfile, draft: completeDraft)
+        let store = OnboardingStore(repository: repository)
+        await store.restore()
+        storage.failNextClear()
+
+        store.profileSaveSucceeded()
+
+        XCTAssertEqual(store.step, .firstLessonHandoff)
+        XCTAssertEqual(store.draft, completeDraft)
+        XCTAssertEqual(store.persistenceFailure, .clear)
+        XCTAssertNotNil(try repository.load())
+
+        store.retryPersistence()
+
+        XCTAssertNil(store.persistenceFailure)
+        XCTAssertEqual(store.step, .firstLessonHandoff)
+        XCTAssertEqual(store.draft, completeDraft)
+        XCTAssertNil(try repository.load())
+    }
+
     private func assertRestored(
         _ repository: OnboardingDraftRepository,
         step: OnboardingStep,
@@ -427,5 +542,64 @@ final class OnboardingStoreTests: XCTestCase {
         await restoredStore.restore()
         XCTAssertEqual(restoredStore.step, step, file: file, line: line)
         XCTAssertEqual(restoredStore.draft, draft, file: file, line: line)
+    }
+}
+
+private enum ScriptedOnboardingDraftStorageError: Error {
+    case scriptedFailure
+}
+
+private final class ScriptedOnboardingDraftStorage: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data: Data?
+    private var loadFailuresRemaining = 0
+    private var saveFailuresRemaining = 0
+    private var clearFailuresRemaining = 0
+
+    var repository: OnboardingDraftRepository {
+        OnboardingDraftRepository(
+            readData: read,
+            writeData: write
+        )
+    }
+
+    func failNextLoad() {
+        lock.withLock { loadFailuresRemaining += 1 }
+    }
+
+    func failNextSave() {
+        failNextSaves(1)
+    }
+
+    func failNextSaves(_ count: Int) {
+        lock.withLock { saveFailuresRemaining += count }
+    }
+
+    func failNextClear() {
+        lock.withLock { clearFailuresRemaining += 1 }
+    }
+
+    private func read() throws -> Data? {
+        try lock.withLock {
+            if loadFailuresRemaining > 0 {
+                loadFailuresRemaining -= 1
+                throw ScriptedOnboardingDraftStorageError.scriptedFailure
+            }
+            return data
+        }
+    }
+
+    private func write(_ data: Data?) throws {
+        try lock.withLock {
+            if data == nil, clearFailuresRemaining > 0 {
+                clearFailuresRemaining -= 1
+                throw ScriptedOnboardingDraftStorageError.scriptedFailure
+            }
+            if data != nil, saveFailuresRemaining > 0 {
+                saveFailuresRemaining -= 1
+                throw ScriptedOnboardingDraftStorageError.scriptedFailure
+            }
+            self.data = data
+        }
     }
 }
