@@ -8,7 +8,7 @@
 
 **Implementation commit:** `f3a07ec` (`feat(curriculum): add validated Swift domain`)
 
-**Documentation provenance:** introduced by the documentation commit immediately after the implementation commit; finalized by the following provenance commit
+**Documentation provenance:** introduced in `7562d69` (`docs: record Task 5 Swift domain checkpoint`); this field is finalized by the immediately following provenance commit
 
 ## Result
 
