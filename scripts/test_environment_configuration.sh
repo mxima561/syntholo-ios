@@ -10,7 +10,7 @@ assert_environment() {
   local info_plist="$derived_data_path/Build/Products/${configuration}-iphoneos/Syntholo.app/Info.plist"
   local actual_environment
 
-  xcodebuild build \
+  xcodebuild build -quiet \
     -project Syntholo.xcodeproj \
     -scheme Syntholo \
     -configuration "$configuration" \
@@ -31,3 +31,31 @@ assert_environment() {
 
 assert_environment Debug development
 assert_environment Release production
+
+release_app="$derived_data_path/Build/Products/Release-iphoneos/Syntholo.app"
+release_binary="$release_app/Syntholo"
+fixture_markers=(
+  "--ui-testing"
+  "--onboarding-reset"
+  "--onboarding-storage-key="
+  "--provider-fixture="
+  "--path-options-expanded"
+  "--path-state-proof"
+  "--session-fixture="
+  "--profile-fixture="
+  "--profile-load-fixture="
+)
+
+for marker in "${fixture_markers[@]}"; do
+  if /usr/bin/grep -a -Fq -- "$marker" "$release_binary"; then
+    echo "Release binary contains UI-test fixture marker: $marker" >&2
+    exit 1
+  fi
+done
+
+if /usr/bin/nm "$release_binary" \
+  | xcrun swift-demangle \
+  | /usr/bin/grep -Eq 'UITest(AuthClient|ProfileRepository)|makeUITestCoordinator|continueWithUITestProvider|uiTestAuthClient'; then
+  echo "Release binary contains UI-test fixture implementation symbols." >&2
+  exit 1
+fi

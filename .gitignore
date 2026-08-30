@@ -2,4 +2,10 @@
 .worktrees/
 Syntholo.xcodeproj/
 DerivedData/
+node_modules/
+firebase-debug.log
+firestore-debug.log
 Config/Secrets.xcconfig
+GoogleService-Info.plist
+Config/Firebase.local.xcconfig
+*.firebase.plist

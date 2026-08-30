@@ -7,6 +7,15 @@ options:
 configs:
   Debug: debug
   Release: release
+# Firebase 12.14.0 stays compatible with the Xcode 16.2/Swift 6.0 iOS 17 CI job.
+# Firebase 12.15.0 and later declare Swift tools 6.1.
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    version: 12.14.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS.git
+    version: 9.2.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -18,6 +27,19 @@ targets:
     platform: iOS
     sources:
       - path: Syntholo
+    dependencies:
+      - package: Firebase
+        product: FirebaseCore
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: GoogleSignIn
+        product: GoogleSignIn
+      - package: GoogleSignIn
+        product: GoogleSignInSwift
     configFiles:
       Debug: Config/Debug.xcconfig
       Release: Config/Release.xcconfig
@@ -26,6 +48,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.syntholo.ios
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        CODE_SIGN_ENTITLEMENTS: Syntholo/Resources/Syntholo.entitlements
         INFOPLIST_FILE: Syntholo/Resources/Info.plist
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

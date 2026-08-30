@@ -1,3 +1,7 @@
 MARKETING_VERSION = 0.1.0
 CURRENT_PROJECT_VERSION = 1
 SWIFT_STRICT_CONCURRENCY = complete
+GOOGLE_CLIENT_ID = syntholo-google-signin-not-configured
+GOOGLE_REVERSED_CLIENT_SCHEME = syntholo-google-signin-not-configured
+
+#include? "Firebase.local.xcconfig"

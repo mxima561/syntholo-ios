@@ -1,0 +1,57 @@
+# Firebase setup
+
+Firebase console files and provider identifiers are deployment configuration. Do not commit them.
+
+## Register the iOS app
+
+1. Create separate Firebase projects for staging and production. Development uses the local emulator project and needs no console credentials.
+2. In each project, register an Apple app with bundle identifier `com.syntholo.ios`.
+3. Download `GoogleService-Info.plist`, rename it to match the environment (`staging.firebase.plist` or `production.firebase.plist`), and place it in `Syntholo/Resources/`.
+4. Run `./scripts/bootstrap.sh` after adding or changing a plist so XcodeGen includes it in the app resources.
+
+The environment plist files, the original `GoogleService-Info.plist`, and `Config/Firebase.local.xcconfig` are ignored by Git. Staging and production show a setup-safe state when their selected environment has no valid bundled plist.
+
+## Enable authentication providers
+
+In Firebase Console → Authentication → Sign-in method, enable:
+
+- Apple
+- Google
+- Email/Password
+
+For Apple, add the **Sign in with Apple** capability to the `Syntholo` target and complete the Apple/Firebase key and redirect-domain configuration. Do not place the Apple private key in this repository.
+
+For Google, copy `Config/Firebase.example.xcconfig` to the ignored `Config/Firebase.local.xcconfig`. `Config/Shared.xcconfig` includes that file when present. Set `GOOGLE_CLIENT_ID` to `CLIENT_ID` and `GOOGLE_REVERSED_CLIENT_SCHEME` to `REVERSED_CLIENT_ID` from the environment plist. The app exposes those values as `GIDClientID` and its callback URL scheme. Never commit either deployment value.
+
+Without the local file, checked-in placeholders keep unsigned builds valid. The Google button remains visible, and selecting it returns a setup message instead of starting the SDK with incomplete configuration. Staging and production deployments must replace both placeholders with a matching client ID and reversed scheme.
+
+## Run local emulators
+
+Rules verification requires Node 22, the exact dependencies in `package-lock.json`, and Java 21 or newer. Install Java with a JDK distribution such as Temurin 21 or Homebrew `openjdk@21`. The runner checks `JAVA_HOME`, macOS `/usr/libexec/java_home`, the standard Homebrew locations, and then `java` on `PATH`.
+
+Restore the pinned local tooling and run the isolated Rules gate:
+
+```bash
+npm ci
+./scripts/test_firebase_rules.sh
+```
+
+Do not install or use a global Firebase CLI for verification. The script requires the exact `firebase-tools` version from `package.json` and `package-lock.json`, creates a temporary Firebase config with non-default ephemeral Firestore, hub, and logging ports, and cleans up the emulator on success, assertion failure, interruption, or timeout. It parses the final TAP summary and requires exactly 20 tests and 20 passes with zero failures, cancellations, or skips. Local emulator tests do not require Firebase authentication or live credentials.
+
+For interactive Auth and Firestore development, use the pinned local CLI:
+
+```bash
+./node_modules/.bin/firebase emulators:start --project syntholo-local --only auth,firestore
+```
+
+Ordinary development builds, tests, and launches with `--ui-testing` use the non-secret `syntholo-local` project identity and connect to Auth on `127.0.0.1:9099` and Firestore on `127.0.0.1:8080`. No Firebase plist is required for those launches.
+
+## Verify credential safety
+
+Before committing, confirm no Firebase plist or local configuration is tracked:
+
+```bash
+git ls-files '*GoogleService-Info.plist' '*.firebase.plist' 'Config/Firebase.local.xcconfig'
+```
+
+The command must print nothing.

@@ -1,10 +1,11 @@
 # Syntholo iOS MVP Product Requirements Document
 
-**Status:** Approved product contract
+**Status:** Historical product draft. **Not law where it conflicts with the bible.**
 **Date:** August 25, 2026  
 **Product:** Syntholo for iPhone  
 **Release target:** App Store-ready MVP, quality-gated without a fixed deadline  
-**Document role:** Product contract and source of truth through App Store release
+**Document role:** Source material. Binding contract is `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
+**Superseded by:** Book III (first ship) and Book I (laws) of the Product Bible. North-star inventory in this PRD remains useful as Book II detail.
 
 ## 1. Executive summary
 

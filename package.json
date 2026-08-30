@@ -1,0 +1,16 @@
+{
+  "name": "syntholo-firebase-rules-tests",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "test": "firebase emulators:exec --project syntholo-local --only firestore \"node --test tests/firebase/firestore.rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase": "12.18.0",
+    "firebase-tools": "15.28.1"
+  }
+}
