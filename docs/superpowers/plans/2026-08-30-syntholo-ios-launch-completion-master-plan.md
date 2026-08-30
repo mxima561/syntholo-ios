@@ -20,7 +20,7 @@ The project is finished only when a 13+ learner can:
 9. Use the critical product flows with assistive technologies.
 10. Install the signed App Store build with approved content, legal assets, monitoring, and rollback operations in place.
 
-The current app is not at this point. Phase 0 is verified, Phase 1 is substantially complete, and Phases 2–9 remain. The read-only Learn feature now exists behind an injected store, but the most important broken promise remains: **“Start the first lesson” does not yet install and open the exact preview route in the same session**. Task 9 owns that root composition and handoff.
+The current app is not at this point. Phase 0 is verified, Phase 1 is substantially complete, and Phases 2–9 remain. Task 9 now installs and opens an exact immutable read-only preview route in the same onboarding session, but this is still only a preview seam: there is no real lesson-start mutation, interaction, feedback, completion, progress, approved original launch curriculum, or staging proof. Task 10 owns the remaining deterministic curriculum UI/no-Firestore and catalog/preview accessibility evidence before analytics and the gated content load.
 
 ## 2. Execution rules
 
@@ -75,7 +75,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.2 — Lock the canonical quality baseline
 
-- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 202 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—433 total. One final August 30 Task 8 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout; no failure, skip, cancellation, or retry may be masked.
+- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 216 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—447 total. One final August 30 Task 9 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout; no failure, skip, cancellation, or retry may be masked. Task 9's seven Learn shell audits exercise the deterministic loading state; Task 10 still owns catalog/preview-state audits.
 - [x] Run the suite on the current iOS simulator.
 - [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
 - [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
@@ -145,9 +145,11 @@ These are product or operational inputs, not implementation details. Assign an o
 - [x] Implement the app-owned environment/project/locale-isolated cache with full snapshot revalidation, atomic replacement, fail-closed quarantine behavior, remote-refresh integration, and deterministic saved/fresh repository event ordering.
 - [x] Surface loading, empty, stale, incompatible-version, offline/unavailable, and retry states through the Task 8 injected-store feature seam.
 - [x] Make version mismatch recovery explicit and preserve a compatible saved fallback; no scoring behavior exists in this phase.
-- [x] Render Learn catalog, program detail, module detail, and a sanitized read-only lesson preview from validated versioned records. Root construction and onboarding routing remain Step 1.5/Task 9.
+- [x] Render Learn catalog, program detail, module detail, and a sanitized read-only lesson preview from validated versioned records. Task 9 now supplies root construction and onboarding routing.
 
-**Task 8 checkpoint:** The observable store and read-only UI slice is complete in implementation commit `0d8ab1f` and passes 19 store plus 7 presentation tests (26/26 focused), 202/202 Swift unit tests, and one uninterrupted 433/433 canonical invocation; see `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`. Complete-history/worktree scans and the standalone Release simulator build/bundle verification are clean. Task 9 is next: construct the dependencies once at the root, move the typed path into `AppRouter`, and connect the first-preview handoff. No specialization was selected or inferred, no original curriculum was authored, and no staging or production content write occurred.
+**Task 8 checkpoint:** The observable store and read-only UI slice is complete in implementation commit `0d8ab1f` and passed 19 store plus 7 presentation tests (26/26 focused), 202/202 Swift unit tests, and one uninterrupted 433/433 canonical invocation; see `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`.
+
+**Task 9 checkpoint:** Root dependency composition, `AppRouter` Learn-path ownership, exact-version first-preview resolution, and the same-session handoff are complete in implementation commit `085fbfa`; see `docs/quality/2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`. The focused router/handoff suite passes 16/16, the Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447. Focused coordinator tests prove exact route identity and installation before `.signedIn`; Apple, Google, and email fixture UI journeys separately prove same-process preview presentation as the shell's first destination without catalog, paywall, notification, or social interruption. Task 10 is next: expand the DEBUG fixture state matrix, formally prove every `--ui-testing` mode avoids Firestore, assert exact preview content, and audit catalog/preview accessibility. No specialization was selected or inferred, no original curriculum was authored, and no staging or production content write occurred.
 
 #### Step 1.5 — Publish the first vertical fixture
 
@@ -508,12 +510,12 @@ Start with this exact package and do not add AI, StoreKit, or social to it:
 
 1. Approve the frozen Phase 2 curriculum-platform contract.
 2. Preserve the completed schema, digest-vector, validator/shape, and pinned secret-scanner checkpoint; its 73-test synthetic gate is the contract baseline.
-3. Preserve the completed emulator-only publisher/rollback, exact-read Rules, Swift domain/digest-parity, app-owned cache, exact-get repository, and Task 8 observable-store/read-only-UI checkpoints; build Task 9 root composition and the exact same-session preview handoff next.
+3. Preserve the completed emulator-only publisher/rollback, exact-read Rules, Swift domain/digest-parity, app-owned cache, exact-get repository, Task 8 observable-store/read-only-UI, and Task 9 root-composition/same-session-preview checkpoints; build Task 10's deterministic UI matrix and proof next.
 4. In parallel, close Phase 1 daily-goal/settings, live staging identity, minimum-iOS 17 CI, and physical accessibility evidence.
 5. Product records the deep launch specialization in the Product Bible; do not infer or recommend the answer in implementation work.
 6. Configure and allowlist the staging Firebase project ID/number and approved keyless impersonated publisher principal, then record the matching tracked decision gate.
 7. Author and validate one original Foundations fixture only after that gate.
-8. Publish it to staging, sync it, and render it as a read-only preview through the Task 9 first-lesson handoff.
+8. Publish it to staging, sync it, and render it as a read-only preview through the completed Task 9 first-lesson handoff.
 9. Prove online, cached, stale, incompatible-version, exact-read/unauthorized-write, audited no-op, replay/collision, historical-max/new-version enforcement, existing-non-live selection rejection, roll-forward, catalog rollback, accessibility, analytics, and final generated/release-bundle scans.
 
 That checkpoint turns the current onboarding demonstration into the first real vertical slice and establishes the content identity required by attempts, scoring, offline recovery, AI rubrics, progress, and analytics.
