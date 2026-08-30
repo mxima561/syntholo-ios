@@ -4,7 +4,7 @@
 
 **Created:** August 30, 2026
 
-**Status:** Implementation-ready through synthetic tooling; original content and staging work remain blocked by the Product Bible specialization decision
+**Status:** Engineering implemented and canonically verified through Task 8; root preview composition, deterministic UI fixtures, analytics, original content, and staging work remain open, and the Product Bible specialization decision still blocks every original-content or staging-write step
 
 **Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
 
@@ -622,7 +622,7 @@ Run the focused `CurriculumCacheTests` with the same Xcode settings as Task 5.
 
 Expected: the last valid graph survives every expected local failure and cache namespaces never cross.
 
-Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Task 7 is next.
+Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Tasks 7–8 have since completed their engineering slices; Task 9 is next.
 
 ### Task 7 — Implement the exact-get Firestore adapter test-first
 
@@ -645,7 +645,7 @@ Run focused `CurriculumRepositoryContractTests`.
 
 Expected: the adapter yields only complete compatible exact-version catalog snapshots and preserves a valid fallback.
 
-Checkpoint: the Task 7 exact-get repository engineering slice is complete in implementation commit `83f6e1a`; see `docs/quality/2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`. The focused repository suite passes 30/30, the combined repository/cache/runtime slice passes 69/69, and the uninterrupted canonical gate passes 407 tests. UI-test memory injection remains a named Task 10 carryover. Task 8 is next.
+Checkpoint: the Task 7 exact-get repository engineering slice is complete in implementation commit `83f6e1a`; see `docs/quality/2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`. The focused repository suite passes 30/30, the combined repository/cache/runtime slice passes 69/69, and its uninterrupted canonical gate passed 407 tests. UI-test memory injection remains a named Task 10 carryover. Task 8's feature slice is now implemented; Task 9 is next.
 
 ### Task 8 — Build Learn state and read-only screens test-first
 
@@ -658,19 +658,22 @@ Checkpoint: the Task 7 exact-get repository engineering slice is complete in imp
 - Create: `Syntholo/Features/Learn/LessonPreviewView.swift`
 - Create: `Syntholo/Features/Learn/CurriculumStatusView.swift`
 - Create: `SyntholoTests/CurriculumStoreTests.swift`
+- Create: `SyntholoTests/CurriculumPresentationTests.swift`
 - Modify: `Syntholo/Features/Learn/LearnHomeView.swift`
 - Modify: `Syntholo/Resources/Localizable.xcstrings`
 
-- [ ] Write failing store tests for every stream transition, retry, cancellation, duplicate-load suppression, and place preservation.
-- [ ] Implement `@MainActor @Observable CurriculumStore` with an `Equatable` state and `@ObservationIgnored` dependencies/task.
-- [ ] Replace Learn placeholder content with the ordered locale catalog and honest `comingSoon` state.
-- [ ] Render stable-ID program/module/lesson rows and the read-only objective, duration, concept, diagram, question, and non-sensitive rubric/version metadata.
-- [ ] Keep all fixed copy in `Localizable.xcstrings`; do not use runtime casing.
-- [ ] Do not render the correct answer or implement response controls, scoring, completion, or progress.
+- [x] Write failing store tests for every stream transition, retry, cancellation, duplicate-load suppression, and place preservation.
+- [x] Implement `@MainActor @Observable CurriculumStore` with an `Equatable` state and `@ObservationIgnored` dependencies/task.
+- [x] Replace the injected Learn feature's placeholder content with the ordered locale catalog and honest `comingSoon` state. Root construction remains Task 9, so the current no-argument app-shell seam displays an honest composition-pending state instead of fake curriculum.
+- [x] Render stable-ID program/module/lesson rows and the read-only objective, duration, concept, diagram, question, and non-sensitive rubric/version metadata.
+- [x] Keep all fixed copy in `Localizable.xcstrings`; do not use runtime casing.
+- [x] Do not render the correct answer or implement response controls, scoring, completion, or progress.
 
-Run focused `CurriculumStoreTests` and an app build on iOS 17.
+Run focused `CurriculumStoreTests` and an app build targeting iOS 17. Execute the full suite on an installed iOS 17 runtime in CI.
 
 Expected: every Section 6 state renders from the exact event contract without newer-only APIs.
+
+Checkpoint: the Task 8 store/read-only UI slice is complete in implementation commit `0d8ab1f`; see `docs/quality/2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`. Nineteen store tests and seven presentation tests pass (26/26 focused), the Swift unit target passes 202/202, and one uninterrupted canonical invocation passes 433/433. The app and standalone Release simulator build succeed; complete-history/worktree and Release-bundle scans are clean; and the iOS 17 deployment-target typecheck succeeds. The local machine has no iOS 17 simulator runtime. Root dependency composition, `AppRouter` path ownership, and the onboarding same-session preview handoff remain Task 9; deterministic UI repositories and all curriculum-state UI/accessibility journeys remain Task 10.
 
 ### Task 9 — Connect typed preview navigation and same-session handoff
 
