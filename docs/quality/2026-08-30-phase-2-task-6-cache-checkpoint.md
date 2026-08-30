@@ -8,7 +8,7 @@
 
 **Implementation commit:** `ba54963` (`feat(curriculum): add validated app cache`)
 
-**Documentation provenance:** introduced in `<FIRST-DOCS-COMMIT>` (`docs: record Task 6 cache checkpoint`); this field is finalized by the immediately following provenance commit
+**Documentation provenance:** introduced in `fd05c5d` (`docs: record Task 6 cache checkpoint`); this field is finalized by the immediately following provenance commit
 
 ## Result
 
