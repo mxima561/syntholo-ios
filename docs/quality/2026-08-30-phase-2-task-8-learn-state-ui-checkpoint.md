@@ -86,7 +86,7 @@ These seven audits cover the temporary root fallback exposed before Task 9; they
 
 A standalone Release simulator build succeeds with deployment target iOS 17.0, `SYNTHOLO_ENV = production`, bundle identifier `com.syntholo.ios`, and a universal simulator executable. Direct app-bundle and extracted-strings/normalized-plist scans are clean under the pinned Gitleaks policy. The built app contains no synthetic curriculum fixture, test artifact, or private curriculum-path marker.
 
-Gitleaks 8.30.1 also reports no leak across the complete 21-commit Git history (approximately 2.54 MB examined) or the first-party worktree (approximately 2.48 MB examined).
+Gitleaks 8.30.1 also reports no leak across the complete Git history or the first-party worktree. A final post-checkpoint scan covered all Task 8 implementation and documentation commits.
 
 This is resource-separation and unsigned Release-simulator evidence. It is not an App Store-signed physical-device archive, iOS 17 runtime execution, or live production configuration proof.
 
