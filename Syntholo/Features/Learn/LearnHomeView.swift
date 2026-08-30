@@ -285,6 +285,8 @@ private struct CurriculumCatalogHeader: View {
             Text("Curriculum catalog")
                 .font(SyntholoTextStyle.pageTitle)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("curriculum.catalog.title")
 
             Text("Choose an available program to preview its lessons.")
                 .font(.body)

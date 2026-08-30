@@ -139,10 +139,9 @@ final class AppDependencies {
         await onboardingCoordinator.restore()
     }
 
-    static func make(
+    static func makeLive(
         configuration: FirebaseRuntimeConfiguration,
-        isFirebaseConfigured: Bool,
-        arguments: [String]
+        isFirebaseConfigured: Bool
     ) -> AppDependencies {
         let router = AppRouter()
         let session = AppSession(
@@ -164,29 +163,10 @@ final class AppDependencies {
                 error: .wrongEnvironment
             )
         } else {
-            #if DEBUG
-            if arguments.contains("--ui-testing") {
-                onboardingCoordinator = makeUITestCoordinator(
-                    session: session,
-                    arguments: arguments
-                )
-                curriculumRepository = DebugCurriculumFixtures.repository(
-                    keepLoading: arguments.contains(
-                        "--curriculum-fixture=loading"
-                    )
-                )
-            } else {
-                onboardingCoordinator = makeLiveCoordinator(session: session)
-                curriculumRepository = makeLiveCurriculumRepository(
-                    configuration: configuration
-                )
-            }
-            #else
             onboardingCoordinator = makeLiveCoordinator(session: session)
             curriculumRepository = makeLiveCurriculumRepository(
                 configuration: configuration
             )
-            #endif
         }
 
         let curriculumStore = CurriculumStore(
@@ -199,6 +179,28 @@ final class AppDependencies {
             curriculumStore: curriculumStore
         )
     }
+
+    #if DEBUG
+    static func makeUITesting(arguments: [String]) -> AppDependencies {
+        let router = AppRouter()
+        let session = AppSession(configurationAvailable: true)
+        let onboardingCoordinator = makeUITestCoordinator(
+            session: session,
+            arguments: arguments
+        )
+        let curriculumStore = CurriculumStore(
+            repository: DebugCurriculumFixtures.repository(
+                arguments: arguments
+            ),
+            locale: launchLocale
+        )
+        return AppDependencies(
+            router: router,
+            onboardingCoordinator: onboardingCoordinator,
+            curriculumStore: curriculumStore
+        )
+    }
+    #endif
 
     private static let launchLocale: CurriculumLocale = {
         do {

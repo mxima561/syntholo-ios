@@ -1,24 +1,165 @@
 #if DEBUG
 import Foundation
 
+enum DebugCurriculumFixture: String, CaseIterable, Sendable {
+    case fresh
+    case saved
+    case savedToFresh = "saved-to-fresh"
+    case offlineNoCache = "offline-no-cache"
+    case incompatibleWithFallback = "incompatible-with-fallback"
+    case incompatibleWithoutFallback = "incompatible-without-fallback"
+    case empty
+    case malformed
+    case failOnceRetry = "fail-once-retry"
+    case loading
+
+    var launchArgument: String {
+        "--curriculum-fixture=\(rawValue)"
+    }
+}
+
+enum DebugCurriculumFixtureSelectionError: Error, Equatable {
+    case unknown(String)
+    case multiple([String])
+}
+
 enum DebugCurriculumFixtures {
+    static func selection(
+        arguments: [String]
+    ) throws -> DebugCurriculumFixture {
+        let prefix = "--curriculum-fixture="
+        let selectors = arguments.filter {
+            $0.hasPrefix("--curriculum-fixture")
+        }
+        guard selectors.count <= 1 else {
+            throw DebugCurriculumFixtureSelectionError.multiple(selectors)
+        }
+        guard let selector = selectors.first else {
+            return .fresh
+        }
+        guard selector.hasPrefix(prefix),
+              let fixture = DebugCurriculumFixture(
+                  rawValue: String(selector.dropFirst(prefix.count))
+              ) else {
+            throw DebugCurriculumFixtureSelectionError.unknown(selector)
+        }
+        return fixture
+    }
+
+    static func repository(arguments: [String]) -> any CurriculumRepository {
+        do {
+            return try repository(
+                fixture: selection(arguments: arguments),
+                transitionDelayNanoseconds: 6_000_000_000
+            )
+        } catch {
+            preconditionFailure(
+                "Invalid DEBUG curriculum fixture contract: \(error)"
+            )
+        }
+    }
+
     static func repository(
-        keepLoading: Bool = false
-    ) -> any CurriculumRepository {
-        if keepLoading {
+        fixture: DebugCurriculumFixture,
+        transitionDelayNanoseconds: UInt64
+    ) throws -> any CurriculumRepository {
+        let snapshot = try snapshot()
+        let requiredSchema = CurriculumSchema.currentVersion + 1
+
+        switch fixture {
+        case .fresh:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [.fresh(snapshot)],
+                transitionDelayNanoseconds: transitionDelayNanoseconds
+            )
+        case .saved:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [
+                    .saved(snapshot),
+                    .unavailable(
+                        error: .networkUnavailable,
+                        saved: snapshot
+                    ),
+                ],
+                transitionDelayNanoseconds: 0
+            )
+        case .savedToFresh:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [.saved(snapshot), .fresh(snapshot)],
+                transitionDelayNanoseconds: transitionDelayNanoseconds
+            )
+        case .offlineNoCache:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [
+                    .unavailable(
+                        error: .networkUnavailable,
+                        saved: nil
+                    ),
+                ],
+                transitionDelayNanoseconds: 0
+            )
+        case .incompatibleWithFallback:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [
+                    .updateRequired(
+                        requiredSchema: requiredSchema,
+                        saved: snapshot
+                    ),
+                ],
+                transitionDelayNanoseconds: 0
+            )
+        case .incompatibleWithoutFallback:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [
+                    .updateRequired(
+                        requiredSchema: requiredSchema,
+                        saved: nil
+                    ),
+                ],
+                transitionDelayNanoseconds: 0
+            )
+        case .empty:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [.empty],
+                transitionDelayNanoseconds: 0
+            )
+        case .malformed:
+            return DebugEventSequenceCurriculumRepository(
+                locale: snapshot.locale,
+                events: [
+                    .unavailable(
+                        error: .malformedDocument(
+                            path: "debug-fixture/catalog"
+                        ),
+                        saved: nil
+                    ),
+                ],
+                transitionDelayNanoseconds: 0
+            )
+        case .failOnceRetry:
+            return DebugFailOnceCurriculumRepository(snapshot: snapshot)
+        case .loading:
             return DebugLoadingCurriculumRepository()
         }
+    }
 
+    static func snapshot() throws -> CurriculumSnapshot {
         guard let data = Data(
             base64Encoded: encodedSnapshot,
             options: [.ignoreUnknownCharacters]
-        ),
-        let snapshot = try? CurriculumJSONCodec.decodeSnapshot(from: data)
-        else {
-            return DebugUnavailableCurriculumRepository()
+        ) else {
+            throw DebugCurriculumFixtureDataError.invalidBase64
         }
-
-        return DebugSingleSnapshotCurriculumRepository(snapshot: snapshot)
+        let snapshot = try CurriculumJSONCodec.decodeSnapshot(from: data)
+        try CurriculumValidator.validate(snapshot)
+        return snapshot
     }
 
     private static let encodedSnapshot = """
@@ -147,6 +288,10 @@ ICAgICAibmFub3NlY29uZHMiOiAxMjM0NTY3ODkKICAgICAgfQogICAgfQogIF0KfQo=
 """
 }
 
+private enum DebugCurriculumFixtureDataError: Error {
+    case invalidBase64
+}
+
 private struct DebugLoadingCurriculumRepository:
     CurriculumRepository,
     Sendable
@@ -154,42 +299,106 @@ private struct DebugLoadingCurriculumRepository:
     func load(
         locale _: CurriculumLocale
     ) -> AsyncStream<CurriculumLoadEvent> {
-        AsyncStream { _ in }
-    }
-}
-
-private struct DebugSingleSnapshotCurriculumRepository:
-    CurriculumRepository,
-    Sendable
-{
-    let snapshot: CurriculumSnapshot
-
-    func load(
-        locale: CurriculumLocale
-    ) -> AsyncStream<CurriculumLoadEvent> {
         AsyncStream { continuation in
-            if locale == snapshot.locale {
-                continuation.yield(.fresh(snapshot))
-            } else {
-                continuation.yield(.empty)
-            }
-            continuation.finish()
+            continuation.onTermination = { @Sendable _ in }
         }
     }
 }
 
-private struct DebugUnavailableCurriculumRepository:
+private struct DebugEventSequenceCurriculumRepository:
     CurriculumRepository,
     Sendable
 {
+    let locale: CurriculumLocale
+    let events: [CurriculumLoadEvent]
+    let transitionDelayNanoseconds: UInt64
+
     func load(
-        locale _: CurriculumLocale
+        locale requestedLocale: CurriculumLocale
     ) -> AsyncStream<CurriculumLoadEvent> {
-        AsyncStream { continuation in
-            continuation.yield(
-                .unavailable(error: .contentUnavailable, saved: nil)
+        guard requestedLocale == locale else {
+            return AsyncStream { continuation in
+                continuation.yield(.empty)
+                continuation.finish()
+            }
+        }
+
+        return AsyncStream { continuation in
+            let task = Task {
+                defer { continuation.finish() }
+                for (index, event) in events.enumerated() {
+                    guard !Task.isCancelled else {
+                        return
+                    }
+                    if index > 0, transitionDelayNanoseconds > 0 {
+                        do {
+                            try await Task.sleep(
+                                nanoseconds: transitionDelayNanoseconds
+                            )
+                        } catch {
+                            return
+                        }
+                    }
+                    guard !Task.isCancelled else {
+                        return
+                    }
+                    continuation.yield(event)
+                }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
+        }
+    }
+}
+
+private actor DebugFailOnceCurriculumRepositoryState {
+    private var didFail = false
+
+    func nextEvent(
+        snapshot: CurriculumSnapshot
+    ) -> CurriculumLoadEvent {
+        if !didFail {
+            didFail = true
+            return .unavailable(
+                error: .networkUnavailable,
+                saved: nil
             )
-            continuation.finish()
+        }
+        return .fresh(snapshot)
+    }
+}
+
+private struct DebugFailOnceCurriculumRepository:
+    CurriculumRepository,
+    Sendable
+{
+    let snapshot: CurriculumSnapshot
+    private let state = DebugFailOnceCurriculumRepositoryState()
+
+    func load(
+        locale: CurriculumLocale
+    ) -> AsyncStream<CurriculumLoadEvent> {
+        guard locale == snapshot.locale else {
+            return AsyncStream { continuation in
+                continuation.yield(.empty)
+                continuation.finish()
+            }
+        }
+
+        return AsyncStream { continuation in
+            let task = Task {
+                let event = await state.nextEvent(snapshot: snapshot)
+                guard !Task.isCancelled else {
+                    continuation.finish()
+                    return
+                }
+                continuation.yield(event)
+                continuation.finish()
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 }

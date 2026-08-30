@@ -130,7 +130,7 @@ echo "Running unit tests."
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 216 unit-tests
+assert_test_result "$unit_result" 224 unit-tests
 
 functional_ui_result="$result_directory/FunctionalUI.xcresult"
 echo "Running functional UI tests."
@@ -147,11 +147,12 @@ functional_ui_command_status=0
     -only-testing:SyntholoUITests \
     -skip-testing:SyntholoUITests/AccessibilityAuditUITests \
     -skip-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests \
+    -skip-testing:SyntholoUITests/CurriculumAccessibilityAuditUITests \
   || functional_ui_command_status=$?
 
 functional_ui_assertion_status=0
 if [[ -d "$functional_ui_result" ]]; then
-  assert_test_result "$functional_ui_result" 18 functional-ui-tests 1 \
+  assert_test_result "$functional_ui_result" 28 functional-ui-tests 1 \
     || functional_ui_assertion_status=$?
 else
   echo "functional-ui-tests did not produce an xcresult bundle." >&2
@@ -220,6 +221,46 @@ else
     assert_test_result "$shell_accessibility_result" 1 "$shell_accessibility_test"
   done
   echo "shell-accessibility-tests: 28 passed, 0 failed, 0 skipped."
+
+  curriculum_accessibility_tests=(
+    testCatalogContrastAudit
+    testCatalogElementDetectionAudit
+    testCatalogHitRegionAudit
+    testCatalogSufficientElementDescriptionAudit
+    testCatalogTextClippedAudit
+    testCatalogTraitAudit
+    testCatalogAccessibility5TextLayoutAudit
+    testPreviewContrastAudit
+    testPreviewElementDetectionAudit
+    testPreviewHitRegionAudit
+    testPreviewSufficientElementDescriptionAudit
+    testPreviewTextClippedAudit
+    testPreviewTraitAudit
+    testPreviewAccessibility5TextLayoutAudit
+  )
+  echo "Running 14 curriculum accessibility audits in isolated Xcode sessions."
+  for curriculum_accessibility_test in "${curriculum_accessibility_tests[@]}"; do
+    if [[ "$curriculum_accessibility_test" == *ContrastAudit ]]; then
+      reboot_ui_audit_simulator "$ui_audit_simulator_udid"
+    fi
+    curriculum_accessibility_result="$result_directory/${curriculum_accessibility_test}.xcresult"
+    echo "Running isolated curriculum audit: $curriculum_accessibility_test."
+    ./scripts/run_with_timeout.sh 300 \
+      xcodebuild -quiet test-without-building \
+        -project Syntholo.xcodeproj \
+        -scheme Syntholo \
+        -destination "$ui_audit_destination" \
+        -derivedDataPath DerivedData \
+        -parallel-testing-enabled NO \
+        CODE_SIGNING_ALLOWED=NO \
+        -resultBundlePath "$curriculum_accessibility_result" \
+        -only-testing:"SyntholoUITests/CurriculumAccessibilityAuditUITests/$curriculum_accessibility_test"
+    assert_test_result \
+      "$curriculum_accessibility_result" \
+      1 \
+      "$curriculum_accessibility_test"
+  done
+  echo "curriculum-accessibility-tests: 14 passed, 0 failed, 0 skipped."
 
   onboarding_accessibility_result="$result_directory/OnboardingAccessibility.xcresult"
   reboot_ui_audit_simulator "$ui_audit_simulator_udid"

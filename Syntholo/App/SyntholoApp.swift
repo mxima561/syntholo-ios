@@ -1,39 +1,48 @@
 import SwiftUI
 
-enum SyntholoRootPresentation: Equatable {
-    case application
-    case configurationRequired
-
-    init(isFirebaseConfigured: Bool) {
-        self = isFirebaseConfigured ? .application : .configurationRequired
-    }
-}
-
 @main
 struct SyntholoApp: App {
     @State private var dependencies: AppDependencies
     private let rootPresentation: SyntholoRootPresentation
+    #if DEBUG
+    private let usesMaximumUITestDynamicType: Bool
+    #endif
 
     init() {
-        let configuration = FirebaseRuntimeConfiguration.current
-        rootPresentation = SyntholoRootPresentation(
-            isFirebaseConfigured: FirebaseBootstrap.configure(configuration)
+        let arguments = ProcessInfo.processInfo.arguments
+        let composition = SyntholoLaunchComposition.make(
+            arguments: arguments
         )
+        rootPresentation = composition.rootPresentation
         _dependencies = State(
-            initialValue: AppDependencies.make(
-                configuration: configuration,
-                isFirebaseConfigured: rootPresentation == .application,
-                arguments: ProcessInfo.processInfo.arguments
-            )
+            initialValue: composition.dependencies
         )
+        #if DEBUG
+        usesMaximumUITestDynamicType = arguments.contains("--ui-testing")
+            && arguments.contains("--dynamic-type-size=accessibility5")
+        #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView(dependencies: dependencies)
-            .onOpenURL { url in
-                _ = GoogleSignInCoordinator.handle(url)
-            }
+            rootContent
+                .onOpenURL { url in
+                    _ = GoogleSignInCoordinator.handle(url)
+                }
         }
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
+        #if DEBUG
+        if usesMaximumUITestDynamicType {
+            RootView(dependencies: dependencies)
+                .dynamicTypeSize(.accessibility5)
+        } else {
+            RootView(dependencies: dependencies)
+        }
+        #else
+        RootView(dependencies: dependencies)
+        #endif
     }
 }

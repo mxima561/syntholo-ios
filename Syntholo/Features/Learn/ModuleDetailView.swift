@@ -160,23 +160,15 @@ private struct LessonNavigationRow: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: Space.sm) {
-                    Label {
-                        Text(
-                            Measurement(
-                                value: Double(presentation.expectedDurationMinutes),
-                                unit: UnitDuration.minutes
-                            ),
-                            format: .measurement(width: .wide)
-                        )
-                    } icon: {
-                        Image(systemName: "clock")
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Space.sm) {
+                        durationLabel
+                        versionLabel
                     }
 
-                    HStack(spacing: Space.xs) {
-                        Text("Lesson version")
-                        Text(presentation.version, format: .number)
-                            .monospacedDigit()
+                    VStack(alignment: .leading, spacing: Space.xs) {
+                        durationLabel
+                        versionLabel
                     }
                 }
                 .font(.caption)
@@ -187,5 +179,27 @@ private struct LessonNavigationRow: View {
         .accessibilityIdentifier(
             "curriculum.lesson.\(presentation.id.rawValue)"
         )
+    }
+
+    private var durationLabel: some View {
+        Label {
+            Text(
+                Measurement(
+                    value: Double(presentation.expectedDurationMinutes),
+                    unit: UnitDuration.minutes
+                ),
+                format: .measurement(width: .wide)
+            )
+        } icon: {
+            Image(systemName: "clock")
+        }
+    }
+
+    private var versionLabel: some View {
+        HStack(spacing: Space.xs) {
+            Text("Lesson version")
+            Text(presentation.version, format: .number)
+                .monospacedDigit()
+        }
     }
 }

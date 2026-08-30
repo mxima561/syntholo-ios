@@ -44,18 +44,36 @@ fixture_markers=(
   "--session-fixture="
   "--profile-fixture="
   "--profile-load-fixture="
+  "--curriculum-fixture="
+  "--dynamic-type-size=accessibility5"
+  "SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH"
+  "U1lOVEhFVElDLUNPTlRSQUNULUZJWFRVUkUtTkVWRVItUFVC"
+  "synthetic-lesson--en-us--v1"
 )
 
+release_bundle_contains_marker() {
+  local marker=$1
+  local bundle_file
+
+  while IFS= read -r -d '' bundle_file; do
+    if /usr/bin/grep -a -Fq -- "$marker" "$bundle_file"; then
+      return 0
+    fi
+  done < <(/usr/bin/find "$release_app" -type f -print0)
+
+  return 1
+}
+
 for marker in "${fixture_markers[@]}"; do
-  if /usr/bin/grep -a -Fq -- "$marker" "$release_binary"; then
-    echo "Release binary contains UI-test fixture marker: $marker" >&2
+  if release_bundle_contains_marker "$marker"; then
+    echo "Release app bundle contains UI-test fixture marker: $marker" >&2
     exit 1
   fi
 done
 
 if /usr/bin/nm "$release_binary" \
   | xcrun swift-demangle \
-  | /usr/bin/grep -Eq 'UITest(AuthClient|ProfileRepository)|makeUITestCoordinator|continueWithUITestProvider|uiTestAuthClient'; then
+  | /usr/bin/grep -Eq 'UITest(AuthClient|ProfileRepository)|makeUITestCoordinator|makeUITesting|DebugCurriculum|continueWithUITestProvider|uiTestAuthClient'; then
   echo "Release binary contains UI-test fixture implementation symbols." >&2
   exit 1
 fi

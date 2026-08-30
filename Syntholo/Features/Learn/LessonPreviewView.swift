@@ -263,9 +263,33 @@ struct RubricCriterionPresentation: Identifiable, Equatable {
 }
 
 struct LessonPreviewView: View {
+    @Environment(\.dismiss) private var dismiss
+
     let presentation: LessonPreviewPresentation
 
     var body: some View {
+        VStack(spacing: 0) {
+            LessonPreviewNavigationHeader(
+                onBack: { dismiss() }
+            )
+            previewScroll
+        }
+        .background(SyntholoColor.canvas)
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
+    }
+
+    @ViewBuilder
+    private var previewScroll: some View {
+        if #available(iOS 26.0, *) {
+            scrollContent
+                .scrollEdgeEffectHidden(true, for: .all)
+        } else {
+            scrollContent
+        }
+    }
+
+    private var scrollContent: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Space.lg) {
                 LessonPreviewHeader(presentation: presentation)
@@ -279,10 +303,41 @@ struct LessonPreviewView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Layout.pageInset)
         }
-        .background(SyntholoColor.canvas)
-        .navigationTitle(presentation.title)
-        .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("curriculum.lesson.preview")
+    }
+}
+
+private struct LessonPreviewNavigationHeader: View {
+    let onBack: () -> Void
+
+    var body: some View {
+        HStack(spacing: Space.md) {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.headline.weight(.semibold))
+                    .frame(
+                        width: Layout.minimumControlHeight,
+                        height: Layout.minimumControlHeight
+                    )
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Back")
+
+            Text("Read-only lesson preview")
+                .font(.headline)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Layout.pageInset)
+        .padding(.vertical, Space.sm)
+        .background(SyntholoColor.canvas)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(
+            "curriculum.lesson.preview.navigation"
+        )
     }
 }
 
@@ -291,24 +346,27 @@ private struct LessonPreviewHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Label("Read-only lesson preview", systemImage: "eye.fill")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(SyntholoColor.accent)
-
             Text(presentation.title)
                 .font(SyntholoTextStyle.pageTitle)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("curriculum.lesson.preview.title")
 
             VStack(alignment: .leading, spacing: Space.sm) {
                 Text("Objective")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 Text(presentation.objective)
                     .font(.body)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(SyntholoColor.secondaryInk)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier(
+                        "curriculum.lesson.preview.objective"
+                    )
             }
 
             Divider()
+                .accessibilityHidden(true)
 
             LabeledContent("Expected duration") {
                 Text(
@@ -318,24 +376,29 @@ private struct LessonPreviewHeader: View {
                     ),
                     format: .measurement(width: .wide)
                 )
+                .foregroundStyle(SyntholoColor.secondaryInk)
             }
 
             LabeledContent("Lesson version") {
                 Text(presentation.lessonVersion, format: .number)
                     .monospacedDigit()
+                    .foregroundStyle(SyntholoColor.secondaryInk)
             }
 
             LabeledContent("Rubric version") {
                 Text(presentation.rubricVersion, format: .number)
                     .monospacedDigit()
+                    .foregroundStyle(SyntholoColor.secondaryInk)
             }
 
             LabeledContent("Rubric type") {
                 Text("Deterministic")
+                    .foregroundStyle(SyntholoColor.secondaryInk)
             }
         }
-        .curriculumCard()
-        .accessibilityElement(children: .contain)
+        .curriculumCard(
+            accessibilityIdentifier: "curriculum.lesson.preview.header"
+        )
     }
 }
 
@@ -362,6 +425,7 @@ private struct ConceptBlockView: View {
             Label("Concept", systemImage: "lightbulb.fill")
                 .font(.headline)
                 .foregroundStyle(SyntholoColor.accent)
+                .accessibilityAddTraits(.isHeader)
 
             if let heading = presentation.heading {
                 Text(heading)
@@ -373,9 +437,9 @@ private struct ConceptBlockView: View {
                 .font(.body)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .curriculumCard()
-        .accessibilityIdentifier(
-            "curriculum.concept.\(presentation.id.rawValue)"
+        .curriculumCard(
+            accessibilityIdentifier:
+                "curriculum.concept.\(presentation.id.rawValue)"
         )
     }
 }
@@ -388,6 +452,7 @@ private struct DiagramBlockView: View {
             Label("Diagram", systemImage: "point.3.connected.trianglepath.dotted")
                 .font(.headline)
                 .foregroundStyle(SyntholoColor.accent)
+                .accessibilityAddTraits(.isHeader)
 
             Text(presentation.title)
                 .font(SyntholoTextStyle.sectionTitle)
@@ -400,18 +465,22 @@ private struct DiagramBlockView: View {
             .accessibilityHidden(true)
 
             Divider()
+                .accessibilityHidden(true)
 
             Label("Text alternative", systemImage: "text.alignleft")
                 .font(.subheadline.weight(.semibold))
 
             Text(presentation.textAlternative)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier(
+                    "curriculum.diagram.\(presentation.id.rawValue).text-alternative"
+                )
         }
-        .curriculumCard()
-        .accessibilityIdentifier(
-            "curriculum.diagram.\(presentation.id.rawValue)"
+        .curriculumCard(
+            accessibilityIdentifier:
+                "curriculum.diagram.\(presentation.id.rawValue)"
         )
     }
 }
@@ -441,17 +510,25 @@ private struct DiagramGraphicView: View {
 
             ForEach(connectors) { connector in
                 VStack(alignment: .leading, spacing: Space.xs) {
-                    HStack(spacing: Space.sm) {
-                        Text(connector.fromLabel)
-                        Image(systemName: "arrow.right")
-                        Text(connector.toLabel)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: Space.sm) {
+                            Text(connector.fromLabel)
+                            Image(systemName: "arrow.right")
+                            Text(connector.toLabel)
+                        }
+
+                        VStack(alignment: .leading, spacing: Space.xs) {
+                            Text(connector.fromLabel)
+                            Image(systemName: "arrow.down")
+                            Text(connector.toLabel)
+                        }
                     }
                     .font(.subheadline)
 
                     if let label = connector.label {
                         Text(label)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(SyntholoColor.secondaryInk)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -468,6 +545,7 @@ private struct QuestionBlockView: View {
             Label("Question preview", systemImage: "questionmark.bubble.fill")
                 .font(.headline)
                 .foregroundStyle(SyntholoColor.accent)
+                .accessibilityAddTraits(.isHeader)
 
             Text(presentation.prompt)
                 .font(SyntholoTextStyle.sectionTitle)
@@ -494,11 +572,11 @@ private struct QuestionBlockView: View {
 
             Text("Read-only preview. Answers aren’t collected yet.")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
         }
-        .curriculumCard()
-        .accessibilityIdentifier(
-            "curriculum.question.\(presentation.id.rawValue)"
+        .curriculumCard(
+            accessibilityIdentifier:
+                "curriculum.question.\(presentation.id.rawValue)"
         )
     }
 }
@@ -511,12 +589,13 @@ private struct RubricCriteriaView: View {
             Label("Criteria", systemImage: "checklist")
                 .font(.headline)
                 .foregroundStyle(SyntholoColor.accent)
+                .accessibilityAddTraits(.isHeader)
 
             Text(
                 "These read-only criteria describe what the lesson checks without showing answers."
             )
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(SyntholoColor.secondaryInk)
 
             ForEach(criteria) { criterion in
                 VStack(alignment: .leading, spacing: Space.xs) {
@@ -526,20 +605,29 @@ private struct RubricCriteriaView: View {
 
                     Text(criterion.description)
                         .font(.body)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(SyntholoColor.secondaryInk)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, Space.xs)
             }
         }
-        .curriculumCard()
-        .accessibilityIdentifier("curriculum.lesson.criteria")
+        .curriculumCard(
+            accessibilityIdentifier: "curriculum.lesson.criteria"
+        )
     }
 }
 
 private struct CurriculumCardModifier: ViewModifier {
+    let accessibilityIdentifier: String
+
     func body(content: Content) -> some View {
+        card(content)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private func card(_ content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Space.md)
@@ -551,7 +639,11 @@ private struct CurriculumCardModifier: ViewModifier {
 }
 
 private extension View {
-    func curriculumCard() -> some View {
-        modifier(CurriculumCardModifier())
+    func curriculumCard(accessibilityIdentifier: String) -> some View {
+        modifier(
+            CurriculumCardModifier(
+                accessibilityIdentifier: accessibilityIdentifier
+            )
+        )
     }
 }

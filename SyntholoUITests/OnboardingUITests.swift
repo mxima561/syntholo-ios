@@ -460,7 +460,35 @@ final class OnboardingUITests: XCTestCase {
             file: file,
             line: line
         )
+        let lessonTitle = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview.title")
+            .firstMatch
         XCTAssertTrue(
+            lessonTitle.waitForExistence(timeout: 2),
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            lessonTitle.label,
+            "Synthetic contract lesson",
+            file: file,
+            line: line
+        )
+        let lessonObjective = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview.objective")
+            .firstMatch
+        XCTAssertTrue(
+            lessonObjective.exists,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            lessonObjective.label,
+            "Validate a synthetic placeholder graph without supplying editorial curriculum.",
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
             app.tabBars.buttons["Learn"].exists,
             file: file,
             line: line
@@ -471,7 +499,12 @@ final class OnboardingUITests: XCTestCase {
             line: line
         )
         XCTAssertFalse(
-            app.tabBars.buttons["Social"].isSelected,
+            app.tabBars.buttons["Social"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertTrue(
+            app.buttons["Back"].exists,
             file: file,
             line: line
         )

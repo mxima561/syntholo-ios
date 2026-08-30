@@ -157,6 +157,7 @@ private struct CurriculumSavedStatusView: View {
                         .frame(minHeight: Layout.minimumControlHeight)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("curriculum.status.retry")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -200,6 +201,7 @@ private struct CurriculumUnavailableStatusView: View {
             Label {
                 Text(title)
                     .font(.title3.weight(.semibold))
+                    .accessibilityIdentifier(accessibilityIdentifier)
             } icon: {
                 Image(systemName: systemImage)
                     .accessibilityHidden(true)
@@ -215,8 +217,8 @@ private struct CurriculumUnavailableStatusView: View {
                         .frame(minHeight: Layout.minimumControlHeight)
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("curriculum.status.retry")
             }
         }
-        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
