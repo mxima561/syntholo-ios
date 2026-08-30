@@ -633,17 +633,19 @@ Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/qua
 - Review: `Syntholo/Infrastructure/Firebase/FirebaseBootstrap.swift`
 - Review: `Syntholo/Infrastructure/Firebase/FirebaseRuntimeConfiguration.swift`
 
-- [ ] Write failing recording-store tests for the exact Section 6 event order and exact configuration/catalog/pinned-program-version/module/lesson/rubric/asset paths; assert that no mutable program-pointer path is read while resolving a snapshot.
-- [ ] Cover saved→fresh, saved→unavailable (including remote publication disappearance), saved→update-required from the compatibility header, no-cache empty for missing header/unsupported locale, advertised-but-missing pointer/target as unavailable, compatible-header unsupported content as unavailable, offline, cancellation, duplicate suppression, order preservation, broken references, malformed values, and digest rejection.
-- [ ] Encapsulate non-`Sendable` Firebase SDK types through the established isolated-store pattern.
-- [ ] Force server-source refresh and never issue a curriculum collection list query.
-- [ ] Never request `evaluationContractVersions` or audit documents from the client.
-- [ ] Validate the complete snapshot before cache replacement and keep profile behavior unchanged.
-- [ ] Make UI tests inject a memory repository; no emulator port dependency during XCUITest.
+- [x] Write failing recording-store tests for the exact Section 6 event order and exact configuration/catalog/pinned-program-version/module/lesson/rubric/asset paths; assert that no mutable program-pointer path is read while resolving a snapshot.
+- [x] Cover saved→fresh, saved→unavailable (including remote publication disappearance), saved→update-required from the compatibility header, no-cache empty for missing header/unsupported locale, advertised-but-missing pointer/target as unavailable, compatible-header unsupported content as unavailable, offline, cancellation, duplicate suppression, order preservation, broken references, malformed values, and digest rejection.
+- [x] Encapsulate non-`Sendable` Firebase SDK types through the established isolated-store pattern.
+- [x] Force server-source refresh and never issue a curriculum collection list query.
+- [x] Never request `evaluationContractVersions` or audit documents from the client.
+- [x] Validate the complete snapshot before cache replacement and keep profile behavior unchanged.
+- [ ] Make UI tests inject a memory repository; no emulator port dependency during XCUITest. This remains deliberately assigned to Task 10 after Tasks 8–9 create the curriculum store and root dependency-composition seams.
 
 Run focused `CurriculumRepositoryContractTests`.
 
 Expected: the adapter yields only complete compatible exact-version catalog snapshots and preserves a valid fallback.
+
+Checkpoint: the Task 7 exact-get repository engineering slice is complete in implementation commit `83f6e1a`; see `docs/quality/2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`. The focused repository suite passes 30/30, the combined repository/cache/runtime slice passes 69/69, and the uninterrupted canonical gate passes 407 tests. UI-test memory injection remains a named Task 10 carryover. Task 8 is next.
 
 ### Task 8 — Build Learn state and read-only screens test-first
 

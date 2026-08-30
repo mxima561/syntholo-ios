@@ -75,7 +75,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.2 — Lock the canonical quality baseline
 
-- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 143 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—374 total. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The final August 30 Task 6 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5 after implementation commit `ba54963`; the recurring Xcode debugger-store diagnostic remained non-failing and no test was retried, skipped, or masked.
+- [x] Keep the script-enforced baseline green: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 176 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—407 total. Run each AppShell accessibility audit in its own Xcode session/result bundle with the canonical timeout. The final August 30 Task 7 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5 after implementation commit `83f6e1a`; the recurring Xcode debugger-store diagnostic remained non-failing and no test was retried, skipped, or masked.
 - [x] Run the suite on the current iOS simulator.
 - [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
 - [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
@@ -140,9 +140,9 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 1.4 — Implement iOS curriculum sync
 
-- [x] Add one `AsyncStream`-based repository domain contract for validated saved content followed by fresh/empty/update-required/unavailable outcomes. Task 7 still owns the concrete exact-get adapter and deterministic event sequence.
-- [ ] Resolve a locale-addressed immutable catalog and every referenced program/content/asset version using authenticated exact gets; never fetch protected evaluation contracts in the client.
-- [x] Implement the app-owned environment/project/locale-isolated cache with full snapshot revalidation, atomic replacement, and fail-closed quarantine behavior. Task 7 still owns remote-refresh integration and saved/fresh repository event ordering.
+- [x] Add one `AsyncStream`-based repository domain contract and concrete exact-get adapter for validated saved content followed by fresh/empty/update-required/unavailable outcomes.
+- [x] Resolve a locale-addressed immutable catalog and every referenced program/content/asset version using authenticated server-source exact gets; never fetch mutable program pointers, protected evaluation contracts, audit records, or collection lists in the client.
+- [x] Implement the app-owned environment/project/locale-isolated cache with full snapshot revalidation, atomic replacement, fail-closed quarantine behavior, remote-refresh integration, and deterministic saved/fresh repository event ordering.
 - [ ] Surface loading, empty, stale, incompatible-version, offline, and retry states.
 - [ ] Make version mismatch recovery explicit; never silently score one version against another rubric.
 - [ ] Render Learn catalog, program detail, module detail, and a read-only lesson preview using real versioned records.
@@ -506,7 +506,7 @@ Start with this exact package and do not add AI, StoreKit, or social to it:
 
 1. Approve the frozen Phase 2 curriculum-platform contract.
 2. Preserve the completed schema, digest-vector, validator/shape, and pinned secret-scanner checkpoint; its 73-test synthetic gate is the contract baseline.
-3. Preserve the completed emulator-only publisher/rollback, exact-read Rules, Swift domain/digest-parity, and app-owned cache checkpoints; build the exact-get repository next, followed by the store and read-only preview UI.
+3. Preserve the completed emulator-only publisher/rollback, exact-read Rules, Swift domain/digest-parity, app-owned cache, and exact-get repository checkpoints; build the observable store and read-only preview UI next.
 4. In parallel, close Phase 1 daily-goal/settings, live staging identity, minimum-iOS 17 CI, and physical accessibility evidence.
 5. Product records the deep launch specialization in the Product Bible; do not infer or recommend the answer in implementation work.
 6. Configure and allowlist the staging Firebase project ID/number and approved keyless impersonated publisher principal, then record the matching tracked decision gate.
