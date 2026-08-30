@@ -25,7 +25,16 @@ class StrictJSONParser {
     if (character === "[") return this.parseArray(instancePath);
     if (character === '"') return void this.parseString();
     const remainder = this.text.slice(this.index);
-    const token = remainder.match(/^(?:-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null)/u)?.[0];
+    const number = remainder
+      .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u)?.[0];
+    if (number) {
+      if (/[.eE]/u.test(number)) {
+        this.fail("Curriculum numbers must use integer JSON syntax.", "JSON_NUMBER_NOT_INTEGER");
+      }
+      this.index += number.length;
+      return;
+    }
+    const token = remainder.match(/^(?:true|false|null)/u)?.[0];
     if (!token) this.fail("Invalid JSON value.");
     this.index += token.length;
   }
@@ -110,9 +119,9 @@ class StrictJSONParser {
     while (/\s/u.test(this.text[this.index] ?? "")) this.index += 1;
   }
 
-  fail(message) {
+  fail(message, code = "JSON_PARSE_INVALID") {
     const error = new SyntaxError(message);
-    error.code = "JSON_PARSE_INVALID";
+    error.code = code;
     error.path = "";
     throw error;
   }

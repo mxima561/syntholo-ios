@@ -17,9 +17,15 @@ class StrictJSONScanner {
     if (character === "{") return this.scanObject();
     if (character === "[") return this.scanArray();
     if (character === '"') return void this.scanString();
-    const token = this.text
-      .slice(this.index)
-      .match(/^(?:-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null)/u)?.[0];
+    const remainder = this.text.slice(this.index);
+    const number = remainder
+      .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u)?.[0];
+    if (number) {
+      if (/[.eE]/u.test(number)) this.fail("JSON_NUMBER_NOT_INTEGER");
+      this.index += number.length;
+      return;
+    }
+    const token = remainder.match(/^(?:true|false|null)/u)?.[0];
     if (!token) this.fail("JSON_PARSE_INVALID");
     this.index += token.length;
   }

@@ -55,13 +55,13 @@ assert_rejects_with_detail() {
   fi
 }
 
-unit_summary='{"result":"Passed","totalTestCount":106,"passedTests":106,"failedTests":0,"skippedTests":0}'
+unit_summary='{"result":"Passed","totalTestCount":118,"passedTests":118,"failedTests":0,"skippedTests":0}'
 functional_ui_summary='{"result":"Passed","totalTestCount":18,"passedTests":18,"failedTests":0,"skippedTests":0}'
 
-assert_accepts "$unit_summary" "$xcresult_assertion" 106 unit-tests
+assert_accepts "$unit_summary" "$xcresult_assertion" 118 unit-tests
 assert_accepts "$functional_ui_summary" "$xcresult_assertion" 18 functional-ui-tests
-assert_rejects '{"result":"Passed","totalTestCount":105,"passedTests":105,"failedTests":0,"skippedTests":0}' \
-  "$xcresult_assertion" 106 unit-tests
+assert_rejects '{"result":"Passed","totalTestCount":117,"passedTests":117,"failedTests":0,"skippedTests":0}' \
+  "$xcresult_assertion" 118 unit-tests
 assert_rejects '{"result":"Passed","totalTestCount":17,"passedTests":17,"failedTests":0,"skippedTests":0}' \
   "$xcresult_assertion" 18 functional-ui-tests
 assert_rejects '{"result":"Passed","totalTestCount":18,"passedTests":17,"failedTests":0,"skippedTests":1}' \

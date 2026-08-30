@@ -28,6 +28,7 @@ import {
   validateCurriculumDraft,
 } from "../../tools/content/lib/curriculum-validation.mjs";
 import { buildPublicationShape } from "../../tools/content/lib/firestore-shape.mjs";
+import { parseStrictJSONBytes } from "../../tools/content/lib/strict-json.mjs";
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -36,6 +37,14 @@ const repositoryRoot = path.resolve(
 const fixturePath = path.join(
   repositoryRoot,
   "tests/fixtures/content/minimal-curriculum-v1.json",
+);
+const publishedClientFixturePath = path.join(
+  repositoryRoot,
+  "tests/fixtures/content/minimal-curriculum-v1.published-client.json",
+);
+const comingSoonProgramFixturePath = path.join(
+  repositoryRoot,
+  "tests/fixtures/content/minimal-coming-soon-program-v1.published-client.json",
 );
 const vectorPath = path.join(
   repositoryRoot,
@@ -47,6 +56,12 @@ const schemaPath = path.join(
 );
 
 const fixture = JSON.parse(await readFile(fixturePath, "utf8"));
+const publishedClientFixture = JSON.parse(
+  await readFile(publishedClientFixturePath, "utf8"),
+);
+const comingSoonProgramFixture = JSON.parse(
+  await readFile(comingSoonProgramFixturePath, "utf8"),
+);
 const digestVectors = JSON.parse(await readFile(vectorPath, "utf8"));
 const curriculumSchema = JSON.parse(await readFile(schemaPath, "utf8"));
 const schemaAjv = new Ajv2020({ allErrors: true, strict: true });
@@ -226,6 +241,70 @@ test("the minimal synthetic authoring envelope validates and builds one determin
   assert.deepEqual(result.publication, buildPublicationShape(fixture));
   assert.doesNotThrow(() =>
     assertValidCurriculumDraft(fixture, { sourcePath: fixturePath }),
+  );
+
+  assert.deepEqual(Object.keys(publishedClientFixture).sort(), [
+    "assetVersions",
+    "catalogPointerID",
+    "catalogVersion",
+    "lessonVersions",
+    "locale",
+    "moduleVersions",
+    "programVersions",
+    "rubricVersions",
+  ]);
+  assert.equal(publishedClientFixture.locale, fixture.locale);
+  assert.equal(
+    publishedClientFixture.catalogPointerID,
+    fixture.locale.toLowerCase(),
+  );
+  assert.equal("evaluationContractVersions" in publishedClientFixture, false);
+
+  const publicDocuments = [
+    [
+      `catalogVersions/${publishedClientFixture.catalogVersion.catalogVersionID}`,
+      publishedClientFixture.catalogVersion,
+    ],
+    ...publishedClientFixture.programVersions.map((document) => [
+      `programVersions/${document.programVersionID}`,
+      document,
+    ]),
+    ...publishedClientFixture.moduleVersions.map((document) => [
+      `modules/${document.moduleVersionID}`,
+      document,
+    ]),
+    ...publishedClientFixture.lessonVersions.map((document) => [
+      `lessonVersions/${document.lessonVersionID}`,
+      document,
+    ]),
+    ...publishedClientFixture.rubricVersions.map((document) => [
+      `rubricVersions/${document.rubricVersionID}`,
+      document,
+    ]),
+    ...publishedClientFixture.assetVersions.map((document) => [
+      `assetVersions/${document.assetVersionID}`,
+      document,
+    ]),
+  ];
+  for (const [documentPath, projectedDocument] of publicDocuments) {
+    const { publishedAt, ...withoutServerTimestamp } = projectedDocument;
+    assert.deepEqual(Object.keys(publishedAt).sort(), ["nanoseconds", "seconds"]);
+    assert.deepEqual(
+      withoutServerTimestamp,
+      result.publication.immutableDocumentsByPath[documentPath],
+      `${documentPath} drifted from the Node-generated public shape`,
+    );
+  }
+  assert.equal(
+    publicDocuments.length + fixture.evaluationContractVersions.length,
+    result.publication.immutableDocuments.length,
+  );
+  assert.equal(comingSoonProgramFixture.catalogState, "comingSoon");
+  assert.deepEqual(comingSoonProgramFixture.moduleVersionIDs, []);
+  assert.equal(comingSoonProgramFixture.firstLessonVersionID, null);
+  assert.equal(
+    contentDigest(comingSoonProgramFixture),
+    "fec6dbef628d2f483b343a666c0293869a662344be51a9639994fc8d3d545419",
   );
 });
 
@@ -1010,6 +1089,35 @@ test("validation CLI uses fatal UTF-8 and duplicate-key parsing while printing s
   );
   t.after(() => rm(temporaryDirectory, { recursive: true, force: true }));
   const cliPath = path.join(repositoryRoot, "tools/content/validate.mjs");
+
+  assert.deepEqual(
+    parseStrictJSONBytes(Buffer.from('{"value":1}', "utf8")),
+    { value: 1 },
+  );
+  const fixtureText = await readFile(fixturePath, "utf8");
+  for (const lexeme of ["1.0", "1e0"]) {
+    assert.throws(
+      () => parseStrictJSONBytes(Buffer.from(`{"value":${lexeme}}`, "utf8")),
+      (error) => error?.code === "JSON_NUMBER_NOT_INTEGER",
+    );
+
+    const nonIntegerPath = path.join(
+      temporaryDirectory,
+      `non-integer-${lexeme.replaceAll(".", "-")}.json`,
+    );
+    const nonIntegerSource = fixtureText.replace(
+      '"expectedDurationMinutes": 1',
+      `"expectedDurationMinutes": ${lexeme}`,
+    );
+    assert.notEqual(nonIntegerSource, fixtureText);
+    await writeFile(nonIntegerPath, nonIntegerSource, "utf8");
+    const result = spawnSync(process.execPath, [cliPath, nonIntegerPath], {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /JSON_NUMBER_NOT_INTEGER/u);
+  }
 
   await t.test("valid source prints only safe identifiers, counts, and digests", () => {
     const result = spawnSync(process.execPath, [cliPath, fixturePath], {
