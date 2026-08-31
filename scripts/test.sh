@@ -9,6 +9,7 @@ cd "$repository_root"
 ./scripts/run_with_timeout.sh 300 ./scripts/test_content_publication.sh
 ./scripts/bootstrap.sh
 ./tests/scripts/test_run_with_timeout.sh
+./tests/scripts/test_accessibility_audit_retry.sh
 ./tests/scripts/test_result_assertions.sh
 ./tests/scripts/test_ci_configuration.sh
 ./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
@@ -45,11 +46,70 @@ reboot_ui_audit_simulator() {
   local simulator_udid=$1
   echo "Rebooting simulator $simulator_udid before the next accessibility audit group."
   ./scripts/run_with_timeout.sh 120 \
-    xcrun simctl bootstatus "$simulator_udid" -b >/dev/null
+    xcrun simctl bootstatus "$simulator_udid" -b >/dev/null \
+    || return $?
   ./scripts/run_with_timeout.sh 60 \
-    xcrun simctl shutdown "$simulator_udid" >/dev/null
+    xcrun simctl shutdown "$simulator_udid" >/dev/null \
+    || return $?
   ./scripts/run_with_timeout.sh 120 \
-    xcrun simctl bootstatus "$simulator_udid" -b >/dev/null
+    xcrun simctl bootstatus "$simulator_udid" -b >/dev/null \
+    || return $?
+}
+
+run_accessibility_audit_with_retry() {
+  local timeout_seconds=$1
+  local result_bundle=$2
+  local test_identifier=$3
+  local attempt
+  local command_status
+  local result_name
+
+  case "$result_bundle" in
+    "$result_directory"/*.xcresult)
+      result_name=${result_bundle#"$result_directory"/}
+      ;;
+    *)
+      echo "Refusing to manage an accessibility result outside $result_directory." >&2
+      return 64
+      ;;
+  esac
+  if [[ "$result_name" == */* ]]; then
+    echo "Refusing to manage a nested accessibility result: $result_name." >&2
+    return 64
+  fi
+
+  for attempt in 1 2; do
+    if ./scripts/run_with_timeout.sh "$timeout_seconds" \
+      xcodebuild -quiet test-without-building \
+        -project Syntholo.xcodeproj \
+        -scheme Syntholo \
+        -destination "$ui_audit_destination" \
+        -derivedDataPath DerivedData \
+        -parallel-testing-enabled NO \
+        CODE_SIGNING_ALLOWED=NO \
+        -resultBundlePath "$result_bundle" \
+        -only-testing:"$test_identifier"; then
+      return 0
+    else
+      command_status=$?
+    fi
+
+    if [[ "$command_status" -ne 124 || "$attempt" -eq 2 ]]; then
+      return "$command_status"
+    fi
+
+    echo "Accessibility audit $test_identifier timed out; rebooting the simulator before retry 2 of 2."
+    if reboot_ui_audit_simulator "$ui_audit_simulator_udid"; then
+      :
+    else
+      return $?
+    fi
+    if rm -rf -- "$result_bundle"; then
+      :
+    else
+      return $?
+    fi
+  done
 }
 
 assert_test_result() {
@@ -208,16 +268,10 @@ else
     fi
     shell_accessibility_result="$result_directory/${shell_accessibility_test}.xcresult"
     echo "Running isolated AppShell audit: $shell_accessibility_test."
-    ./scripts/run_with_timeout.sh 180 \
-      xcodebuild -quiet test-without-building \
-        -project Syntholo.xcodeproj \
-        -scheme Syntholo \
-        -destination "$ui_audit_destination" \
-        -derivedDataPath DerivedData \
-        -parallel-testing-enabled NO \
-        CODE_SIGNING_ALLOWED=NO \
-        -resultBundlePath "$shell_accessibility_result" \
-        -only-testing:"SyntholoUITests/AccessibilityAuditUITests/$shell_accessibility_test"
+    run_accessibility_audit_with_retry \
+      180 \
+      "$shell_accessibility_result" \
+      "SyntholoUITests/AccessibilityAuditUITests/$shell_accessibility_test"
     assert_test_result "$shell_accessibility_result" 1 "$shell_accessibility_test"
   done
   echo "shell-accessibility-tests: 28 passed, 0 failed, 0 skipped."
@@ -245,16 +299,10 @@ else
     fi
     curriculum_accessibility_result="$result_directory/${curriculum_accessibility_test}.xcresult"
     echo "Running isolated curriculum audit: $curriculum_accessibility_test."
-    ./scripts/run_with_timeout.sh 300 \
-      xcodebuild -quiet test-without-building \
-        -project Syntholo.xcodeproj \
-        -scheme Syntholo \
-        -destination "$ui_audit_destination" \
-        -derivedDataPath DerivedData \
-        -parallel-testing-enabled NO \
-        CODE_SIGNING_ALLOWED=NO \
-        -resultBundlePath "$curriculum_accessibility_result" \
-        -only-testing:"SyntholoUITests/CurriculumAccessibilityAuditUITests/$curriculum_accessibility_test"
+    run_accessibility_audit_with_retry \
+      300 \
+      "$curriculum_accessibility_result" \
+      "SyntholoUITests/CurriculumAccessibilityAuditUITests/$curriculum_accessibility_test"
     assert_test_result \
       "$curriculum_accessibility_result" \
       1 \
