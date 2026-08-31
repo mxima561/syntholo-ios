@@ -37,6 +37,26 @@ The immediate product gap is now narrower: observable Learn state, sanitized rea
 
 No Product Bible release gate is currently passed. `GATE-ALPHA`, `GATE-TF-CLOSED`, `GATE-TF-EXPANDED`, and `GATE-STORE` must each receive dated evidence and named approval.
 
+### August 30 continuation verification
+
+- On exact documentation HEAD `8770223`, one fresh login-shell invocation of `./scripts/test.sh` passed all 487 enforced checks: 73 curriculum content, 32 operator identity, 38 publication/rollback, 232 Swift unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests. The counted suites had zero failure, skip, or cancellation and used no runtime retry.
+- The Build iOS Apps simulator-browser workflow then installed and launched bundle `com.syntholo.ios` on the explicitly selected iPhone 17 Pro / iOS 26.5 simulator. The browser-visible live frame rendered the Learn tab, catalog metadata, and the `SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH` program card. This proves the current app shell and fresh deterministic read-only curriculum seam render at runtime.
+- The simulator proof does **not** prove approved launch curriculum, a real lesson-start/completion loop, live Firebase reads, provider authentication, signing, a physical device, minimum-iOS behavior, or App Store readiness. The synthetic fixture remains test-only evidence and may never be published.
+- The scoped simulator mirror was stopped after capture, its helper exited successfully, and no listener remained on local port 3200.
+
+### Current Mac dependency status
+
+| Dependency | Current status | Required action |
+| --- | --- | --- |
+| Xcode / Swift | Xcode 26.6, Swift 6.3.3, and iOS 26.5 simulator runtime are installed and working | Keep this toolchain for current-OS evidence. Add the CI-pinned Xcode 16.2 / iOS 17.5 lane locally or run it on a configured remote CI host for minimum-OS proof. |
+| Homebrew / project tools | Homebrew 6.0.20, XcodeGen 2.46.0, and Gitleaks 8.30.1 are installed | No install required. Use a login shell or explicit Homebrew `PATH` because a bare non-login environment does not expose every Homebrew binary. |
+| Node / npm | Node 22.23.2 and npm 10.9.8 satisfy the repository's Node 22 requirement | No install or upgrade required for this repository. |
+| Java / Firebase emulator | Homebrew OpenJDK 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0 are installed and the Rules suite passes | No Java install required. The macOS system `java` launcher is not linked, but repository scripts already locate Homebrew Java. |
+| Dependency manager | The app uses Swift Package Manager | CocoaPods is absent and is not required. |
+| Apple execution/signing | No physical iPhone, Apple signing identity, or provisioning profile was detected | Connect a test iPhone and provide the Apple Developer team/signing/provisioning access before physical-device, provider, archive, or TestFlight proof. |
+| Firebase environments | Only emulator-safe configuration is present | Provide separate development and staging Firebase app configuration, approved principals, and provider setup without committing credentials. |
+| Source-control delivery | No Git remote is configured | Provide the repository remote/default branch, then enable protected CI and the required minimum-iOS lane. |
+
 ## 3. Non-engineering inputs that must be supplied
 
 These inputs can be worked on in parallel, but the associated implementation must stop at the stated boundary until each one is recorded.
