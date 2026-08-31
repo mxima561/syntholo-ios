@@ -4,7 +4,7 @@
 
 **Created:** August 30, 2026
 
-**Status:** Engineering implemented and canonically verified through Task 10; privacy-safe analytics, original content, and staging work remain open, and the Product Bible specialization decision still blocks every original-content or staging-write step
+**Status:** Engineering implemented and canonically verified through Task 11; the mandatory content-load gate is 0/4, so original content and staging work remain prohibited and Phase 2 remains in progress
 
 **Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
 
@@ -622,7 +622,7 @@ Run the focused `CurriculumCacheTests` with the same Xcode settings as Task 5.
 
 Expected: the last valid graph survives every expected local failure and cache namespaces never cross.
 
-Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Tasks 7–10 have since completed their engineering slices; Task 11 is next.
+Checkpoint: Task 6 is complete in implementation commit `ba54963`; see `docs/quality/2026-08-30-phase-2-task-6-cache-checkpoint.md`. Tasks 7–11 have since completed their engineering slices; the mandatory content-load gate is next and remains closed.
 
 ### Task 7 — Implement the exact-get Firestore adapter test-first
 
@@ -728,7 +728,7 @@ Expected: zero failed/skipped/canceled tests and exact totals.
 
 Checkpoint: Task 10 is complete in implementation commit `b9083a7`; see `docs/quality/2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md`. The focused fixture/composition suite passes 8/8; Apple, Google, and email exact-preview journeys pass 3/3; fresh Back/tab restoration passes 1/1; final focused contrast/clipped-text rechecks pass 2/2; and the final focused accessibility5 recheck passes 1/1. One uninterrupted canonical invocation passes 479/479: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 224 unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules, with zero failure, skip, or cancellation. Gitleaks 8.30.1 is clean across the 28-commit post-implementation history and then-current worktree, and Release configuration/bundle separation passes.
 
-The preview now deliberately uses an immersive nested destination with localized **Read-only lesson preview** chrome and a 48-point Back control; tabs hide inside preview and restore on Back. Its iOS 26 edge-effect suppression is availability-gated with an iOS 17 fallback. Accessibility evidence applies to the fresh synthetic catalog/preview only and does not include raw `.dynamicType`, physical VoiceOver, Reduce Motion, Switch Control, device, or `SHIP-A11Y` proof. The malformed fixture injects a typed malformed terminal event rather than malformed decoder bytes. No specialization, original curriculum, staging/production operation, real lesson execution, Phase 2 exit, launch approval, or `SHIP-FIRST-LESSON` completion is claimed. Task 11 is next.
+The preview now deliberately uses an immersive nested destination with localized **Read-only lesson preview** chrome and a 48-point Back control; tabs hide inside preview and restore on Back. Its iOS 26 edge-effect suppression is availability-gated with an iOS 17 fallback. Accessibility evidence applies to the fresh synthetic catalog/preview only and does not include raw `.dynamicType`, physical VoiceOver, Reduce Motion, Switch Control, device, or `SHIP-A11Y` proof. The malformed fixture injects a typed malformed terminal event rather than malformed decoder bytes. No specialization, original curriculum, staging/production operation, real lesson execution, Phase 2 exit, launch approval, or `SHIP-FIRST-LESSON` completion is claimed. Task 11 has since completed without changing those boundaries.
 
 ### Task 11 — Add privacy-safe analytics
 
@@ -736,17 +736,26 @@ The preview now deliberately uses an immersive nested destination with localized
 
 - Modify: `Syntholo/Services/Analytics/AnalyticsClient.swift`
 - Modify: `Syntholo/Infrastructure/Firebase/FirebaseAnalyticsClient.swift`
+- Modify: `Syntholo/App/AppDependencies.swift`
 - Modify: `SyntholoTests/AnalyticsEventTests.swift`
 - Modify: `Syntholo/Features/Learn/CurriculumStore.swift`
+- Modify: `Syntholo/Features/Learn/LearnHomeView.swift`
+- Modify: `SyntholoTests/CurriculumStoreTests.swift`
+- Modify: `scripts/test.sh`
+- Create: `tests/scripts/test_accessibility_audit_retry.sh`
 
-- [ ] Write failing typed-payload tests first.
-- [ ] Add `program_viewed`, `module_viewed`, and `lesson_viewed`; optional sync events use stable IDs, locale, freshness/source, duration bucket, and safe error code only.
-- [ ] Make title/body/question/options/correct answer/feedback/prompt/submission/email/profile/operator fields unrepresentable in the typed API.
-- [ ] Emit one view event per route presentation; body reevaluation emits none, while a later distinct presentation may emit another.
+- [x] Write failing typed-payload tests first.
+- [x] Add `program_viewed`, `module_viewed`, and `lesson_viewed` with stable IDs, separate numeric versions, locale, saved/fresh source, actual rubric identity, and a bounded duration bucket. Optional sync/error events were not added.
+- [x] Make title/body/question/options/correct answer/feedback/prompt/submission/email/profile/operator fields unrepresentable in the typed API.
+- [x] Emit one view event per route presentation; body reevaluation emits none, while a later distinct presentation may emit another.
 
 Run focused `AnalyticsEventTests`.
 
 Expected: no curriculum or learner text can enter analytics.
+
+Checkpoint: Task 11 is complete in implementation commit `0234034`; canonical-runner reliability commit `a124267` adds one timeout-only retry for per-method accessibility audits without masking non-timeout failures. See `docs/quality/2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md`. The focused analytics suite passes 11/11, the complete Swift unit target passes 232/232, and one uninterrupted canonical invocation on `a124267` passes 487/487: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 232 unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules. The final run used no retry and had zero failure, skip, or cancellation in counted suites.
+
+The three contexts accept only typed entity IDs/versions, locale, saved/fresh source, and the five closed lesson-duration buckets. Production `CurriculumStore` call sites populate them from retained validated snapshot entities, including the actual resolved rubric. A destination-local private `@State` records once per presentation, blocks body-reevaluation duplicates, and permits a later recreated destination to emit again. Direct lesson presentation emits only `lesson_viewed`. One analytics client is shared by onboarding and curriculum; configured live composition uses Firebase, while unconfigured and exact UI-test compositions use no-op analytics. This is typed synthetic client-lifecycle proof, not live Firebase delivery, DebugView/dashboard, consent/retention approval, physical accessibility, or minimum-iOS runtime evidence.
 
 ### Content-load gate — mandatory stop
 

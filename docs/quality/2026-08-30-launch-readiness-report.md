@@ -14,7 +14,7 @@ This goal is intentionally narrower than the Book II north star. Launch does **n
 
 Syntholo has a high-quality, freshly verified Phase 0 foundation and a substantially complete Phase 1 identity/onboarding slice. The current app is **not an internal alpha yet** because the learning product begins after the point where implementation stops.
 
-The repository is healthy enough to build on: every completed enforced suite has current passing evidence, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. Tasks 8–10 now supply observable Learn state, sanitized read-only curriculum screens, root dependency composition, an exact same-session preview handoff, deterministic curriculum-state UI coverage without live test dependencies, and automated accessibility evidence for the fresh synthetic catalog/preview. Task 11 privacy-safe curriculum analytics is next. This is still a preview seam, not the real first-lesson loop.
+The repository is healthy enough to build on: every completed enforced suite has current passing evidence, the implemented onboarding is visually coherent, and the SwiftUI baseline is modern and generally correct. Tasks 8–11 now supply observable Learn state, sanitized read-only curriculum screens, root dependency composition, an exact same-session preview handoff, deterministic curriculum-state UI coverage without live test dependencies, automated accessibility evidence for the fresh synthetic catalog/preview, and typed privacy-safe route analytics. The mandatory content-load gate is next and is 0/4 complete. This is still a preview seam, not the real first-lesson loop.
 
 No Product Bible milestone is currently satisfied:
 
@@ -250,6 +250,22 @@ The focused fixture/composition suite passed 8/8; the three provider exact-previ
 
 The malformed fixture injects the typed malformed terminal event and verifies learner-safe collapse; it does not test malformed decoder bytes. No original curriculum, specialization choice, staging/production operation, analytics, real lesson execution, physical accessibility, Phase 2 exit, launch approval, `SHIP-FIRST-LESSON`, or Product Bible release gate is claimed.
 
+## Phase 2 privacy-safe curriculum analytics checkpoint
+
+Phase 2 Task 11 is complete in implementation commit `0234034`; see `docs/quality/2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md`. Typed contexts now define `program_viewed`, `module_viewed`, and `lesson_viewed` with only typed entity IDs, separate numeric versions, locale, saved/fresh source, rubric identity/version, and one of five bounded duration buckets. Production `CurriculumStore` call sites populate those contexts from entities resolved in the retained validated snapshot. The closed global analytics key allowlist contains 17 keys across onboarding and curriculum.
+
+Forbidden curriculum/learner/editorial/operator text has no field in the typed curriculum contexts. The store resolves all event identity from a retained validated snapshot rather than copying lexical route tokens, rejects mismatched or missing routes without logging, and retains freshness with the matching catalog. A direct lesson route emits only `lesson_viewed`.
+
+Each real SwiftUI destination uses destination-local private `@State`: body reevaluation cannot duplicate the view event, while popping and recreating the destination may record a later distinct presentation. One root analytics client is shared by onboarding and curriculum. Configured live composition uses Firebase; unconfigured and exact DEBUG UI-test composition use no-op analytics. Firebase mapping emits strings and integers only.
+
+Focused analytics tests passed 11/11, the complete Swift unit target passed 232/232, focused route UI smoke passed 2/2, a generic simulator production build passed, environment/Release separation passed, and two independent reviews found no P0/P1/P2 issue. Canonical-runner reliability commit `a124267` permits one retry only for a per-method accessibility watchdog timeout after a successful simulator reboot; non-timeout failures and a second timeout remain terminal.
+
+One uninterrupted canonical invocation on exact commit `a124267` passed 487/487: 73 curriculum content, 32 operator identity, 38 publication/rollback, 232 unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules. The final run used the dedicated iPhone 17 Pro / iOS 26.5 simulator, used no retry, and had zero failure, skip, or cancellation in counted suites. Gitleaks 8.30.1 was clean across all 31 local commits then present and the first-party worktree.
+
+This evidence is typed synthetic client-lifecycle and adapter proof. It is not live Firebase event delivery, DebugView/dashboard or packet-capture evidence, consent/retention/privacy-policy approval, complete Book VI telemetry, physical accessibility, iOS 17 runtime execution, staging proof, Phase 2 exit, or launch approval.
+
+The mandatory content-load gate was audited immediately afterward and is 0/4: no dated accepted specialization exists in the Product Bible, `content/config/launch-content-decision.json` is absent, `content/config/environments.json` is emulator-only, and no dated Product/curriculum authorization for original Foundations authoring and staging load exists. Task 12 and staging work therefore remain prohibited.
+
 ## Initial audit verification evidence (historical)
 
 Before the remediation checkpoint above, the canonical `./scripts/test.sh` gate passed on this machine using Xcode 26.6, iPhone 17 Pro / iOS 26.5, XcodeGen 2.46.0, Node 22.23.2, npm 10.9.8, Java 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0.
@@ -272,7 +288,7 @@ After adding the pinned Phase 2 validator/Admin development dependencies, `npm a
 | --- | --- | --- | --- |
 | 0 — Foundation | Verified | Swift 6, iOS 17, iPhone-only, XcodeGen, environments, design system, four tabs, CI/test gate | Physical-device checks still matter at release, but Phase 0 engineering is sound |
 | 1 — Identity/onboarding | Substantially complete | Age gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, Apple/Google/email architecture, profile persistence, typed local-persistence recovery, and localization hardening | Live provider smoke tests, development/staging Firebase configuration, minimum-iOS CI evidence, physical VoiceOver evidence, daily-goal/settings completion |
-| 2 — Curriculum platform | In progress | Frozen contract through exact-get repository plus Task 8 Learn UI, Task 9 exact same-session preview handoff, and Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility proof; Task 10 passes 8/8 focused fixture/composition tests, 224/224 unit, and 479/479 canonical tests | Owner approval; Task 11 analytics; original reviewed content and staging proof; full physical/minimum-OS accessibility certification; chosen specialization before original content authoring or staging load |
+| 2 — Curriculum platform | In progress | Frozen contract through exact-get repository plus Task 8 Learn UI, Task 9 exact same-session preview handoff, Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility proof, and Task 11 typed route analytics; Task 11 passes 11/11 focused analytics tests, 232/232 unit, and 487/487 canonical tests | The 0/4 content-load gate; contract/owner approval; original reviewed content and staging proof; full physical/minimum-OS accessibility certification; chosen specialization before original content authoring or staging load |
 | 3 — Learning engine | Missing | An exact immutable read-only first-lesson preview opens; no lesson-start or attempt mutation exists | Player, required formats, deterministic scoring, attempts, start limits, durable queue, cache/offline recovery, progress semantics |
 | 4 — AI coach | Missing | Coach-mode preference only | Moderation, immutable rubric load, structured scoring, server validation, separate tone rendering, feedback/revision/follow-up, fail-soft recovery |
 | 5 — Engagement | Missing | Root-composed read-only Learn catalog and preview UI exist; Practice and all engagement behavior remain placeholders | Today mission, next action, XP, streak, daily challenge, objective review, persistence/reconciliation |
@@ -459,7 +475,7 @@ Syntholo 1.0 is launch-ready only when all of the following are true:
 
 ## Immediate next implementation slice
 
-Continue the approved synthetic Phase 2 sequence. The emulator-only publisher/rollback, exact-read Rules, Swift curriculum-domain/digest-parity, app-owned cache, exact-get Firestore repository, Task 8 observable-store/read-only-UI, Task 9 root-composition/exact-preview, and Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility checkpoints are implemented. The next engineering checkpoint is Task 11 privacy-safe curriculum route analytics. The first staging vertical checkpoint remains:
+Continue only work permitted by the binding dependency gates. The emulator-only publisher/rollback, exact-read Rules, Swift curriculum-domain/digest-parity, app-owned cache, exact-get Firestore repository, Task 8 observable-store/read-only-UI, Task 9 root-composition/exact-preview, Task 10 deterministic UI/no-Firestore/fresh catalog-preview accessibility, and Task 11 typed privacy-safe route analytics checkpoints are implemented. The mandatory content-load gate is 0/4, so original curriculum, a staging dry-run/write, and Task 12 remain stopped. After Product, curriculum, and environment owners supply and approve all four records, the first staging vertical checkpoint remains:
 
 > A privately published, immutable Foundations fixture containing a program, module, lesson version, objective, expected duration, completion rule, still-diagram/concept content, one deterministic question, and rubric/version references syncs into the app and renders read-only from the existing first-lesson handoff.
 
@@ -469,5 +485,6 @@ Do not add AI, StoreKit, leagues, or a broader redesign to that checkpoint. Prov
 
 - Simulator captures verify visible layout and navigation behavior for the audited fixture, not live provider/network behavior.
 - Automated audits now cover the AppShell loading state, onboarding handoff, and the fresh synthetic catalog/preview. Task 10's curriculum boundary is 14 isolated methods: six raw categories plus one accessibility5 measured-growth/clipped-text lane per screen. It excludes raw `.dynamicType`, the other deterministic fixture states, spoken VoiceOver focus/announcements, Reduce Motion, Switch Control, and physical hardware.
+- Task 11 proves typed synthetic client-event shape and SwiftUI presentation lifecycle, not live Firebase delivery, DebugView/dashboard ingestion, packet capture, consent/retention approval, or complete launch telemetry.
 - Only iOS 26.5 ran locally. The configured iOS 17.5 CI job remains required for minimum-OS evidence.
 - Local Git provenance now begins at preserved baseline commit `b0ce17d` on `main`. No remote is configured, so upstream history, branch protection, and remote CI provenance still cannot be verified.

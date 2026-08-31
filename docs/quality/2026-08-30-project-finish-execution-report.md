@@ -13,7 +13,7 @@
 
 Finish Syntholo 1.0 as a trustworthy, accessible native iPhone school for learners aged 13 and older. A launch build is not complete until a learner can onboard, authenticate, start and finish a real lesson, receive explainable feedback, recover work after interruption, see accurate progress and limits, purchase or restore Pro, use the bounded social system safely, manage or delete their data, and install a signed App Store build backed by approved content and operating procedures.
 
-The immediate product gap is now narrower: observable Learn state, sanitized read-only curriculum screens, production root composition, an exact same-session preview handoff, deterministic curriculum-state UI/no-Firestore proof, and fresh catalog/preview automated accessibility evidence are implemented. The preview still is not a real lesson start. The critical path therefore continues with Task 11 privacy-safe curriculum analytics and approved publication, then the real lesson engine, and only then AI, engagement, subscriptions, and social.
+The immediate product gap is now narrower: observable Learn state, sanitized read-only curriculum screens, production root composition, an exact same-session preview handoff, deterministic curriculum-state UI/no-Firestore proof, fresh catalog/preview automated accessibility evidence, and typed privacy-safe route analytics are implemented. The preview still is not a real lesson start. The critical path therefore continues with the mandatory content-load gate, approved staging publication and Phase 2 certification, then the real lesson engine, and only then AI, engagement, subscriptions, and social.
 
 ## 2. Current standing
 
@@ -30,7 +30,8 @@ The immediate product gap is now narrower: observable Learn state, sanitized rea
 | Phase 2 Task 8 | **Feature slice complete** | Implementation commit `0d8ab1f` adds the main-actor observable store, finite learner-safe states, exact typed Learn routes, ordered/fail-closed presentations, and sanitized read-only catalog/program/module/lesson UI; 19 store + 7 presentation tests, 202/202 complete Swift unit tests, and one uninterrupted 433/433 canonical invocation passed at that checkpoint. |
 | Phase 2 Task 9 | **Engineering complete** | Commit `085fbfa` connects root composition, exact typed preview navigation, route-before-sign-in ordering, retry/fallback behavior, returning-learner Learn home, and same-session preview presentation; 16/16 focused, 216/216 unit, and 447/447 canonical tests pass. |
 | Phase 2 Task 10 | **Engineering complete** | Commit `b9083a7` adds the complete deterministic DEBUG state matrix, exact-`--ui-testing` no-Firebase/no-Firestore composition proof, exact preview-content and Back/tab-restoration journeys, and 14 isolated fresh catalog/preview accessibility methods; 8/8 focused fixture/composition, 224/224 unit, and 479/479 canonical tests pass. |
-| Phase 2 Tasks 11–13 | **Not complete** | Privacy-safe curriculum analytics, approved original content, staging publication/read/cache/roll-forward/rollback, physical/minimum-OS accessibility certification, and Phase 2 verification remain. |
+| Phase 2 Task 11 | **Engineering complete** | Implementation `0234034` adds typed route-view analytics populated by production call sites from validated snapshots; runner hardening `a124267` preserves fail-closed Xcode behavior. Focused analytics pass 11/11, the complete unit target passes 232/232, and one uninterrupted canonical run passes 487/487 without using a retry. |
+| Phase 2 Tasks 12–13 | **Not complete** | The content-load gate is 0/4. Approved original content, staging publication/read/cache/roll-forward/rollback, physical/minimum-OS accessibility certification, and Phase 2 verification remain prohibited or open. |
 | Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
 | Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
 
@@ -109,7 +110,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 5 — Build the app-owned curriculum cache (Phase 2 Task 6)
 
-**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Tasks 7–10 have since completed their engineering slices; Task 11 is next.
+**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Tasks 7–11 have since completed their engineering slices; the mandatory content-load gate is next and remains closed.
 
 - Implement an actor-backed cache with atomic replacement.
 - Namespace by environment, project, and locale.
@@ -176,21 +177,27 @@ The preview is now an immersive nested destination with fixed localized **Read-o
 
 ### Step 10 — Add privacy-safe curriculum analytics (Phase 2 Task 11)
 
+**Status:** Engineering complete in implementation commit `0234034`; see [`2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md`](2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md). Canonical-runner reliability commit `a124267` permits one watchdog-timeout-only accessibility retry without masking non-timeout failures. Focused analytics pass 11/11, the complete unit target passes 232/232, and one uninterrupted canonical invocation passes 487/487 without using a retry.
+
 - Add typed `program_viewed`, `module_viewed`, and `lesson_viewed` events.
-- Limit payloads to stable IDs, locale, source/freshness, duration bucket, and safe error code.
+- Limit payloads to typed stable IDs, separate numeric versions, locale, source/freshness, actual rubric identity, and a bounded duration bucket; production route call sites must resolve those values from the retained validated snapshot.
 - Make lesson title/body/question/options/answer/feedback, prompt/submission, email/profile text, and operator fields impossible to place in the typed payload.
 - Emit one event per route presentation, not per SwiftUI body evaluation.
+
+Optional content-sync and safe-error-code events were not added. Task 11 proves the three view events and their SwiftUI client lifecycle; it does not prove live Firebase delivery, consent/retention approval, or complete launch telemetry.
 
 **Done when:** Tests prove no curriculum or learner text can enter analytics and all payloads comply with `LAW-19`.
 
 ### Step 11 — Pass the mandatory content-load decision gate
 
+**Status:** Mandatory stop active; 0/4 requirements are complete.
+
 Stop before original content or staging writes unless all four items are complete:
 
-- Product Bible contains a dated accepted specialization: School, Work, Creation, or Build.
-- A tracked `content/config/launch-content-decision.json` validates and matches that Bible decision exactly.
-- The approved staging project ID/number and keyless publisher principals are allowlisted.
-- Product and curriculum owners authorize original Foundations fixture authoring and staging load.
+- **Missing:** Product Bible contains a dated accepted specialization: School, Work, Creation, or Build.
+- **Missing:** A tracked `content/config/launch-content-decision.json` validates and matches that Bible decision exactly.
+- **Missing:** The approved staging project ID/number and keyless publisher principals are allowlisted; current environment config is emulator-only.
+- **Missing:** Product and curriculum owners authorize original Foundations fixture authoring and staging load.
 
 **Done when:** Every decision/access record is tracked and approved. There is no implementation override for this gate.
 
@@ -302,16 +309,16 @@ Stop before original content or staging writes unless all four items are complet
 
 ## 5. The next ten concrete actions
 
-1. Implement Task 11: add privacy-safe curriculum route analytics.
-2. Configure the Git remote/branch protection, minimum-iOS CI runtime, and development/staging Firebase access.
+1. Obtain and track all four mandatory content-load inputs: Product's dated specialization, its exact derivative decision file, the owner-supplied staging project/principal allowlist, and dated Product/curriculum authorization.
+2. Configure the Git remote/branch protection and minimum-iOS CI runtime; finish non-content development/staging Firebase access without inventing the gated publisher identities.
 3. Complete the remaining Phase 1 daily-goal/settings, live-provider device, and physical VoiceOver evidence.
 4. Obtain the six-owner Phase 2 contract approval.
-5. Product records the specialization and environment owners provide the approved staging identity gate without engineering selecting or inferring it.
-6. Author and cross-functionally review the original Foundations fixture only after that gate.
+5. Only after action 1 passes, enable and prove the approved keyless staging operator path.
+6. Author and cross-functionally review the original Foundations fixture only after the gate and staging identity are proven.
 7. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification.
-8. Preserve Task 8's exact state/sanitization, Task 9's exact route/order, and Task 10's deterministic composition/UI/accessibility boundaries while building analytics and staging evidence.
+8. Preserve Task 8's exact state/sanitization, Task 9's exact route/order, Task 10's deterministic composition/UI/accessibility, and Task 11's typed analytics boundaries while building staging evidence.
 9. Keep `SHIP-FIRST-LESSON` explicitly open until Phase 3 adds real start, interaction, feedback, completion, and progress behavior.
-10. Keep Phase 2 exit open until specialization, owner approval, analytics, original content, staging, minimum-OS, and named physical accessibility evidence all pass.
+10. Keep Phase 2 exit open until specialization, owner approval, original content, staging, minimum-OS, and named physical accessibility evidence all pass.
 
 Do not start Phase 3 implementation until the immutable Phase 2 content identity and staging path are proven. Do not start Phase 4 AI scoring until Phase 3 attempt/rubric/version semantics are proven.
 
