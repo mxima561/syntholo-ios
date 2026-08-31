@@ -46,6 +46,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 | Decision or access | Required result | Blocks |
 | --- | --- | --- |
+| Daily-goal contract | Product records the measure, ordered stable choices, default/fallback and assignment-source lifecycle, achievement/counting applicability, edit effective time within frozen DEC-9, product uses, relationship to the free allowance, onboarding behavior, legacy behavior, approved copy authority, owner, and date. Book VI defines no event, so implementation emits none unless the Bible is separately amended. | Daily-goal domain/persistence/UI implementation and Phase 1 exit |
 | Deep launch specialization | Product chooses School, Work, Creation, or Build and records it through Product Bible change control. No plan, onboarding default, or adjacent web product may infer the answer. | Any original Phase 2 learner-facing content authoring/load, staging or production content write, staging-device content load, and Phase 2 exit |
 | Firebase environments | Separate development, staging, and production projects; approved bundle/app records; provider credentials; least-privilege service access. | Live Phase 1 tests and every backend phase |
 | Apple Developer access | Team, signing, App ID, capabilities, Sign in with Apple, App Store Connect app, sandbox testers. | Device auth, StoreKit, TestFlight |
@@ -89,7 +90,7 @@ These are product or operational inputs, not implementation details. Assign an o
 - [x] Tell the learner when a local choice could not be saved and offer retry without losing selections.
 - [x] Replace runtime localization conversion for fixed enum copy with `LocalizedStringResource` or equivalent compile-time catalog entries.
 - [x] Move intended uppercase presentation into localized catalog copy instead of runtime `.textCase(.uppercase)`.
-- [ ] Add daily-goal selection/default and an editable settings destination.
+- [ ] Add daily-goal selection/default and an editable settings destination only after Product resolves the contract in `docs/superpowers/plans/2026-08-30-syntholo-daily-goal-settings.md`; the binding Bible does not define the unit, choices, or fallback.
 - [x] Keep experience level separate from coach personality and grading.
 
 **Proof:** Persistence-failure, relaunch, localization, and daily-goal tests pass.
@@ -176,7 +177,7 @@ These are product or operational inputs, not implementation details. Assign an o
 - [ ] Define activity state, lesson state, attempt state, sync state, entitlement state, and allowance state separately.
 - [ ] Assign a stable attempt ID before the learner submits work.
 - [ ] Define server-authoritative start, completion, mastery, XP, credit-consumption, retry, and reconciliation semantics.
-- [ ] Define the exact learner-day boundary using server reconciliation.
+- [ ] Implement the frozen DEC-9 learner-day (local calendar date reconciled against server time) with LAW-10 clock-spoofing and offline-roll protections.
 
 #### Step 2.2 — Build required lesson formats
 

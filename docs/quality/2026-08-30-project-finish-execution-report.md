@@ -42,15 +42,16 @@ No Product Bible release gate is currently passed. `GATE-ALPHA`, `GATE-TF-CLOSED
 These inputs can be worked on in parallel, but the associated implementation must stop at the stated boundary until each one is recorded.
 
 1. **Choose the deep launch specialization.** Product must choose exactly one of School, Work, Creation, or Build through Product Bible change control. Engineering must not infer or recommend the choice. This blocks original learner-facing content, any staging/production content write, staging-device content load, and Phase 2 exit.
-2. **Approve the Phase 2 contract.** Product, curriculum, iOS, backend, privacy, and accessibility owners must approve the frozen contract.
-3. **Provide Firebase environments.** Supply separate development, staging, and production project IDs/numbers, app records, allowed keyless impersonated publisher principals, App Check setup, provider configuration, and least-privilege access.
-4. **Provide Apple access.** Apple Developer team, signing, App ID/capabilities, Sign in with Apple, App Store Connect record, subscription products, and sandbox testers are required.
-5. **Provide Google auth setup.** Supply the production iOS OAuth client and approved callback/configuration.
-6. **Configure source-control operations.** Choose the Git remote/default branch, configure it, protect release/CI branches, and require the canonical gate.
-7. **Approve the AI policy.** Name the primary/fallback models, timeout and rate limits, evaluation thresholds, retention rules, and change-control owner before Phase 4 exits.
-8. **Approve privacy/legal/support policy.** Record data-retention and deletion periods, privacy policy, terms, support URL/email, subscription language, AI disclosure, age-rating answers, and vendor data-use restrictions.
-9. **Name launch owners.** Assign product, engineering, curriculum, privacy, accessibility, support, monitoring, content rollback, backend rollback, and app-release rollback owners.
-10. **Define TestFlight policy.** Record cohort sizes, observation windows, support route, stop conditions, and rollback rules before expanded testing.
+2. **Approve the daily-goal contract.** Product must record the measure, ordered stable choices, default/fallback and assignment-source lifecycle, achievement/counting applicability, edit effective time within frozen DEC-9, product uses, relationship to the free allowance, onboarding behavior, legacy behavior, copy authority, owner, and date. Book VI currently defines no event, so the implementation emits none unless the Bible is separately amended. This blocks daily-goal persistence/UI and Phase 1 exit.
+3. **Approve the Phase 2 contract.** Product, curriculum, iOS, backend, privacy, and accessibility owners must approve the frozen contract.
+4. **Provide Firebase environments.** Supply separate development, staging, and production project IDs/numbers, app records, allowed keyless impersonated publisher principals, App Check setup, provider configuration, and least-privilege access.
+5. **Provide Apple access.** Apple Developer team, signing, App ID/capabilities, Sign in with Apple, App Store Connect record, subscription products, and sandbox testers are required.
+6. **Provide Google auth setup.** Supply the production iOS OAuth client and approved callback/configuration.
+7. **Configure source-control operations.** Choose the Git remote/default branch, configure it, protect release/CI branches, and require the canonical gate.
+8. **Approve the AI policy.** Name the primary/fallback models, timeout and rate limits, evaluation thresholds, retention rules, and change-control owner before Phase 4 exits.
+9. **Approve privacy/legal/support policy.** Record data-retention and deletion periods, privacy policy, terms, support URL/email, subscription language, AI disclosure, age-rating answers, and vendor data-use restrictions.
+10. **Name launch owners.** Assign product, engineering, curriculum, privacy, accessibility, support, monitoring, content rollback, backend rollback, and app-release rollback owners.
+11. **Define TestFlight policy.** Record cohort sizes, observation windows, support route, stop conditions, and rollback rules before expanded testing.
 
 ## 4. Exact implementation order
 
@@ -71,7 +72,10 @@ These inputs can be worked on in parallel, but the associated implementation mus
 
 ### Step 2 — Finish the remaining Phase 1 baseline in parallel
 
-- Add daily-goal selection/default and an editable settings destination.
+**Daily-goal status:** Product decision required before implementation. The Bible requires the preference and permits—but does not select—the default-plus-edit-later path. It does not define the unit, choices, default/fallback or assignment-source lifecycle, achievement/counting applicability, edit effective time within frozen DEC-9, product uses, relationship to the free allowance, legacy behavior, or copy authority. Book VI currently defines no event, so the implementation emits none unless the Bible is separately amended. See [`2026-08-30-syntholo-daily-goal-settings.md`](../superpowers/plans/2026-08-30-syntholo-daily-goal-settings.md) for the exact fill-in and test-first sequence.
+
+- Product records and dates the complete daily-goal contract; do not infer it from the three-new-lesson allowance.
+- After approval, add the typed default, backward-compatible profile mapping, narrow preference update, UID-scoped pending-edit recovery, owner-only Rules, and editable Profile → Learning settings destination.
 - Configure development and staging Firebase apps without committing local credentials.
 - Verify Apple, Google, and email/password on a physical device.
 - Test cancellation, provider error, offline behavior, duplicate email, expired credential, sign-out, relaunch, returning-user recovery, and account switching.
@@ -310,13 +314,13 @@ Stop before original content or staging writes unless all four items are complet
 ## 5. The next ten concrete actions
 
 1. Obtain and track all four mandatory content-load inputs: Product's dated specialization, its exact derivative decision file, the owner-supplied staging project/principal allowlist, and dated Product/curriculum authorization.
-2. Configure the Git remote/branch protection and minimum-iOS CI runtime; finish non-content development/staging Firebase access without inventing the gated publisher identities.
-3. Complete the remaining Phase 1 daily-goal/settings, live-provider device, and physical VoiceOver evidence.
-4. Obtain the six-owner Phase 2 contract approval.
-5. Only after action 1 passes, enable and prove the approved keyless staging operator path.
-6. Author and cross-functionally review the original Foundations fixture only after the gate and staging identity are proven.
-7. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification.
-8. Preserve Task 8's exact state/sanitization, Task 9's exact route/order, Task 10's deterministic composition/UI/accessibility, and Task 11's typed analytics boundaries while building staging evidence.
+2. Product records the complete daily-goal value, assignment-source lifecycle, achievement/counting applicability, DEC-9 edit-effective-time, product-use, allowance, onboarding, legacy, and copy contract; then engineering implements the linked test-first settings plan with no analytics event.
+3. Configure the Git remote/branch protection and minimum-iOS CI runtime; finish non-content development/staging Firebase access without inventing the gated publisher identities.
+4. Complete the remaining Phase 1 live-provider device and physical VoiceOver evidence.
+5. Obtain the six-owner Phase 2 contract approval.
+6. Only after action 1 passes, enable and prove the approved keyless staging operator path.
+7. Author and cross-functionally review the original Foundations fixture only after the gate and staging identity are proven.
+8. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification while preserving Tasks 8–11 boundaries.
 9. Keep `SHIP-FIRST-LESSON` explicitly open until Phase 3 adds real start, interaction, feedback, completion, and progress behavior.
 10. Keep Phase 2 exit open until specialization, owner approval, original content, staging, minimum-OS, and named physical accessibility evidence all pass.
 
