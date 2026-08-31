@@ -2,6 +2,8 @@
 
 **Prepared:** August 30, 2026
 
+**Revalidated:** August 31, 2026
+
 **Product authority:** [`2026-08-25-syntholo-product-bible.md`](../superpowers/specs/2026-08-25-syntholo-product-bible.md)
 
 **Readiness source:** [`2026-08-30-launch-readiness-report.md`](2026-08-30-launch-readiness-report.md)
@@ -43,6 +45,13 @@ No Product Bible release gate is currently passed. `GATE-ALPHA`, `GATE-TF-CLOSED
 - The Build iOS Apps simulator-browser workflow then installed and launched bundle `com.syntholo.ios` on the explicitly selected iPhone 17 Pro / iOS 26.5 simulator. The browser-visible live frame rendered the Learn tab, catalog metadata, and the `SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH` program card. This proves the current app shell and fresh deterministic read-only curriculum seam render at runtime.
 - The simulator proof does **not** prove approved launch curriculum, a real lesson-start/completion loop, live Firebase reads, provider authentication, signing, a physical device, minimum-iOS behavior, or App Store readiness. The synthetic fixture remains test-only evidence and may never be published.
 - The scoped simulator mirror was stopped after capture, its helper exited successfully, and no listener remained on local port 3200.
+
+### August 31 machine and runtime revalidation
+
+- On exact HEAD `f9d0cb9`, one fresh invocation of `./scripts/test.sh` with the installed Homebrew toolchain explicitly added to `PATH` passed all 487 enforced checks: 73 curriculum content, 32 operator identity, 38 publication/rollback, 232 Swift unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests.
+- Every counted suite reported zero failures, skips, or cancellations. The run used no accessibility retry. The expected Xcode 26.6 `DebuggerLLDB.DebuggerVersionStore.StoreError` warning recurred without changing any result.
+- Xcode 26.6, iOS 26.5 Simulator, Homebrew 6.0.20, Node 22.23.2, npm 10.9.8, OpenJDK 21.0.12.1, XcodeGen 2.46.0, Gitleaks 8.30.1, and Firebase CLI 15.28.1 are installed and proven together. No additional local package installation is currently required for the repository's current-runtime gate.
+- `/Users/aly/.zprofile` already exports the Homebrew, Node 22, OpenJDK 21, and `JAVA_HOME` paths. A process launched before that profile change may still report those tools as missing; starting a new login shell or restarting the host app resolves the inherited-environment issue.
 
 ### Current Mac dependency status
 
