@@ -97,6 +97,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 0.4 — Finish live identity verification
 
+- [ ] Harden the restored-session missing-profile cleanup so a failed sign-out preserves the authenticated recovery state and local draft until retry succeeds; execute `2026-08-30-restored-session-sign-out-recovery.md` before live-provider certification.
 - [ ] Configure development and staging Firebase apps.
 - [ ] Verify Sign in with Apple, Google, and email/password on a physical device.
 - [ ] Test cancel, provider error, offline, duplicate email, expired credential, sign-out, relaunch, and returning-user states.
@@ -123,12 +124,14 @@ These are product or operational inputs, not implementation details. Assign an o
 
 #### Step 1.2 — Implement immutable versioned content
 
-- [ ] Add locale catalog/pointer models plus `programs`, `programVersions`, `modules`, `lessonVersions`, learner-readable rubric/client-scoring data, protected evaluation contracts, immutable assets/rights, objectives, and constrained feature configuration.
-- [ ] Make published lesson and rubric versions immutable.
-- [ ] Make edits create a new draft/version rather than mutating published learner history.
-- [ ] Store explicit locale, schema, minimum-client compatibility, publication-state, and canonical SHA-256 digest fields on every learner-facing immutable document.
-- [ ] Define stable catalog/content ordering without using array offsets as identity. Each immutable catalog entry pins an exact program version, and the client resolves that immutable graph through authenticated exact gets rather than dereferencing mutable program pointers or using a broad Rules-protected list query.
-- [ ] Validate broken references, missing objectives/rubrics/assets, inaccessible/cyclic prerequisites, invalid completion/scoring contracts, unsupported blocks, document/transaction bounds, and public/protected scoring mismatch before publication.
+- [x] Add locale catalog/pointer models plus `programs`, `programVersions`, `modules`, `lessonVersions`, learner-readable rubric/client-scoring data, protected evaluation contracts, immutable assets/rights, objectives, and constrained feature configuration.
+- [x] Make published lesson and rubric versions immutable.
+- [x] Make edits create a new draft/version rather than mutating published learner history.
+- [x] Store explicit locale, schema, minimum-client compatibility, publication-state, and canonical SHA-256 digest fields on every learner-facing immutable document.
+- [x] Define stable catalog/content ordering without using array offsets as identity. Each immutable catalog entry pins an exact program version, and the client resolves that immutable graph through authenticated exact gets rather than dereferencing mutable program pointers or using a broad Rules-protected list query.
+- [x] Validate broken references, missing objectives/rubrics/assets, inaccessible/cyclic prerequisites, invalid completion/scoring contracts, unsupported blocks, document/transaction bounds, and public/protected scoring mismatch before publication.
+
+**Step 1.2 checkpoint:** The synthetic-only schema/validation contract (`7b76f87`), create-only immutable emulator publisher and monotonic version heads (`ec8ac97`), exact-read/write-deny Rules (`5e94dc0`), and Swift graph/digest parity (`f3a07ec`) together complete these engineering requirements. This does not authorize an original draft or a staging write; owner approval, staging identity, the 0/4 content-load gate, and production-shaped certification remain open in Steps 1.1, 1.3, and 1.5.
 
 #### Step 1.3 — Build the private operator path
 
