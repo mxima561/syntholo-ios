@@ -6,6 +6,8 @@ enum ProfileRecoveryKind: Equatable {
     case profileCheckFailed
     case savingProfile
     case profileSaveFailed
+    case signingOut
+    case signOutFailed
 }
 
 @MainActor
@@ -31,6 +33,8 @@ final class OnboardingCoordinator {
     private var restorationTask: Task<Void, Never>?
     @ObservationIgnored
     private var isRetryingOnboardingPersistence = false
+    @ObservationIgnored
+    private var shouldExplainProfileSetup = false
 
     init(
         session: AppSession,
@@ -225,7 +229,9 @@ final class OnboardingCoordinator {
             await resolveRestoredProfile(for: pendingUser)
         case .profileSaveFailed:
             await retryProfileSave()
-        case .checkingProfile, .savingProfile, nil:
+        case .signOutFailed:
+            await abandonUnrecoverableProfile(user: pendingUser)
+        case .checkingProfile, .savingProfile, .signingOut, nil:
             return
         }
     }
@@ -309,8 +315,8 @@ final class OnboardingCoordinator {
         guard onboardingStore.draft.isReadyForAccount,
               onboardingStore.step == .account
                 || onboardingStore.step == .savingProfile else {
-            profileRecoveryKind = nil
             await abandonUnrecoverableProfile(
+                user: user,
                 explainToLearner: !restoredSession
             )
             return
@@ -320,15 +326,37 @@ final class OnboardingCoordinator {
     }
 
     private func abandonUnrecoverableProfile(
+        user: AuthenticatedUser,
         explainToLearner: Bool = false
     ) async {
-        pendingUser = nil
-        profileRecoveryKind = nil
-        onboardingStore.reset()
-        try? await authClient.signOut()
-        // A learner who just tapped "Sign in" and landed back on the welcome
-        // screen needs to know why. A silently restored session does not.
-        authenticationError = explainToLearner ? .profileSetupRequired : nil
-        session.transition(to: .signedOut)
+        guard pendingUser?.id == user.id else {
+            return
+        }
+
+        // Remembered rather than passed through, so a retry after a failed
+        // sign-out still explains itself on the welcome screen.
+        if explainToLearner {
+            shouldExplainProfileSetup = true
+        }
+
+        profileRecoveryKind = .signingOut
+        session.transition(to: .accountPendingProfile(userID: user.id))
+
+        do {
+            try await authClient.signOut()
+            pendingUser = nil
+            profileRecoveryKind = nil
+            onboardingStore.reset()
+            // A learner who just tapped "Sign in" and landed back on the
+            // welcome screen needs to know why. A silently restored session
+            // does not.
+            authenticationError = shouldExplainProfileSetup
+                ? .profileSetupRequired
+                : nil
+            shouldExplainProfileSetup = false
+            session.transition(to: .signedOut)
+        } catch {
+            profileRecoveryKind = .signOutFailed
+        }
     }
 }

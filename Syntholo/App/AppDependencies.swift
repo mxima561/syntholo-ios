@@ -271,6 +271,9 @@ final class AppDependencies {
         let hasDelayedSignedOutSession = arguments.contains(
             "--session-fixture=delayed-signed-out"
         )
+        let hasMissingProfileSignOutFailure = arguments.contains(
+            "--session-fixture=missing-profile-sign-out-fails-once"
+        )
         let hasHeldProfileLoad = arguments.contains(
             "--profile-load-fixture=fail-once-hold-existing"
         )
@@ -295,11 +298,17 @@ final class AppDependencies {
         if arguments.contains("--onboarding-persistence-fixture=fail-first-load") {
             onboardingRepository = onboardingRepository.failingFirstLoad()
         }
+        if hasMissingProfileSignOutFailure {
+            try? onboardingRepository.save(
+                step: .goal,
+                draft: OnboardingDraft(ageBand: .adult)
+            )
+        }
         let restoredUser = onboardingStorageKey != nil
             || hasDelayedSignedOutSession
             ? nil
             : user
-        let loadedProfile = restoredUser.map { restoredUser in
+        let loadedProfile = hasMissingProfileSignOutFailure ? nil : restoredUser.map { restoredUser in
             LearnerProfile.make(
                 user: restoredUser,
                 draft: completeDraft,
@@ -318,6 +327,7 @@ final class AppDependencies {
             && !hasDelayedSignedOutSession
             && !hasProfileLoadFailure
             && !hasHeldProfileLoad
+            && !hasMissingProfileSignOutFailure
             && onboardingStorageKey == nil {
             session.transition(to: .signedIn)
         }
@@ -331,6 +341,10 @@ final class AppDependencies {
                 shouldCancelAuthentication: shouldCancelAuthentication,
                 restoreDelayNanoseconds: hasDelayedSignedOutSession
                     ? 3_000_000_000
+                    : 0,
+                signOutFailuresRemaining: hasMissingProfileSignOutFailure ? 1 : 0,
+                signOutDelayNanoseconds: hasMissingProfileSignOutFailure
+                    ? 5_000_000_000
                     : 0
             ),
             profileRepository: UITestProfileRepository(
@@ -414,17 +428,23 @@ private actor UITestAuthClient: AuthClient {
     private var restoredUser: AuthenticatedUser?
     private let shouldCancelAuthentication: Bool
     private let restoreDelayNanoseconds: UInt64
+    private var signOutFailuresRemaining: Int
+    private let signOutDelayNanoseconds: UInt64
 
     init(
         authenticatedUser: AuthenticatedUser,
         restoredUser: AuthenticatedUser?,
         shouldCancelAuthentication: Bool,
-        restoreDelayNanoseconds: UInt64
+        restoreDelayNanoseconds: UInt64,
+        signOutFailuresRemaining: Int,
+        signOutDelayNanoseconds: UInt64
     ) {
         self.authenticatedUser = authenticatedUser
         self.restoredUser = restoredUser
         self.shouldCancelAuthentication = shouldCancelAuthentication
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
+        self.signOutFailuresRemaining = signOutFailuresRemaining
+        self.signOutDelayNanoseconds = signOutDelayNanoseconds
     }
 
     func createEmailAccount(
@@ -478,6 +498,13 @@ private actor UITestAuthClient: AuthClient {
     }
 
     func signOut() async throws {
+        if signOutFailuresRemaining > 0 {
+            if signOutDelayNanoseconds > 0 {
+                try? await Task.sleep(nanoseconds: signOutDelayNanoseconds)
+            }
+            signOutFailuresRemaining -= 1
+            throw AuthError.providerUnavailable
+        }
         restoredUser = nil
     }
 }

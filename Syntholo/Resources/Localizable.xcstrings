@@ -31,6 +31,16 @@
         }
       }
     },
+    "ACCOUNT RECOVERY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACCOUNT RECOVERY"
+          }
+        }
+      }
+    },
     "ACCOUNT SAVED": {
       "localizations": {
         "en": {
@@ -661,6 +671,16 @@
         }
       }
     },
+    "Keeping your saved choices until sign out finishes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeping your saved choices until sign out finishes."
+          }
+        }
+      }
+    },
     "Language": {
       "localizations": {
         "en": {
@@ -1161,6 +1181,16 @@
         }
       }
     },
+    "Retry sign out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry sign out"
+          }
+        }
+      }
+    },
     "Return to Learn and choose an available curriculum item.": {
       "localizations": {
         "en": {
@@ -1257,6 +1287,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selected"
+          }
+        }
+      }
+    },
+    "Signing out safely": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out safely"
+          }
+        }
+      }
+    },
+    "Signing out…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out…"
           }
         }
       }
@@ -1601,6 +1651,16 @@
         }
       }
     },
+    "We couldn’t finish signing out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t finish signing out"
+          }
+        }
+      }
+    },
     "We couldn’t open the lesson preview. Your place is safe.": {
       "localizations": {
         "en": {
@@ -1681,6 +1741,16 @@
         }
       }
     },
+    "Your account is still signed in on this device. Try again before continuing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account is still signed in on this device. Try again before continuing."
+          }
+        }
+      }
+    },
     "Your account stores your learning choices and progress.": {
       "localizations": {
         "en": {
@@ -1717,6 +1787,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your current setup is safe. Try again to remove the old draft from this device."
+          }
+        }
+      }
+    },
+    "Your learning choices are still safe on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your learning choices are still safe on this device."
           }
         }
       }

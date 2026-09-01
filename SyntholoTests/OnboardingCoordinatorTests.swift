@@ -346,6 +346,57 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertTrue(profileSnapshot.attemptedProfiles.isEmpty)
     }
 
+    func testMissingProfileSignOutFailureKeepsDraftUntilRetrySucceeds() async throws {
+        let draft = OnboardingDraft(ageBand: .adult)
+        let draftRepository = OnboardingDraftRepository.memory()
+        try draftRepository.save(step: .goal, draft: draft)
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            signOutFailuresRemaining: 1,
+            signOutDelayNanoseconds: 50_000_000
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil),
+            draftRepository: draftRepository
+        )
+
+        async let restoration: Void = fixture.coordinator.restore()
+        await authClient.waitForSignOutStart()
+
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signingOut)
+        XCTAssertEqual(fixture.store.step, .goal)
+        XCTAssertEqual(fixture.store.draft, draft)
+        XCTAssertEqual(try draftRepository.load()?.draft, draft)
+
+        await restoration
+
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signOutFailed)
+        XCTAssertEqual(fixture.store.step, .goal)
+        XCTAssertEqual(fixture.store.draft, draft)
+        XCTAssertEqual(try draftRepository.load()?.draft, draft)
+        let firstSignOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(firstSignOutCount, 1)
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertNil(fixture.coordinator.profileRecoveryKind)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(fixture.store.draft, OnboardingDraft())
+        XCTAssertNil(try draftRepository.load())
+        let finalSignOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(finalSignOutCount, 2)
+    }
+
     func testRestoredProfileLoadFailureDoesNotSaveOrClearCanonicalDraft() async throws {
         let draftRepository = try repositoryAtAccount()
         let profileRepository = CoordinatorProfileRepository(
@@ -571,7 +622,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
         )
         let authClient = CoordinatorAuthClient(
             restoredUser: user,
-            signOutFails: true
+            signOutFailuresRemaining: 1
         )
         let fixture = makeCoordinator(
             authClient: authClient,
@@ -586,7 +637,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
             try await fixture.coordinator.signOut()
             XCTFail("Expected sign-out to propagate the backend failure")
         } catch {
-            XCTAssertEqual(AuthError.map(error), .networkUnavailable)
+            XCTAssertEqual(AuthError.map(error), .providerUnavailable)
         }
 
         // Credentials are still live, so the app must not present itself as
@@ -690,8 +741,10 @@ private actor CoordinatorAuthClient: AuthClient {
 
     let restoredUser: AuthenticatedUser?
     let emailSignInUser: AuthenticatedUser?
-    private let signOutFails: Bool
     private let restoreDelayNanoseconds: UInt64
+    private let signOutDelayNanoseconds: UInt64
+    private var signOutFailuresRemaining: Int
+    private var signOutStartedContinuation: CheckedContinuation<Void, Never>?
     private(set) var restoreCount = 0
     private(set) var signOutCount = 0
     private(set) var passwordResetCount = 0
@@ -699,13 +752,15 @@ private actor CoordinatorAuthClient: AuthClient {
     init(
         restoredUser: AuthenticatedUser?,
         emailSignInUser: AuthenticatedUser? = nil,
-        signOutFails: Bool = false,
-        restoreDelayNanoseconds: UInt64 = 0
+        restoreDelayNanoseconds: UInt64 = 0,
+        signOutFailuresRemaining: Int = 0,
+        signOutDelayNanoseconds: UInt64 = 0
     ) {
         self.restoredUser = restoredUser
         self.emailSignInUser = emailSignInUser
-        self.signOutFails = signOutFails
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
+        self.signOutFailuresRemaining = signOutFailuresRemaining
+        self.signOutDelayNanoseconds = signOutDelayNanoseconds
     }
 
     func createEmailAccount(
@@ -754,8 +809,23 @@ private actor CoordinatorAuthClient: AuthClient {
 
     func signOut() async throws {
         signOutCount += 1
-        if signOutFails {
-            throw AuthError.networkUnavailable
+        signOutStartedContinuation?.resume()
+        signOutStartedContinuation = nil
+        if signOutDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: signOutDelayNanoseconds)
+        }
+        if signOutFailuresRemaining > 0 {
+            signOutFailuresRemaining -= 1
+            throw AuthError.providerUnavailable
+        }
+    }
+
+    func waitForSignOutStart() async {
+        guard signOutCount == 0 else {
+            return
+        }
+        await withCheckedContinuation { continuation in
+            signOutStartedContinuation = continuation
         }
     }
 
