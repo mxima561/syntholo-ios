@@ -1,8 +1,11 @@
 # Syntholo iOS Launch Completion Master Plan
 
-**Created:** August 30, 2026  
-**Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`  
-**Source audit:** `docs/quality/2026-08-30-launch-readiness-report.md`  
+**Created:** August 30, 2026
+
+**Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
+
+**Source audit:** `docs/quality/2026-08-30-launch-readiness-report.md`
+
 **Target:** A launch-ready Syntholo 1.0 that passes `GATE-ALPHA`, `GATE-TF-CLOSED`, `GATE-TF-EXPANDED`, and `GATE-STORE`.
 
 ## 1. What “finished” means

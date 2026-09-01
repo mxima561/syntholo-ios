@@ -1,7 +1,9 @@
 # Syntholo iOS launch-readiness report
 
-**Audit date:** August 30, 2026  
-**Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`  
+**Audit date:** August 30, 2026
+
+**Binding specification:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
+
 **Audit scope:** Repository, Product Bible alignment, canonical automated gate, current simulator flow, UX/accessibility risk, SwiftUI implementation quality, and launch delivery plan.
 
 ## Product goal

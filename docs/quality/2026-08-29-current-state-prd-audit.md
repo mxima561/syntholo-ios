@@ -1,7 +1,9 @@
 # Syntholo iOS current-state and Product Bible audit
 
-**Audit date:** August 29, 2026  
-**Authority:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`  
+**Audit date:** August 29, 2026
+
+**Authority:** `docs/superpowers/specs/2026-08-25-syntholo-product-bible.md`
+
 **Method:** Repository-wide static inspection of product code, tests, configuration, Firestore Rules, plans, and verification ledgers. Runtime build, simulator capture, and fresh accessibility execution were attempted but were unavailable on this host because full Xcode, Simulator, XcodeGen, Node, and npm are not installed or active.
 
 ## Executive verdict
