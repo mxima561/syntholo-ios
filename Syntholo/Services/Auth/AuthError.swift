@@ -17,7 +17,7 @@ enum AuthError: Error, Equatable, Sendable {
         self != .cancelled
     }
 
-    var localizationKey: String {
+    var message: LocalizedStringResource {
         switch self {
         case .cancelled:
             "auth_error_cancelled"

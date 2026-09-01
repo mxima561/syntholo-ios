@@ -35,9 +35,10 @@ enum OnboardingPalette {
 
 struct ChoiceListItem<ID: Hashable>: Identifiable {
     let id: ID
-    let title: String
-    let detail: LocalizedStringKey
+    let title: LocalizedStringResource
+    let detail: LocalizedStringResource
     let systemImage: String
+    let accessibilityIdentifier: String
 }
 
 struct ChoiceListView<ID: Hashable>: View {
@@ -65,7 +66,7 @@ struct ChoiceListView<ID: Hashable>: View {
                             .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: Space.xs) {
-                            Text(LocalizedStringKey(item.title))
+                            Text(item.title)
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(OnboardingPalette.academicInk)
                             Text(item.detail)
@@ -103,7 +104,7 @@ struct ChoiceListView<ID: Hashable>: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
-                .accessibilityIdentifier(item.title)
+                .accessibilityIdentifier(item.accessibilityIdentifier)
                 .accessibilityValue(isSelected ? "Selected" : "Not selected")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
@@ -131,7 +132,6 @@ struct OnboardingPage<Content: View>: View {
                     VStack(alignment: .leading, spacing: Space.sm) {
                         Text(eyebrow)
                             .font(.system(.caption, design: .monospaced, weight: .semibold))
-                            .textCase(.uppercase)
                             .foregroundStyle(OnboardingPalette.lectureBlue)
                             .fixedSize(horizontal: false, vertical: true)
 

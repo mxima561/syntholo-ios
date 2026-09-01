@@ -1,0 +1,282 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Syntholo iOS Launch Execution Plan",
+    "description": "A dependency-ordered plan for taking the audited iOS app from its current foundation through App Store launch.",
+    "generatedAt": "2026-08-30T08:51:31Z",
+    "cards": [],
+    "charts": [
+      {
+        "id": "canonical_gate_chart",
+        "title": "Fresh enforced quality evidence",
+        "subtitle": "Final passed tests by suite on August 30, 2026; one Social hit-region audit required a transient rerun.",
+        "type": "bar",
+        "dataset": "canonical_gate",
+        "sourceId": "test_gate_sql",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "suite",
+            "type": "nominal",
+            "label": "Test suite"
+          },
+          "y": {
+            "field": "passed",
+            "type": "quantitative",
+            "label": "Passed tests"
+          },
+          "tooltip": [
+            {
+              "field": "failed",
+              "type": "quantitative",
+              "label": "Failed"
+            },
+            {
+              "field": "skipped",
+              "type": "quantitative",
+              "label": "Skipped"
+            },
+            {
+              "field": "cancelled",
+              "type": "quantitative",
+              "label": "Cancelled"
+            }
+          ]
+        }
+      }
+    ],
+    "tables": [],
+    "sources": [
+      {
+        "id": "product_bible",
+        "label": "Syntholo Product Bible",
+        "path": "docs/superpowers/specs/2026-08-25-syntholo-product-bible.md"
+      },
+      {
+        "id": "launch_readiness",
+        "label": "Launch readiness audit and remediation checkpoint",
+        "path": "docs/quality/2026-08-30-launch-readiness-report.md"
+      },
+      {
+        "id": "launch_master_plan",
+        "label": "Launch completion master plan",
+        "path": "docs/superpowers/plans/2026-08-30-syntholo-ios-launch-completion-master-plan.md"
+      },
+      {
+        "id": "phase2_plan",
+        "label": "Phase 2 curriculum platform contract",
+        "path": "docs/superpowers/plans/2026-08-30-syntholo-curriculum-platform.md"
+      },
+      {
+        "id": "test_gate_sql",
+        "label": "Fresh canonical test-gate summary",
+        "path": "docs/quality/2026-08-30-launch-execution-report/test-gate-summary.sql"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "report_title",
+        "type": "markdown",
+        "body": "# Syntholo iOS Launch Execution Plan\n\n**Snapshot:** August 30, 2026  \n**Binding scope:** Syntholo Product Bible, Book III App Store contract  \n**Launch target:** a signed, monitored Syntholo 1.0 that passes `GATE-ALPHA`, `GATE-TF-CLOSED`, `GATE-TF-EXPANDED`, and `GATE-STORE`."
+      },
+      {
+        "id": "executive_summary",
+        "type": "markdown",
+        "sourceId": "launch_readiness",
+        "body": "## Executive Summary\n\n- **The engineering base is healthy.** Phase 0 is verified, Phase 1 onboarding is substantially complete, and every enforced suite has current passing evidence.\n- **Phase 2 has started, but is not finished.** The frozen curriculum contract, synthetic schema/validator/deterministic shapes, and pinned secret gate are implemented at 73 passing content tests; publisher, Rules, Swift sync/cache, and preview UI remain.\n- **The product is not an internal alpha yet.** The first-lesson CTA still reaches a placeholder, so no Product Bible release gate is satisfied.\n- **The work has a strict dependency order.** Close live identity while finishing curriculum, then build the learning engine, AI coaching, engagement, subscriptions, bounded social, operations/content, and finally release certification.\n- **Original content remains blocked.** Product must record School, Work, Creation, or Build before original learner-facing curriculum, staging writes, staging-device load, or Phase 2 exit."
+      },
+      {
+        "id": "completed_work",
+        "type": "markdown",
+        "sourceId": "launch_readiness",
+        "body": "## Preserve What Is Already Finished\n\nDo not restart or redesign these areas:\n\n- Phase 0 foundation: Swift 6, iOS 17, iPhone-only SwiftUI app, XcodeGen, environment seams, design system, four-tab shell, CI/test architecture, and Firebase foundations.\n- Phase 1 core onboarding: 13+ gate, teen/adult distinction, goal, experience, editable path recommendation, five coach modes, auth architecture, profile persistence, and teen-safe defaults.\n- Reliability remediation: typed recoverable onboarding load/save/clear failures, exact retry snapshots, accessible retry announcement, relaunch/handoff recovery, compile-safe fixed localization, and catalog-authored uppercase copy.\n- Phase 2 validation foundation: exact schema and pre-server shapes, digest vectors, graph/bounds/budget validation, safe CLI, synthetic fixture policy, and checksum-pinned history/worktree/generated/binary/plist secret scanning.\n- Local provenance: `main` contains baseline `b0ce17d`, Phase 1 reliability checkpoint `3969e73`, and Phase 2 validation checkpoint `7b76f87`. The unresolved source-control task is confirming and configuring the intended remote and branch policy."
+      },
+      {
+        "id": "verification_context",
+        "type": "markdown",
+        "sourceId": "test_gate_sql",
+        "body": "## The Current Enforced Baseline Reaches Green\n\nThe chart shows the final fresh pass count for each enforced suite. Suite counts measure different kinds of coverage, so bar lengths do not represent relative product completeness. The uninterrupted canonical invocation encountered one anomalous 112-second failure in the Social hit-region audit; that exact audit then passed three consecutive reruns in 23.7–26.9 seconds, and all remaining accessibility and Rules checks passed in the resumed gate. Require another uninterrupted canonical run before merge."
+      },
+      {
+        "id": "verification_chart",
+        "type": "chart",
+        "chartId": "canonical_gate_chart"
+      },
+      {
+        "id": "phase_standing",
+        "type": "markdown",
+        "sourceId": "launch_readiness",
+        "body": "## Eight Product Phases Still Separate the App from Launch\n\n- **0 — Foundation: verified.** Preserve the gate and add remote/branch provenance.\n- **1 — Identity/onboarding: substantially complete.** Finish daily goal/settings, live providers, staging Firebase, iOS 17 CI, and physical accessibility.\n- **2 — Curriculum platform: in progress.** Validation foundation is complete; owner approval, publisher/rollback, curriculum Rules, Swift sync/cache/store/UI, and the specialization-gated original content load remain.\n- **3 — Learning engine: missing.** Build the real lesson/player, attempts, scoring, allowance, queue, and offline recovery.\n- **4 — AI coach: missing.** Build safe server evaluation, rubric validation, tone separation, and fail-soft recovery.\n- **5 — Engagement: missing.** Build Today, progression, XP/streak, review, and practice.\n- **6 — Subscriptions: missing.** Build StoreKit products, verification, entitlements, restore, and management.\n- **7 — Bounded social: missing.** Build opt-in friends, preset reactions, report, and block.\n- **8 — Profile/operations: missing.** Build Settings, deletion/export, production services, launch content, and observability.\n- **9 — Store hardening: not started.** Complete identity assets, privacy metadata, device matrix, App Review, and launch operations.\n\n**So what:** visual polish is not the critical path. The critical path is completing immutable content delivery and then turning the onboarding handoff into a durable, scored, recoverable learning loop."
+      },
+      {
+        "id": "blocking_inputs",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Resolve These Product and Access Inputs Early\n\n1. **Deep launch specialization — immediate.** Product must record School, Work, Creation, or Build in the Product Bible. This blocks original learner-facing curriculum authoring, any staging/production content write, staging-device content load, and Phase 2 exit.\n2. **Source-control home — immediate.** Confirm the repository remote/organization, default branch, required checks, and branch protection.\n3. **Firebase environments — immediate.** Supply separate development, staging, and production projects, bundle/app records, project IDs/numbers, provider credentials, and least-privilege keyless publisher access.\n4. **Apple and Google access — before Phase 1 exit.** Supply the Apple Developer team, App ID/capabilities, App Store Connect app, sandbox testers, and production Google OAuth configuration.\n5. **Daily-goal contract — before Phase 1 exit.** Record the exact selectable values, default, persistence behavior, and editable Settings location.\n6. **AI model policy — before Phase 4 exit.** Approve primary/fallback models, rate limits, timeouts, quality threshold, retention/minimization, and change-control owner.\n7. **Legal, retention, and support — before Closed TestFlight.** Approve privacy policy, terms, support route, age-rating answers, subscription wording, AI disclosure, and all retention/deletion periods.\n8. **TestFlight and launch ownership — before later gates.** Name cohort/observation/stop rules and the Product, engineering, curriculum, privacy, accessibility, support, monitoring, and rollback signatories."
+      },
+      {
+        "id": "execution_order",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Execute in This Order\n\n`0. Finish Phase 1` → `1. Curriculum` → `2. Learning engine` → `3. AI coach` → **GATE-ALPHA** → `4. Engagement` → `5. Subscriptions` → `6. Social` → **GATE-TF-CLOSED** → `7. Profile, content, operations` → **GATE-TF-EXPANDED** → `8. Store certification` → **GATE-STORE**\n\nEach stage below is an exit-gated work package. Do not advance a downstream dependency merely because its UI can be mocked."
+      },
+      {
+        "id": "stage_0",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 0 — Close and Preserve Phase 1\n\n**Outcome:** a new and returning learner can authenticate against staging, recover preferences, and encounter no known data-loss path.\n\n- [x] Commit the verified persistence/localization remediation as traceable checkpoint `3969e73`.\n- [ ] Confirm the intended Git remote, push the preserved baseline/current work, protect the required branch, and require `./scripts/test.sh`.\n- [ ] Obtain one uninterrupted green run at the exact 73 content / 106 unit / 18 functional UI / 28 shell accessibility / 11 onboarding accessibility / 20 Rules baseline; all tests have passing evidence, but one Social hit-region audit required a transient rerun in the latest invocation.\n- [ ] Run the gate on the minimum iOS 17 CI destination; current iOS 26.5 simulator evidence is present.\n- [ ] Keep the nine moderate development-only npm findings on a reviewed dependency ledger; production dependencies have zero findings and forced downgrade is prohibited without compatibility review.\n- [ ] Add the approved daily-goal field, selection/default behavior, persistence, profile mapping, analytics, and editable Settings destination.\n- [ ] Configure development and staging Firebase apps.\n- [ ] Verify Apple, Google, and email/password on a physical iPhone, including cancel, offline, duplicate email, expired credential, sign-out, relaunch, and returning-user recovery.\n- [ ] Complete physical VoiceOver checks for every onboarding and handoff screen.\n\n**Exit gate:** live staging identity works for new and returning learners; daily goal is editable; iOS 17/current-OS gates pass; no Phase 1 data-loss or critical accessibility defect remains."
+      },
+      {
+        "id": "stage_1",
+        "type": "markdown",
+        "sourceId": "phase2_plan",
+        "body": "## Step 1 — Build the Curriculum Platform\n\n**Outcome:** an authorized operator can publish or roll back immutable curriculum, and the app can load the exact compatible version online or from cache.\n\n### Synthetic implementation work\n\n- [ ] Obtain Product, curriculum, iOS, backend, privacy, and accessibility approval of the frozen Phase 2 contract.\n- [x] Prove RED, then implement 73 tests for exact schema keys and bounds, RFC 8785 vectors/digests, IDs/order/graph/DAG, assets/rights/accessibility, scoring agreement, document/publication limits, and transaction budget.\n- [x] Implement the normative authoring/pre-server shapes, pure validator, deterministic Firestore-shape conversion, structured safe errors, and unmistakably synthetic fixture.\n- [x] Add checksum-pinned full-history, ignored/non-ignored worktree, generated-output, direct-bundle, binary-string, and plist secret scanning to CI and the canonical content gate.\n- [ ] Build the emulator-only idempotent publisher and rollback tool: immutable create-only versions, catalog-root atomicity, monotonic historical version heads, audited no-op/replay, collision rejection, exact-source secret scan before Firebase construction, and rollback without history mutation.\n- [ ] Extend Firestore Rules for authenticated exact gets, shallow allowlisted shapes, learner write denial, private-read denial, and catch-all denial.\n- [ ] Build the Swift curriculum domain, shared digest validation, saved-first `AsyncStream` repository, app-owned atomic cache, and exact-get Firestore adapter.\n- [ ] Surface saved, fresh, empty, stale, offline, incompatible-version, publication-disappeared, cancellation, and retry states.\n- [ ] Replace the Learn placeholder with real read-only catalog, program, module, and lesson-preview surfaces plus typed onboarding navigation.\n- [ ] Add deterministic UI fixtures, localization, accessibility audits, privacy-safe content analytics, and end-to-end tests.\n\n### Content-load gate that must remain closed until Product decides\n\n- [ ] Record the chosen deep specialization in the Product Bible and add the matching tracked decision record.\n- [ ] Record the allowlisted staging project ID/number and approved keyless impersonated publisher principal.\n- [ ] Obtain Product/curriculum authorization for original content.\n- [ ] Author one original Foundations preview fixture with objective, duration, prerequisites, completion rule, concept/still diagram, rights, deterministic question/feedback, public scoring metadata, and protected evaluation contract.\n- [ ] Publish to staging and prove v2 roll-forward, immutability, exact rollback, cache/relaunch, unauthorized denial, accessibility, and complete secret scans.\n\n**Exit gate:** staging publication/rollback and exact compatible app loading pass. The route must remain clearly labeled as a preview; `SHIP-FIRST-LESSON` is not complete until Step 2 adds a real lesson-start mutation and outcomes."
+      },
+      {
+        "id": "stage_2",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 2 — Build the Real Learning Engine\n\n**Outcome:** a learner completes a real module through interruption and supported offline recovery without lost work or duplicate state.\n\n- [ ] Freeze separate activity, lesson, attempt, sync, entitlement, allowance, and learner-day contracts.\n- [ ] Assign a stable attempt ID before submission and keep starts, completions, mastery, XP, credits, and reconciliation server-authoritative/idempotent.\n- [ ] Implement concept/scroll, single-answer, multi-select, one matching-or-ordering activity, prompt builder/revision, feedback/results, and captioned video/transcript or still-diagram equivalent.\n- [ ] Implement deterministic objective scoring against immutable versioned answer contracts.\n- [ ] Persist response recovery before rewards and preserve historical outcomes against later content versions.\n- [ ] Enforce three newly started lessons per free learner-day; resumes, review, retry, revision, and sync must not consume another start.\n- [ ] Build the durable local queue with local, pending, submitting, acknowledged, retryable, permanent-failure, and reconciled states.\n- [ ] Recover work after kill/relaunch, crash, network loss, auth expiry, timeout, and duplicate delivery.\n- [ ] Permit completion of already-started cached lessons offline while requiring online authorization for another start.\n- [ ] Replace the handoff placeholder with a real lesson start, resume, results, progress update, and next preview.\n\n**Exit gate:** a complete module passes online, retry, relaunch, and supported offline scenarios without progress loss, version mismatch, duplicate credit use, or duplicate rewards."
+      },
+      {
+        "id": "stage_3",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 3 — Build the AI Coach and Reach Internal Alpha\n\n**Outcome:** AI-evaluated work receives safe, rubric-grounded feedback whose score never changes with coach tone.\n\n- [ ] Approve the model/fallback/rate-limit/timeout/quality/change-control policy and teen/vendor privacy threat model.\n- [ ] Keep every model call in authenticated server code; verify auth, App Check, entitlement/rate limit, content version, and attempt state.\n- [ ] Moderate input, load the immutable rubric, request strict structured scoring, and validate criteria, evidence, totals, bounds, and version references server-side.\n- [ ] Store the validated score independently from presentation tone.\n- [ ] Render Supportive, Funny, Strict, Chill, and Socratic feedback from the same score object and prove score/pass/mastery invariance.\n- [ ] Give Free one revision and three follow-ups per scored attempt; Pro may receive unlimited use only within approved abuse/rate limits.\n- [ ] Preserve learner work across moderation, timeout, unavailable model, malformed schema, rate limit, auth expiry, offline, and retry. Never invent a score after validation failure.\n- [ ] Certify primary/fallback models with versioned normal, edge, adversarial, teen-safety, prompt-injection, malformed-output, and tone-invariance cases.\n- [ ] Record privacy-safe latency, visible failure, schema failure, moderation, and cost telemetry.\n\n**Exit — `GATE-ALPHA`:** onboarding → real lesson → objective/AI feedback → progress sync → kill/relaunch → supported offline recovery works as one secure loop, with approved threat-model evidence and zero known progress-loss or duplicate-reward defects."
+      },
+      {
+        "id": "stage_4",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 4 — Build Daily Engagement\n\n**Outcome:** every learner receives an honest daily next action and learning-oriented progression.\n\n- [ ] Build Today with the daily mission, continue/next lesson, allowance, streak, XP, mastery/review needs, and next preview.\n- [ ] Build real programs, path switching, program/module detail, and honest coming-soon states from versioned content.\n- [ ] Keep Foundations first and preview specialization after the first Foundations lesson.\n- [ ] Award XP and streak only from acknowledged verified events.\n- [ ] Add daily challenge, objective review, spaced practice, saved feedback, and history.\n- [ ] Show pending/offline progress honestly and reconcile it without duplicate rewards or silent reversals.\n- [ ] Replace all remaining Learn and Practice placeholders, including loading, empty, all-complete, offline, stale, retry, and version-mismatch states.\n- [ ] Validate engagement analytics without raw learner answers or private content.\n\n**Exit gate:** the daily loop survives relaunch and supported cross-device use while server-authoritative rewards stay correct under retry and offline reconciliation."
+      },
+      {
+        "id": "stage_5",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 5 — Build Subscriptions and Entitlements\n\n**Outcome:** the Free limit and Pro access are transparent, verified, restorable, and resilient.\n\n- [ ] Configure one subscription group with final monthly/annual products and the approved seven-day annual trial.\n- [ ] Display StoreKit-localized price/period and approved trial, renewal, cancellation, and benefit disclosures.\n- [ ] Implement StoreKit 2 product loading, eligibility, pending-purchase protection, transaction verification, lifecycle updates, backend reconciliation, restore, and manage subscription.\n- [ ] Model Free, trial, monthly, annual, billing retry/grace, pending, canceled-active, expired, revoked/refunded, verification failure, offline/stale, and backend-mismatch states.\n- [ ] Reconcile reinstall, account/device changes, family-sharing policy, refund, and expiry without granting unverified access.\n- [ ] Show allowance before the limit and show the paywall only after value.\n- [ ] Resume the interrupted fourth lesson after verified purchase.\n- [ ] Ensure Pro never changes scoring, mastery, XP, or social standing.\n\n**Exit gate:** the complete sandbox and backend entitlement matrix passes without bypass, duplicate purchase, or lost access recovery."
+      },
+      {
+        "id": "stage_6",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 6 — Build Bounded Social and Reach Closed TestFlight\n\n**Outcome:** learners can connect safely without broad discovery, ranking pressure, or free-text abuse surfaces.\n\n- [ ] Make social opt-in and default teen profiles to stricter privacy.\n- [ ] Support exact handle lookup and explicit invite only; no broad people discovery.\n- [ ] Implement friend request send, receive, accept, decline, cancel, remove, and all retry/race states.\n- [ ] Add approved preset reactions with accessible state and removal.\n- [ ] Add report categories, trusted moderation intake, block/unblock, and required immediate local-cache removal.\n- [ ] Test authorization, enumeration resistance, races, repeated requests, and offline caches.\n- [ ] Document moderation/support ownership.\n- [ ] Exclude DMs, comments, free text, leagues, leaderboards, team quests, and shared streaks from 1.0.\n\n**Exit — `GATE-TF-CLOSED`:** Phases 5–7 pass, the StoreKit matrix is green, physical critical accessibility is signed off, privacy/terms/support and retention baselines are live, and no critical security, safety, purchase, or data-loss defect is open."
+      },
+      {
+        "id": "stage_7",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 7 — Complete Profile, Launch Content, and Operations\n\n**Outcome:** the full 1.0 product is controllable by the learner and observable by the launch team.\n\n- [ ] Build Profile and Settings for account/public profile, learning preferences, experience/path/coach/daily goal, notifications, membership, downloads, privacy/safety, blocked users, help/support/policies/version, and sign-out.\n- [ ] Implement in-app account deletion with reauthentication and trusted propagation through auth, product data, derived data, vendors, and backup policy.\n- [ ] Implement data export request, status, secure delivery, expiry, audit, retry, and escalation.\n- [ ] Finish production Auth, Firestore, Functions, Storage, App Check, Remote Config, Messaging, Analytics, and Crashlytics.\n- [ ] Add least-privilege authorization, structured logs, dashboards, alerts, correlation IDs, rate limits, cost controls, and runbooks.\n- [ ] Validate the full approved event taxonomy and prohibit raw answers, submissions, prompts, transcripts, email, and private profile text from telemetry.\n- [ ] Publish and certify Foundations with at least 3 modules, 12 lessons, and 1 capstone.\n- [ ] Publish and certify the chosen specialization with at least 2 modules and 8 real lessons.\n- [ ] Publish three honest coming-soon specialization shells with no fake lessons.\n- [ ] Run editorial, instructional, safety, rights/license, and accessibility QA on every launch version.\n- [ ] Load-test learner, AI, entitlement, deletion, and export paths; drill provider outage, timeout, Firebase degradation, stale cache, duplicate delivery, and rollback.\n\n**Exit — `GATE-TF-EXPANDED`:** deletion/export/download/notification flows work end to end; every launch lesson has QA evidence; load/failure drills pass; no P0/P1 launch defect remains; reliability approaches the 99.8% crash-free target and AI visible failure is below the approved threshold or has an approved remediation plan."
+      },
+      {
+        "id": "stage_8",
+        "type": "markdown",
+        "sourceId": "launch_master_plan",
+        "body": "## Step 8 — Certify, Submit, and Operate the App Store Release\n\n**Outcome:** a signed, monitored, reviewable Syntholo 1.0 is ready for App Store submission.\n\n- [ ] Add and enable the final app icon, launch appearance, display name, category, age rating, copyright, and release version/build scheme.\n- [ ] Add the privacy manifest, required-reason declarations, accurate App Privacy labels, localized subscription disclosure, privacy/terms/support URLs, marketing copy, screenshots, and preview assets.\n- [ ] Run minimum iOS 17 and current iOS on representative smallest/largest supported physical iPhones.\n- [ ] Complete physical VoiceOver, Dynamic Type accessibility sizes, Switch Control, Reduce Motion, contrast, captions/transcripts, non-color state, focus, and target-size sign-off.\n- [ ] Run fresh install, upgrade, kill/relaunch, reinstall, account switch, second device, slow/intermittent/offline, stale cache, timeout, auth expiry, and provider outage.\n- [ ] Run all live auth, StoreKit, allowance/day-boundary, AI-cap, download, progress, duplicate-request, social safety, deletion/export, notification, and support matrices.\n- [ ] Prove the release bundle contains no secret, debug endpoint, sensitive log, or unrestricted protected write.\n- [ ] Prepare stable reviewer data/account and clear notes for lessons, AI, purchase/restore/manage, social safety, and deletion.\n- [ ] Activate dashboards/alerts and name the release commander, support/incident contacts, and content/backend/app rollback owners.\n- [ ] Freeze app/content versions, test rollback/hotfix procedures, and satisfy the approved TestFlight observation policy.\n- [ ] Require a green release-commit gate, at least 99.8% crash-free sessions, no open P0/P1 launch defect, and dated cross-functional approvals.\n\n**Exit — `GATE-STORE`:** App Review can learn, purchase, restore/manage, control an account, and delete it; privacy and subscription disclosures match reality; monitoring and rollback ownership are live; the signed candidate is submitted."
+      },
+      {
+        "id": "immediate_package",
+        "type": "markdown",
+        "sourceId": "phase2_plan",
+        "body": "## Immediate Work Package\n\nStart here and keep the boundary tight:\n\n1. Obtain cross-functional approval of the frozen Phase 2 contract and one uninterrupted green canonical run.\n2. Preserve the completed 73-test schema/validator/shape/secret-gate checkpoint.\n3. Implement Task 3: emulator-only idempotent publish/rollback with timestamp, version-head, audit, replay, collision, no-op, atomicity, and exact-source secret-scan proof before Firebase construction.\n4. Implement curriculum Rules, then the Swift domain/digest parity, app-owned cache, exact-get repository, observable state, read-only preview UI/navigation, localization, accessibility, analytics, and end-to-end tests.\n5. In parallel, close Phase 1 daily-goal/settings, staging identity, iOS 17 CI, and physical accessibility gaps.\n6. Product records the deep specialization; operations records the staging project ID/number and approved keyless publisher principal.\n7. Only then author and publish one original Foundations preview to staging and prove exact online/cache/relaunch loading, stale/incompatible states, unauthorized denial, audited no-op/replay/collision, version-head monotonicity, roll-forward, rollback, accessibility, analytics, and final bundle scans.\n\nDo not add AI, StoreKit, social, or a visual rewrite to this package. Its job is to establish immutable content delivery and replace the fake post-onboarding destination with a truthful preview."
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## Further Questions\n\nThe following answers materially affect execution and should be recorded, not assumed:\n\n- Which deep specialization will launch: School, Work, Creation, or Build?\n- What are the exact daily-goal choices and default?\n- Which Git remote/organization owns the source of truth?\n- What are the development, staging, and production Firebase project IDs/numbers?\n- Which approved principal will perform keyless curriculum publication?\n- Who owns curriculum approval, privacy/retention, accessibility sign-off, TestFlight stop/go, support, monitoring, and rollback?\n- What primary/fallback AI models and measurable acceptance thresholds are approved?\n\nNo delivery estimate is included until these inputs and team capacity are known; adding dates now would create false precision."
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "sourceId": "launch_readiness",
+        "body": "## Caveats and Assumptions\n\n- Every enforced test has passing evidence, but the latest uninterrupted canonical invocation hit one non-reproducing Social hit-region audit interruption; require another uninterrupted run before merge.\n- Only iOS 26.5 ran locally; minimum-iOS 17 evidence remains a CI requirement.\n- Simulator XCTest accessibility audits do not replace physical VoiceOver, Switch Control, Reduce Motion, or device-size sign-off.\n- Live Apple, Google, and email providers have not yet been certified against staging on a physical device.\n- The clean bundle scan covered a debug simulator app, not the signed release archive; nested archives are not expanded and must receive bounded explicit scanning if introduced.\n- Local Git provenance begins at `b0ce17d`; no remote is configured, so upstream history and branch protection remain unverified.\n- Production reliability, AI failure rate, StoreKit behavior, load capacity, content quality, and App Review readiness cannot be evidenced until their phases exist.\n- The Product Bible is binding. If a checklist item conflicts with it, update the execution plan through change control rather than silently changing the product contract."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-30T08:51:31Z",
+    "status": "ready",
+    "datasets": {
+      "canonical_gate": [
+        {
+          "suite_order": 1,
+          "suite": "Content contract",
+          "passed": 73,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        {
+          "suite_order": 2,
+          "suite": "Unit",
+          "passed": 106,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        {
+          "suite_order": 3,
+          "suite": "Functional UI",
+          "passed": 18,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        {
+          "suite_order": 4,
+          "suite": "Shell a11y",
+          "passed": 28,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        {
+          "suite_order": 5,
+          "suite": "Onboarding a11y",
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        {
+          "suite_order": 6,
+          "suite": "Rules",
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0,
+          "cancelled": 0
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "product_bible",
+      "label": "Syntholo Product Bible",
+      "path": "docs/superpowers/specs/2026-08-25-syntholo-product-bible.md"
+    },
+    {
+      "id": "launch_readiness",
+      "label": "Launch readiness audit and remediation checkpoint",
+      "path": "docs/quality/2026-08-30-launch-readiness-report.md"
+    },
+    {
+      "id": "launch_master_plan",
+      "label": "Launch completion master plan",
+      "path": "docs/superpowers/plans/2026-08-30-syntholo-ios-launch-completion-master-plan.md"
+    },
+    {
+      "id": "phase2_plan",
+      "label": "Phase 2 curriculum platform contract",
+      "path": "docs/superpowers/plans/2026-08-30-syntholo-curriculum-platform.md"
+    },
+    {
+      "id": "test_gate_sql",
+      "label": "Fresh canonical test-gate summary",
+      "path": "docs/quality/2026-08-30-launch-execution-report/test-gate-summary.sql"
+    }
+  ]
+}

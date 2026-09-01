@@ -19,7 +19,7 @@ struct EmailAuthView: View {
     var body: some View {
         NavigationStack {
             OnboardingPage(
-                eyebrow: "Account",
+                eyebrow: "ACCOUNT",
                 progress: nil,
                 title: "Create your account",
                 introduction: "Use your email to save your route and progress.",
@@ -53,7 +53,7 @@ struct EmailAuthView: View {
 
                     if let error, error.shouldPresentMessage {
                         Label {
-                            Text(LocalizedStringKey(error.localizationKey))
+                            Text(error.message)
                                 .fixedSize(horizontal: false, vertical: true)
                         } icon: {
                             Image(systemName: "exclamationmark.circle")

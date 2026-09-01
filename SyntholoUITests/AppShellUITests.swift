@@ -35,7 +35,10 @@ final class AccessibilityAuditUITests: XCTestCase {
     private func launchApp() -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing"]
+        app.launchArguments = [
+            "--ui-testing",
+            "--curriculum-fixture=loading",
+        ]
         app.launch()
         return app
     }

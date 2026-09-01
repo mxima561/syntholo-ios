@@ -63,7 +63,7 @@ struct AccountCreationView: View {
 
     private var accountPage: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 6/6",
+            eyebrow: "ORIENTATION · 6/6",
             progress: 6,
             title: "Save your learning route",
             introduction: "Create an account to keep your route and lesson progress.",
@@ -108,9 +108,7 @@ struct AccountCreationView: View {
 
                 if let providerError, providerError.shouldPresentMessage {
                     Label {
-                        Text(
-                            LocalizedStringKey(providerError.localizationKey)
-                        )
+                        Text(providerError.message)
                         .fixedSize(horizontal: false, vertical: true)
                     } icon: {
                         Image(systemName: "exclamationmark.circle")

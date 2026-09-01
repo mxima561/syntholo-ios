@@ -6,7 +6,7 @@ struct PrimaryButtonConfiguration: Equatable, Sendable {
 }
 
 struct PrimaryButton: View {
-    let title: LocalizedStringKey
+    let title: LocalizedStringResource
     let action: () -> Void
     var isEnabled = true
     var configuration = PrimaryButtonConfiguration.default

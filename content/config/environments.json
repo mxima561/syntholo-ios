@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "environments": [
+    {
+      "environment": "emulator",
+      "projectID": "syntholo-local",
+      "projectNumber": "emulator",
+      "publicationMode": "emulator",
+      "credentialPrincipals": [
+        "emulator-local"
+      ]
+    }
+  ]
+}

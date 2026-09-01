@@ -175,7 +175,7 @@ if [[ "$firebase_status" -ne 0 ]]; then
   exit "$firebase_status"
 fi
 
-node ./scripts/assert_tap_summary.mjs 20 firestore-rules-tests \
+node ./scripts/assert_tap_summary.mjs 31 firestore-rules-tests \
   < "$rules_output"
 
 node - "$firestore_port" <<'NODE'

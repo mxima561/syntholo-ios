@@ -1,0 +1,380 @@
+# Syntholo iOS — Ordered Project-Finish Execution Report
+
+**Prepared:** August 30, 2026
+
+**Revalidated:** August 31, 2026
+
+**Product authority:** [`2026-08-25-syntholo-product-bible.md`](../superpowers/specs/2026-08-25-syntholo-product-bible.md)
+
+**Readiness source:** [`2026-08-30-launch-readiness-report.md`](2026-08-30-launch-readiness-report.md)
+
+**Detailed launch plan:** [`2026-08-30-syntholo-ios-launch-completion-master-plan.md`](../superpowers/plans/2026-08-30-syntholo-ios-launch-completion-master-plan.md)
+**Detailed Phase 2 plan:** [`2026-08-30-syntholo-curriculum-platform.md`](../superpowers/plans/2026-08-30-syntholo-curriculum-platform.md)
+
+## 1. Launch objective
+
+Finish Syntholo 1.0 as a trustworthy, accessible native iPhone school for learners aged 13 and older. A launch build is not complete until a learner can onboard, authenticate, start and finish a real lesson, receive explainable feedback, recover work after interruption, see accurate progress and limits, purchase or restore Pro, use the bounded social system safely, manage or delete their data, and install a signed App Store build backed by approved content and operating procedures.
+
+The immediate product gap is now narrower: observable Learn state, sanitized read-only curriculum screens, production root composition, an exact same-session preview handoff, deterministic curriculum-state UI/no-Firestore proof, fresh catalog/preview automated accessibility evidence, and typed privacy-safe route analytics are implemented. The preview still is not a real lesson start. The critical path therefore continues with the mandatory content-load gate, approved staging publication and Phase 2 certification, then the real lesson engine, and only then AI, engagement, subscriptions, and social.
+
+## 2. Current standing
+
+| Area | Status | Evidence or remaining gap |
+| --- | --- | --- |
+| Phase 0 — engineering foundation | **Verified** | Native Swift 6/iOS 17 architecture, four-tab shell, tests, CI definition, accessibility harness, and local secret scanning exist. |
+| Phase 1 — identity/onboarding | **Substantially complete** | Onboarding, age gate, goal, experience, path, coach, auth architecture, persistence recovery, and localization hardening exist. Daily goal/settings, live staging auth, iOS 17 CI proof, and physical VoiceOver proof remain. |
+| Phase 2 Tasks 1–2 | **Complete** | Frozen curriculum contract, synthetic schema/fixture, canonical digests, validation, Firestore-shape conversion, and secret-scanner foundation; 73 content-contract tests pass. |
+| Phase 2 Task 3 | **Complete at emulator scope** | Publisher/rollback and operator identity are preserved at `ec8ac97`; independent security/contract reviews are clear and the uninterrupted 326-test gate passed. Live publication remains a later staging-gate task. |
+| Phase 2 Task 4 | **Complete at emulator scope** | Authenticated shallow exact gets, allowed missing-path semantics, list/write/private denial, fixed launch identifier bounds, and the preserved profile contract pass 31/31 Rules tests; no index was added. |
+| Phase 2 Task 5 | **Complete** | The pure Swift 6 curriculum domain, closed learner-readable models, strict JSON ingress, RFC 8785/SHA-256 parity, graph validation, typed load boundary, and test-only fixtures are committed at `f3a07ec`; the uninterrupted gate passes 349 tests. |
+| Phase 2 Task 6 | **Complete** | The actor-backed environment/project/locale-isolated cache, exact bounded envelope, full graph/digest revalidation, atomic replacement, and deterministic fail-closed quarantine behavior are committed at `ba54963`; 25 focused cache tests pass and the uninterrupted gate passes 374 tests. |
+| Phase 2 Task 7 | **Repository engineering complete** | The authenticated server-source exact-get adapter, runtime/Firestore source provenance, deterministic saved/fresh/terminal events, complete immutable-graph validation, strict Firebase normalization, and cancellation-safe cache replacement are committed at `83f6e1a`; 30 repository tests pass and the uninterrupted gate passes 407 tests. Task 9 later added the minimal DEBUG happy-path/loading repository, and Task 10 completed its full state-matrix expansion and formal no-Firestore proof. |
+| Phase 2 Task 8 | **Feature slice complete** | Implementation commit `0d8ab1f` adds the main-actor observable store, finite learner-safe states, exact typed Learn routes, ordered/fail-closed presentations, and sanitized read-only catalog/program/module/lesson UI; 19 store + 7 presentation tests, 202/202 complete Swift unit tests, and one uninterrupted 433/433 canonical invocation passed at that checkpoint. |
+| Phase 2 Task 9 | **Engineering complete** | Commit `085fbfa` connects root composition, exact typed preview navigation, route-before-sign-in ordering, retry/fallback behavior, returning-learner Learn home, and same-session preview presentation; 16/16 focused, 216/216 unit, and 447/447 canonical tests pass. |
+| Phase 2 Task 10 | **Engineering complete** | Commit `b9083a7` adds the complete deterministic DEBUG state matrix, exact-`--ui-testing` no-Firebase/no-Firestore composition proof, exact preview-content and Back/tab-restoration journeys, and 14 isolated fresh catalog/preview accessibility methods; 8/8 focused fixture/composition, 224/224 unit, and 479/479 canonical tests pass. |
+| Phase 2 Task 11 | **Engineering complete** | Implementation `0234034` adds typed route-view analytics populated by production call sites from validated snapshots; runner hardening `a124267` preserves fail-closed Xcode behavior. Focused analytics pass 11/11, the complete unit target passes 232/232, and one uninterrupted canonical run passes 487/487 without using a retry. |
+| Phase 2 Tasks 12–13 | **Not complete** | The content-load gate is 0/4. Approved original content, staging publication/read/cache/roll-forward/rollback, physical/minimum-OS accessibility certification, and Phase 2 verification remain prohibited or open. |
+| Phases 3–8 | **Missing** | Learning engine, AI coach, engagement, StoreKit, bounded social, settings/data rights/operations, and full launch curriculum remain. |
+| Phase 9 | **Not started** | App Store identity/assets, privacy metadata, release matrix, review materials, monitoring, rollback ownership, and submission remain. |
+
+No Product Bible release gate is currently passed. `GATE-ALPHA`, `GATE-TF-CLOSED`, `GATE-TF-EXPANDED`, and `GATE-STORE` must each receive dated evidence and named approval.
+
+### August 30 continuation verification
+
+- On exact documentation HEAD `8770223`, one fresh login-shell invocation of `./scripts/test.sh` passed all 487 enforced checks: 73 curriculum content, 32 operator identity, 38 publication/rollback, 232 Swift unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests. The counted suites had zero failure, skip, or cancellation and used no runtime retry.
+- The Build iOS Apps simulator-browser workflow then installed and launched bundle `com.syntholo.ios` on the explicitly selected iPhone 17 Pro / iOS 26.5 simulator. The browser-visible live frame rendered the Learn tab, catalog metadata, and the `SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH` program card. This proves the current app shell and fresh deterministic read-only curriculum seam render at runtime.
+- The simulator proof does **not** prove approved launch curriculum, a real lesson-start/completion loop, live Firebase reads, provider authentication, signing, a physical device, minimum-iOS behavior, or App Store readiness. The synthetic fixture remains test-only evidence and may never be published.
+- The scoped simulator mirror was stopped after capture, its helper exited successfully, and no listener remained on local port 3200.
+
+### August 31 machine and runtime revalidation
+
+- On exact HEAD `f9d0cb9`, one fresh invocation of `./scripts/test.sh` with the installed Homebrew toolchain explicitly added to `PATH` passed all 487 enforced checks: 73 curriculum content, 32 operator identity, 38 publication/rollback, 232 Swift unit, 28 functional UI, 28 AppShell accessibility, 14 curriculum accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests.
+- Every counted suite reported zero failures, skips, or cancellations. The run used no accessibility retry. The expected Xcode 26.6 `DebuggerLLDB.DebuggerVersionStore.StoreError` warning recurred without changing any result.
+- Xcode 26.6, iOS 26.5 Simulator, Homebrew 6.0.20, Node 22.23.2, npm 10.9.8, OpenJDK 21.0.12.1, XcodeGen 2.46.0, Gitleaks 8.30.1, and Firebase CLI 15.28.1 are installed and proven together. No additional local package installation is currently required for the repository's current-runtime gate.
+- `/Users/aly/.zprofile` already exports the Homebrew, Node 22, OpenJDK 21, and `JAVA_HOME` paths. A process launched before that profile change may still report those tools as missing; starting a new login shell or restarting the host app resolves the inherited-environment issue.
+
+### Current Mac dependency status
+
+| Dependency | Current status | Required action |
+| --- | --- | --- |
+| Xcode / Swift | Xcode 26.6, Swift 6.3.3, and iOS 26.5 simulator runtime are installed and working | Keep this toolchain for current-OS evidence. Add the CI-pinned Xcode 16.2 / iOS 17.5 lane locally or run it on a configured remote CI host for minimum-OS proof. |
+| Homebrew / project tools | Homebrew 6.0.20, XcodeGen 2.46.0, and Gitleaks 8.30.1 are installed | No install required. Use a login shell or explicit Homebrew `PATH` because a bare non-login environment does not expose every Homebrew binary. |
+| Node / npm | Node 22.23.2 and npm 10.9.8 satisfy the repository's Node 22 requirement | No install or upgrade required for this repository. |
+| Java / Firebase emulator | Homebrew OpenJDK 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0 are installed and the Rules suite passes | No Java install required. The macOS system `java` launcher is not linked, but repository scripts already locate Homebrew Java. |
+| Dependency manager | The app uses Swift Package Manager | CocoaPods is absent and is not required. |
+| Apple execution/signing | No physical iPhone, Apple signing identity, or provisioning profile was detected | Connect a test iPhone and provide the Apple Developer team/signing/provisioning access before physical-device, provider, archive, or TestFlight proof. |
+| Firebase environments | Only emulator-safe configuration is present | Provide separate development and staging Firebase app configuration, approved principals, and provider setup without committing credentials. |
+| Source-control delivery | No Git remote is configured | Provide the repository remote/default branch, then enable protected CI and the required minimum-iOS lane. |
+
+## 3. Non-engineering inputs that must be supplied
+
+These inputs can be worked on in parallel, but the associated implementation must stop at the stated boundary until each one is recorded.
+
+1. **Choose the deep launch specialization.** Product must choose exactly one of School, Work, Creation, or Build through Product Bible change control. Engineering must not infer or recommend the choice. This blocks original learner-facing content, any staging/production content write, staging-device content load, and Phase 2 exit.
+2. **Approve the daily-goal contract.** Product must record the measure, ordered stable choices, default/fallback and assignment-source lifecycle, achievement/counting applicability, edit effective time within frozen DEC-9, product uses, relationship to the free allowance, onboarding behavior, legacy behavior, copy authority, owner, and date. Book VI currently defines no event, so the implementation emits none unless the Bible is separately amended. This blocks daily-goal persistence/UI and Phase 1 exit.
+3. **Approve the Phase 2 contract.** Product, curriculum, iOS, backend, privacy, and accessibility owners must approve the frozen contract.
+4. **Provide Firebase environments.** Supply separate development, staging, and production project IDs/numbers, app records, allowed keyless impersonated publisher principals, App Check setup, provider configuration, and least-privilege access.
+5. **Provide Apple access.** Apple Developer team, signing, App ID/capabilities, Sign in with Apple, App Store Connect record, subscription products, and sandbox testers are required.
+6. **Provide Google auth setup.** Supply the production iOS OAuth client and approved callback/configuration.
+7. **Configure source-control operations.** Choose the Git remote/default branch, configure it, protect release/CI branches, and require the canonical gate.
+8. **Approve the AI policy.** Name the primary/fallback models, timeout and rate limits, evaluation thresholds, retention rules, and change-control owner before Phase 4 exits.
+9. **Approve privacy/legal/support policy.** Record data-retention and deletion periods, privacy policy, terms, support URL/email, subscription language, AI disclosure, age-rating answers, and vendor data-use restrictions.
+10. **Name launch owners.** Assign product, engineering, curriculum, privacy, accessibility, support, monitoring, content rollback, backend rollback, and app-release rollback owners.
+11. **Define TestFlight policy.** Record cohort sizes, observation windows, support route, stop conditions, and rollback rules before expanded testing.
+
+## 4. Exact implementation order
+
+### Step 1 — Close the current publisher/rollback checkpoint
+
+**Status:** Complete at emulator scope in implementation commit `ec8ac97`; live staging enablement remains the first part of Step 12 and certification remains Step 13.
+
+- Finish deterministic regressions for source-file replacement, fail-closed unsafe REST preference with poisoned ambient Google credentials, non-loopback emulator hosts, foreign SDK/filesystem error redaction, and corrupt historical document identity.
+- Prove the source bytes that are scanned are the exact bytes parsed and published.
+- Prove the unsafe REST preference and non-loopback endpoints are rejected before Firebase Admin construction or ambient credential lookup, and pin the accepted emulator client to non-REST loopback transport.
+- Prove first publish, version-head monotonicity, no-op audit, replay, collision, roll-forward, rollback, repeated rollback, injected failures, transaction budget, and authorization gates.
+- Run the publication suite on isolated dynamic emulator ports and record its exact discovered count with zero failure, skip, cancellation, or leaked listener.
+- Run the combined content suites, syntax checks, `git diff --check`, the full uninterrupted `./scripts/test.sh`, and full-history/worktree/generated-output/built-app secret scans.
+- Review and commit only the intended publisher/config/test/setup changes.
+- Create a dated Phase 2 Task 3 checkpoint that records RED/GREEN evidence, security findings and fixes, exact totals, scans, and known limits.
+
+**Done when:** The emulator-only operator path is committed, independently reviewed, reproducibly green, and cannot perform a live write. No original curriculum and no staging/production write may be introduced here.
+
+### Step 2 — Finish the remaining Phase 1 baseline in parallel
+
+**Daily-goal status:** Product decision required before implementation. The Bible requires the preference and permits—but does not select—the default-plus-edit-later path. It does not define the unit, choices, default/fallback or assignment-source lifecycle, achievement/counting applicability, edit effective time within frozen DEC-9, product uses, relationship to the free allowance, legacy behavior, or copy authority. Book VI currently defines no event, so the implementation emits none unless the Bible is separately amended. See [`2026-08-30-syntholo-daily-goal-settings.md`](../superpowers/plans/2026-08-30-syntholo-daily-goal-settings.md) for the exact fill-in and test-first sequence.
+
+- Product records and dates the complete daily-goal contract; do not infer it from the three-new-lesson allowance.
+- After approval, add the typed default, backward-compatible profile mapping, narrow preference update, UID-scoped pending-edit recovery, owner-only Rules, and editable Profile → Learning settings destination.
+- Configure development and staging Firebase apps without committing local credentials.
+- Verify Apple, Google, and email/password on a physical device.
+- Test cancellation, provider error, offline behavior, duplicate email, expired credential, sign-out, relaunch, returning-user recovery, and account switching.
+- Keep Apple equally available wherever Google login is offered.
+- Run the canonical suite on the minimum iOS 17 simulator in CI.
+- Complete physical-device VoiceOver checks across every onboarding/auth/handoff step.
+
+**Done when:** A new and returning eligible learner can authenticate against staging, recover preferences, edit the daily goal/settings, and complete the critical flow on iOS 17 and current iOS without data loss or a critical accessibility defect.
+
+### Step 3 — Add curriculum Firestore Rules (Phase 2 Task 4)
+
+**Status:** Complete at emulator scope in implementation commit `5e94dc0`; production-shaped staging Rules proof remains part of Step 13 certification.
+
+- Write failing Rules tests first.
+- Allow authenticated exact `get` only for shallow, valid, published learner-readable documents.
+- Deny unauthenticated reads, all broad `list` queries, drafts, malformed/unknown shapes, private evaluation contracts, audit records, and authoring namespaces.
+- Deny every client create/update/delete across configuration, pointers, versions, assets, rubrics, heads, private contracts, and audit.
+- Preserve all existing profile protections and the final catch-all deny.
+- Keep graph/digest/deep validation in Node and Swift rather than pretending Rules prove it.
+- Update and freeze the exact Rules test count.
+
+**Done when:** Authenticated exact reads work, missing allowed records return not-found, every unauthorized/private/write case fails, and no new broad index/query surface is added.
+
+### Step 4 — Implement the Swift curriculum domain (Phase 2 Task 5)
+
+**Status:** Complete in implementation commit `f3a07ec`; see [`2026-08-30-phase-2-task-5-swift-domain-checkpoint.md`](2026-08-30-phase-2-task-5-swift-domain-checkpoint.md). Tasks 6–7 have since completed their engineering checkpoints.
+
+- Add stable/locale/version identifiers and exact `Codable`, `Equatable`, `Hashable`, and `Sendable` curriculum models.
+- Implement the same canonical JSON/digest and validation semantics used by Node.
+- Add the closed block/completion unions and exact compatibility checks.
+- Add the `AsyncStream<CurriculumLoadEvent>` repository boundary.
+- Keep protected evaluation data, Firebase SDK types, filesystem types, SwiftUI, and authoring-only rights workflow out of the core domain.
+- Use the shared synthetic fixtures and digest vectors only as test resources, never app resources.
+
+**Done when:** Node and Swift produce identical validation/digest results and strict-concurrency focused tests pass.
+
+### Step 5 — Build the app-owned curriculum cache (Phase 2 Task 6)
+
+**Status:** Complete in implementation commit `ba54963`; see [`2026-08-30-phase-2-task-6-cache-checkpoint.md`](2026-08-30-phase-2-task-6-cache-checkpoint.md). Tasks 7–11 have since completed their engineering slices; the mandatory content-load gate is next and remains closed.
+
+- Implement an actor-backed cache with atomic replacement.
+- Namespace by environment, project, and locale.
+- Revalidate the complete graph before returning or replacing a snapshot.
+- Quarantine corrupt, incompatible, wrong-envelope, malformed, or digest-invalid data deterministically.
+- Preserve the last valid snapshot after failed reads, writes, or quarantine operations.
+
+**Done when:** Valid cached curriculum survives relaunch and every expected local failure without crossing environments or deleting another valid snapshot.
+
+### Step 6 — Build the exact-get Firestore repository (Phase 2 Task 7)
+
+**Status:** Repository engineering complete in implementation commit `83f6e1a`; see [`2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md`](2026-08-30-phase-2-task-7-firestore-repository-checkpoint.md). Task 9 later supplied the minimal DEBUG memory seam and root composition; Task 10 has since completed the deterministic fixture matrix and formal no-Firestore XCUITest composition proof.
+
+- Resolve configuration, locale catalog, pinned program versions, modules, lessons, rubrics, and assets through authenticated exact gets.
+- Never resolve a snapshot through mutable program pointers, list queries, audit documents, or protected evaluation contracts.
+- Force a server refresh, validate the entire graph, and replace cache only after full success.
+- Implement saved → fresh, saved → unavailable/stale, saved → update-required, and no-cache empty/unavailable behavior.
+- Cover missing targets, unsupported locale/schema/client version, offline, cancellation, malformed values, digest failure, duplicate suppression, and order preservation.
+- Isolate non-`Sendable` Firebase SDK values behind the established store pattern.
+
+**Done when:** The adapter emits the exact event order, never exposes partial/incompatible data, and preserves a valid fallback when the remote path fails.
+
+### Step 7 — Replace the Learn placeholder with read-only curriculum UI (Phase 2 Task 8)
+
+**Status:** Feature slice complete in implementation commit `0d8ab1f`; see [`2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md`](2026-08-30-phase-2-task-8-learn-state-ui-checkpoint.md). At that checkpoint, the focused store/presentation suite passed 26/26, the complete Swift unit target passed 202/202, and one uninterrupted canonical invocation passed 433/433. Task 9 has since replaced the temporary composition seam with production root dependencies and router path ownership.
+
+- Add `@MainActor @Observable` curriculum state with narrow, equatable UI state and ignored dependencies/tasks.
+- Render loading, saved/stale, empty, update-required, unavailable, retry, and fresh states.
+- Render ordered catalog, program, module, and lesson rows using stable IDs.
+- Render a read-only lesson preview with objective, duration, concept, diagram/text alternative, question, and non-sensitive rubric/version metadata.
+- Keep fixed interface text in `Localizable.xcstrings` and support iOS 17 without unguarded newer APIs.
+- Do not add answer controls, correct answers, scoring, completion, progress, AI, or paywall behavior in this step.
+
+**Done when:** Real validated versioned records replace the Learn placeholder and every state is testable, localized, and accessible.
+
+### Step 8 — Connect the same-session first-preview handoff (Phase 2 Task 9)
+
+**Status:** Engineering complete in implementation commit `085fbfa`; see [`2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md`](2026-08-30-phase-2-task-9-first-lesson-handoff-checkpoint.md). The focused router/handoff suite passes 16/16, the complete Swift unit target passes 216/216, and one uninterrupted canonical invocation passes 447/447. This proves an exact read-only preview handoff only; Task 10 has since supplied rendered fresh catalog/preview automated accessibility evidence, while `SHIP-FIRST-LESSON` remains Phase 3 work.
+
+- Add a typed route retaining locale, catalog, program, module, lesson, and rubric versions.
+- Build curriculum dependencies once in root composition; do not inject Firestore into onboarding.
+- While resolving, remain on the handoff, disable duplicate taps, and expose accessible loading.
+- On failure without cache, remain on the handoff and offer retry.
+- On success, install the exact Learn preview route before entering the signed-in shell.
+- Label the action **Preview the first lesson** until Phase 3 implements a real lesson-start mutation.
+- Do not show catalog, paywall, notification, or social UI before the preview.
+
+**Done when:** The same onboarding session opens the exact immutable preview, while `SHIP-FIRST-LESSON` remains honestly incomplete until Phase 3.
+
+### Step 9 — Add deterministic UI fixtures and end-to-end coverage (Phase 2 Task 10)
+
+**Status:** Engineering complete in implementation commit `b9083a7`; see [`2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md`](2026-08-30-phase-2-task-10-curriculum-ui-accessibility-checkpoint.md). The focused fixture/composition suite passes 8/8, Apple/Google/email exact-preview journeys pass 3/3, fresh Back/tab restoration passes 1/1, the final contrast/clipped-text rechecks pass 2/2, and the final accessibility5 recheck passes 1/1. One uninterrupted canonical invocation passes 479/479 with zero failure, skip, or cancellation.
+
+- Add DEBUG-only in-memory fixtures for fresh, saved, saved → fresh, offline/no cache, incompatible with/without fallback, empty, a typed malformed terminal event, fail-once/retry, and retained loading.
+- Make exact `--ui-testing` select memory dependencies before Firebase configuration/bootstrap/live construction; keep a defensive pre-SDK bootstrap guard.
+- Test Apple/Google/email onboarding → exact title/objective and catalog → program → module → preview → Back/tab restoration.
+- Preserve the Task 9 proof that no catalog/paywall/notification/social interruption precedes the onboarding preview.
+- Add 14 isolated accessibility methods for the fresh synthetic catalog/preview: six raw XCTest categories plus an accessibility5 measured-growth/clipped-text method per screen. Raw `.dynamicType`, other fixture states, and physical assistive-technology claims remain excluded.
+- Record 224 unit, 28 functional UI, and 14 curriculum accessibility only after the final green run; the full canonical total is 479.
+
+The preview is now an immersive nested destination with fixed localized **Read-only lesson preview** chrome and a 48-point Back control. Tabs hide within preview and restore on Back, superseding only Task 9's historical post-preview visible-tab assertion. iOS 26 edge-effect suppression is availability-gated with an iOS 17 fallback. The malformed fixture injects a typed terminal event rather than malformed decoder bytes.
+
+**Done when:** The curriculum UI is deterministic, has no live test dependency, and the canonical gate reports zero failure, skip, or cancellation.
+
+### Step 10 — Add privacy-safe curriculum analytics (Phase 2 Task 11)
+
+**Status:** Engineering complete in implementation commit `0234034`; see [`2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md`](2026-08-30-phase-2-task-11-privacy-safe-analytics-checkpoint.md). Canonical-runner reliability commit `a124267` permits one watchdog-timeout-only accessibility retry without masking non-timeout failures. Focused analytics pass 11/11, the complete unit target passes 232/232, and one uninterrupted canonical invocation passes 487/487 without using a retry.
+
+- Add typed `program_viewed`, `module_viewed`, and `lesson_viewed` events.
+- Limit payloads to typed stable IDs, separate numeric versions, locale, source/freshness, actual rubric identity, and a bounded duration bucket; production route call sites must resolve those values from the retained validated snapshot.
+- Make lesson title/body/question/options/answer/feedback, prompt/submission, email/profile text, and operator fields impossible to place in the typed payload.
+- Emit one event per route presentation, not per SwiftUI body evaluation.
+
+Optional content-sync and safe-error-code events were not added. Task 11 proves the three view events and their SwiftUI client lifecycle; it does not prove live Firebase delivery, consent/retention approval, or complete launch telemetry.
+
+**Done when:** Tests prove no curriculum or learner text can enter analytics and all payloads comply with `LAW-19`.
+
+### Step 11 — Pass the mandatory content-load decision gate
+
+**Status:** Mandatory stop active; 0/4 requirements are complete.
+
+Stop before original content or staging writes unless all four items are complete:
+
+- **Missing:** Product Bible contains a dated accepted specialization: School, Work, Creation, or Build.
+- **Missing:** A tracked `content/config/launch-content-decision.json` validates and matches that Bible decision exactly.
+- **Missing:** The approved staging project ID/number and keyless publisher principals are allowlisted; current environment config is emulator-only.
+- **Missing:** Product and curriculum owners authorize original Foundations fixture authoring and staging load.
+
+**Done when:** Every decision/access record is tracked and approved. There is no implementation override for this gate.
+
+### Step 12 — Enable the approved staging path, then author the first reviewed Foundations fixture (Phase 2 Task 12)
+
+- Only after Step 11 passes, extend the constrained operator command to staging: construct live Firestore only for the allowlisted staging project, use keyless ADC impersonation, derive and verify the actual principal/project ID/project number through authenticated metadata, and reject direct user ADC, service-account key JSON, development, production, mismatched confirmation, and unapproved identities before Firestore construction.
+- Apply the least-privilege publisher role, retain the underlying impersonator in Cloud Audit Logs, keep safe-output/source-scan/transaction semantics identical to emulator mode, and add deterministic authorization and disguised-production regressions.
+- Write fixture-specific failing tests first.
+- Author one original Foundations program, one module, and one structurally valid read-only lesson preview.
+- Include objective, duration, completion rule, prerequisites, concept, original diagram and text alternative, rights metadata, applied single-answer check, deterministic feedback, public scoring/rubric data, and a matching protected evaluation contract.
+- Include catalog membership and the exact first-lesson pointer.
+- Complete curriculum, copyright/rights, safety, and accessibility review.
+- Keep authoring drafts outside the app target/resources.
+
+**Done when:** The live operator path proves the approved staging identity and least privilege without accepting a key file or production target; the reviewed fixture validates; and its staging dry-run exposes only safe metadata and performs no write. Do not call this a complete Product Bible lesson; response capture, revision, outcomes, and progress come in Phase 3.
+
+### Step 13 — Certify Phase 2 on staging (Phase 2 Task 13)
+
+- Complete VoiceOver, Dynamic Type, Switch Control, Reduce Motion, target-size, non-color status, text-alternative, and localization checks.
+- Run the complete gate on current iOS and minimum iOS 17 CI.
+- Review staging dry-run, publish v1 with an approved keyless principal, and verify exact device load/cache/relaunch/refresh.
+- Publish a safe v2, prove v1 remains immutable, reject selecting v1 through publish, roll back through the rollback operation, and prove the app resolves v1.
+- Verify authenticated exact reads and all learner/private writes denied under production-shaped Rules.
+- Scan full Git history, worktree, logs/reports, generated files, and the built `.app`.
+- Record commands, versions, exact totals, IDs/digests, derived principal, operation/audit IDs, screenshots/recordings, approvals, rollout, rollback, and known defects.
+
+**Done when:** The dated Phase 2 evidence report proves the complete immutable publish → exact sync/cache → preview → roll-forward → rollback path with no open P0/P1 integrity, exposure, credential, crash, or critical accessibility defect.
+
+### Step 14 — Build the real learning engine (Phase 3)
+
+1. Write the Phase 3 contract for activity, lesson, attempt, sync, entitlement, allowance, learner-day, and reconciliation state.
+2. Assign a stable attempt ID before submission.
+3. Implement concept/scroll, single-answer, multi-select, one matching/ordering interaction, prompt builder/revision, feedback/results, and captioned video or accessible still equivalent.
+4. Implement deterministic objective scoring against the immutable published answer contract.
+5. Persist attempts/responses before rewards and make completion, XP, mastery, and rewards server-authoritative and idempotent.
+6. Enforce three new free lesson starts per learner-day; resume/retry/review/revision must not consume another credit.
+7. Build a durable queue for draft, pending, submitting, acknowledged, retryable/permanent failure, and reconciled states.
+8. Preserve work across backgrounding, kill/relaunch, crash, network loss, auth expiry, timeout, duplicate response, and supported offline use.
+9. Replace **Preview the first lesson** with a real **Start the first lesson** mutation, resume path, results, progress, and next lesson.
+
+**Done when:** A complete module works online, after interruption/relaunch, and in supported offline cases with no lost work, duplicate allowance use, duplicate rewards, or content-version mismatch.
+
+### Step 15 — Build and certify the AI coach (Phase 4)
+
+- Write the teen/privacy threat model and keep all model calls in authenticated server code.
+- Verify auth, App Check, entitlement/rate limit, content/rubric version, attempt state, and allowance before evaluation.
+- Moderate input, load the immutable rubric, request strict structured scoring, and validate criteria/ranges/totals/version on the server.
+- Store the validated score independently from presentation tone.
+- Render Supportive, Funny, Strict, Chill, and Socratic feedback from the same score and prove tone invariance.
+- Support one free revision and three free follow-ups per scored attempt; Pro receives the approved expanded limits.
+- Preserve learner work across moderation rejection, timeout, model outage, invalid schema, auth expiry, rate limit, offline, and retry.
+- Run a versioned adversarial/safety/schema/tone/cost/latency evaluation suite for primary and fallback models.
+
+**Done when — `GATE-ALPHA`:** Onboarding → real lesson → objective/AI feedback → progress sync → kill/relaunch → supported offline recovery passes as one flow, Rules deny protected writes, the privacy threat model is approved, and no progress-loss or duplicate-reward defect remains.
+
+### Step 16 — Build daily engagement (Phase 5)
+
+- Build Today with mission, continue/next lesson, allowance, streak, XP, mastery/review needs, and next preview.
+- Replace Learn and Practice placeholders with real catalog/progress/review/challenge/history states.
+- Award XP and streaks only from acknowledged learning events and reconcile offline work without duplicate rewards.
+- Add all-complete, stale, offline, retry, and version-mismatch states.
+
+**Done when:** The daily loop is accurate across relaunch, supported second device, offline reconciliation, and duplicate server delivery.
+
+### Step 17 — Build StoreKit 2 subscriptions (Phase 6)
+
+- Configure monthly/annual products and the approved seven-day annual trial in one subscription group.
+- Display StoreKit-localized price/period and complete trial/renewal/cancellation disclosures.
+- Verify transactions before access, reconcile signed evidence with the backend, listen for updates, restore purchases, and link manage-subscription.
+- Implement free, trial, active, grace/retry, pending, canceled-active, expired, revoked/refunded, verification-failed, offline/stale, and backend-mismatch states.
+- Resume the interrupted fourth lesson only after verified purchase.
+- Prove Pro never changes grading, mastery, XP, or social standing.
+
+**Done when:** The complete StoreKit sandbox, restore, refund, expiry, reinstall, account/device change, pending, billing, and stale/offline matrix passes without entitlement bypass or duplicate purchase.
+
+### Step 18 — Build bounded 1.0 social (Phase 7)
+
+- Make social opt-in and teen defaults stricter.
+- Add exact handle lookup/invite, friend requests, accept/decline/cancel/remove, and approved preset reactions.
+- Add report and block/unblock with immediate required cache removal and backend intake.
+- Test enumeration resistance, unauthorized reads/writes, races, repeated requests, offline caches, and moderation ownership.
+- Do not add discovery feeds, DMs, comments, free text, leagues, leaderboards, team quests, or shared streaks.
+
+**Done when — `GATE-TF-CLOSED`:** Phases 5–7, StoreKit sandbox, device accessibility, privacy/terms/support, and retention baselines pass with zero open critical security, safety, purchase, accessibility, or data-loss defect.
+
+### Step 19 — Complete profile, data rights, launch content, and operations (Phase 8)
+
+- Build Profile/Settings for account, age-safe public profile, learning preferences, path, coach, daily goal, notifications, membership, restore/manage, downloads, privacy/safety, blocked users, support, policies, version, and sign-out.
+- Implement authenticated account deletion and data export end to end, including retry, partial failure, vendor/backups propagation, secure delivery/expiry, and audit.
+- Finish production Auth, Firestore, Functions, Storage, App Check, Remote Config, Messaging, Analytics, and Crashlytics with least privilege.
+- Add logs, dashboards, alerts, correlation IDs, rate/cost controls, and incident/runbook coverage without sensitive payloads.
+- Publish and editorially certify Foundations with at least 3 modules, 12 lessons, and 1 capstone; the chosen specialization with at least 2 modules and 8 real lessons; and three honest specialization shells.
+- Load-test starts/completions, progress, AI bursts, subscription reconciliation, deletion/export, and outage/rollback behavior.
+
+**Done when — `GATE-TF-EXPANDED`:** Every launch lesson has editorial/safety/rights/accessibility QA; data rights, notifications, downloads, and operations work end to end; reliability approaches the 99.8% crash-free target; and no P0/P1 launch defect remains.
+
+### Step 20 — Certify, sign, and submit Syntholo 1.0 (Phase 9)
+
+- Finish final icon, launch appearance, display name, category, age rating, version/build scheme, and copyright.
+- Complete privacy manifest/required-reason APIs, App Privacy labels, localized subscription/legal/support metadata, screenshots, and preview assets showing only shipping features.
+- Run minimum/current iOS on representative smallest/largest iPhones and physical VoiceOver, Dynamic Type, Switch Control, Reduce Motion, contrast, target, caption/transcript, focus, and orientation checks.
+- Run fresh-install, upgrade, kill/relaunch, reinstall, account switch, second-device, network/failure, live auth, StoreKit, allowance, learner-day, revision/follow-up, download, social safety, deletion/export, notification, and support matrices.
+- Prove the signed bundle contains no secret, debug endpoint, sensitive log, or unrestricted protected write.
+- Prepare reviewer account/data and review notes for lesson, AI, purchases, restore/manage, social safety, and deletion.
+- Activate dashboards/alerts and name the release commander, support/incident contacts, and content/backend/app rollback owners.
+- Freeze app/content versions, exercise rollback, meet TestFlight observation policy and reliability thresholds, obtain cross-functional sign-off, upload, and submit.
+
+**Done when — `GATE-STORE`:** The signed release commit has a zero-skip canonical pass; crash-free sessions are at least 99.8%; visible AI failure is below the approved limit; there is no open P0/P1; App Review can use the core product, purchase/restore/manage, and delete an account; and all owners sign the dated evidence.
+
+## 5. The next ten concrete actions
+
+1. Obtain and track all four mandatory content-load inputs: Product's dated specialization, its exact derivative decision file, the owner-supplied staging project/principal allowlist, and dated Product/curriculum authorization.
+2. Product records the complete daily-goal value, assignment-source lifecycle, achievement/counting applicability, DEC-9 edit-effective-time, product-use, allowance, onboarding, legacy, and copy contract; then engineering implements the linked test-first settings plan with no analytics event.
+3. Configure the Git remote/branch protection and minimum-iOS CI runtime; finish non-content development/staging Firebase access without inventing the gated publisher identities.
+4. Complete the remaining Phase 1 live-provider device and physical VoiceOver evidence.
+5. Obtain the six-owner Phase 2 contract approval.
+6. Only after action 1 passes, enable and prove the approved keyless staging operator path.
+7. Author and cross-functionally review the original Foundations fixture only after the gate and staging identity are proven.
+8. Complete staging publication, device sync/cache, roll-forward, rollback, accessibility, and secret-scan certification while preserving Tasks 8–11 boundaries.
+9. Keep `SHIP-FIRST-LESSON` explicitly open until Phase 3 adds real start, interaction, feedback, completion, and progress behavior.
+10. Keep Phase 2 exit open until specialization, owner approval, original content, staging, minimum-OS, and named physical accessibility evidence all pass.
+
+Do not start Phase 3 implementation until the immutable Phase 2 content identity and staging path are proven. Do not start Phase 4 AI scoring until Phase 3 attempt/rubric/version semantics are proven.
+
+## 6. Required evidence discipline
+
+Every phase/gate checkpoint must include:
+
+- implementation commit and clean-worktree status;
+- environment/tool/OS versions;
+- exact test counts with zero unexpected failure, skip, or cancellation;
+- current and minimum-iOS results;
+- negative authorization, integrity, interruption, offline, replay/idempotency, and accessibility evidence appropriate to the phase;
+- full Git-history, worktree, generated-output, and built-app secret scans;
+- screenshots/recordings for critical user journeys;
+- open-defect list and P0/P1 disposition;
+- approved identifiers/digests/operation IDs without sensitive learner or credential material;
+- named product, engineering, curriculum, privacy, accessibility, support, and release approvals at the relevant gate;
+- rollback/stop procedure and responsible owner.
+
+## 7. Scope guardrails for 1.0
+
+Do not expand the launch scope without an approved Product Bible change. Syntholo 1.0 does not require leagues, leaderboards, team quests, shared streaks, free-text social, comments, direct messages, complete depth for all five paths, accredited certificate claims, Android, a learner web app, mandatory iPad optimization, or a visual rewrite that delays the real learning loop.
+
+## 8. Final launch definition of done
+
+The project is finished only when all twenty steps above are complete and all four release gates have dated evidence. Passing simulator tests alone is insufficient: the final state must include approved curriculum, live provider/device proof, verified backend authority and security, physical accessibility sign-off, StoreKit entitlement proof, data deletion/export, legal/support assets, operational monitoring and rollback, a scanned signed build, App Review materials, and cross-functional approval.

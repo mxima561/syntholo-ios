@@ -1,15 +1,15 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    let isStartEnabled: Bool
     let onStart: () -> Void
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.xl) {
                 VStack(alignment: .leading, spacing: Space.md) {
-                    Text("Orientation · 1/6")
+                    Text("ORIENTATION · 1/6")
                         .font(.system(.caption, design: .monospaced, weight: .semibold))
-                        .textCase(.uppercase)
                         .tracking(0.7)
                         .foregroundStyle(OnboardingPalette.lectureBlue)
                         .fixedSize(horizontal: false, vertical: true)
@@ -30,6 +30,7 @@ struct WelcomeView: View {
                 Spacer(minLength: Space.lg)
 
                 PrimaryButton(title: "Start learning", action: onStart)
+                    .disabled(!isStartEnabled)
                     .accessibilityIdentifier("onboarding.start")
             }
             .frame(maxWidth: 560, minHeight: 620, alignment: .topLeading)

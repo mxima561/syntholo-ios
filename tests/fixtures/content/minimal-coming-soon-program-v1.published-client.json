@@ -1,0 +1,19 @@
+{
+  "programVersionID": "synthetic-coming-soon--en-us--v1",
+  "programID": "synthetic-coming-soon",
+  "version": 1,
+  "locale": "en-US",
+  "publicationState": "published",
+  "title": "SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH",
+  "promise": "Synthetic coming-soon shell used only to validate the curriculum contract.",
+  "catalogState": "comingSoon",
+  "schemaVersion": 1,
+  "minimumClientSchemaVersion": 1,
+  "moduleVersionIDs": [],
+  "firstLessonVersionID": null,
+  "contentDigest": "fec6dbef628d2f483b343a666c0293869a662344be51a9639994fc8d3d545419",
+  "publishedAt": {
+    "seconds": 1800000000,
+    "nanoseconds": 123456789
+  }
+}

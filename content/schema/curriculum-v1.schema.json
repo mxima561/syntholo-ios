@@ -1,0 +1,1971 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://syntholo.com/schemas/curriculum-v1.schema.json",
+  "title": "Syntholo Curriculum Authoring Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "publicationState",
+    "schemaVersion",
+    "minimumClientSchemaVersion",
+    "locale",
+    "catalogVersion",
+    "programVersions",
+    "moduleVersions",
+    "lessonVersions",
+    "rubricVersions",
+    "evaluationContractVersions",
+    "assetVersions"
+  ],
+  "properties": {
+    "publicationState": {
+      "const": "draft"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "minimumClientSchemaVersion": {
+      "const": 1
+    },
+    "locale": {
+      "$ref": "#/$defs/launchLocale"
+    },
+    "catalogVersion": {
+      "$ref": "#/$defs/catalogVersionDraft"
+    },
+    "programVersions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/programVersionDraft"
+      }
+    },
+    "moduleVersions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 48,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/moduleVersionDraft"
+      }
+    },
+    "lessonVersions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/lessonVersionDraft"
+      }
+    },
+    "rubricVersions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/rubricVersionDraft"
+      }
+    },
+    "evaluationContractVersions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/evaluationContractVersionDraft"
+      }
+    },
+    "assetVersions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/assetVersionDraft"
+      }
+    }
+  },
+  "$defs": {
+    "nonControlString": {
+      "type": "string",
+      "pattern": "^[^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]*$"
+    },
+    "stableID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    },
+    "launchLocale": {
+      "type": "string",
+      "const": "en-US",
+      "maxLength": 35
+    },
+    "versionID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "maxLength": 114,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*--en-us--v[1-9][0-9]{0,9}$"
+        }
+      ]
+    },
+    "catalogVersionID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "maxLength": 114,
+          "pattern": "^catalog--en-us--v[1-9][0-9]{0,9}$"
+        }
+      ]
+    },
+    "programPointerID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "maxLength": 101,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*--en-us$"
+        }
+      ]
+    },
+    "title": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      ]
+    },
+    "summary": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      ]
+    },
+    "conceptBody": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      ]
+    },
+    "questionPrompt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      ]
+    },
+    "questionOptionText": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      ]
+    },
+    "feedback": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      ]
+    },
+    "criterionDescription": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      ]
+    },
+    "accessibilityDescription": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      ]
+    },
+    "shortMetadata": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      ]
+    },
+    "catalogProgramEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "programPointerID",
+        "programVersionID"
+      ],
+      "properties": {
+        "programPointerID": {
+          "$ref": "#/$defs/programPointerID"
+        },
+        "programVersionID": {
+          "$ref": "#/$defs/versionID"
+        }
+      }
+    },
+    "catalogVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalogVersionID",
+        "version",
+        "locale",
+        "publicationState",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "programEntries"
+      ],
+      "properties": {
+        "catalogVersionID": {
+          "$ref": "#/$defs/catalogVersionID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "programEntries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/catalogProgramEntry"
+          }
+        }
+      }
+    },
+    "programVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "programVersionID",
+        "programID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "promise",
+        "catalogState",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "moduleVersionIDs",
+        "firstLessonVersionID"
+      ],
+      "properties": {
+        "programVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "promise": {
+          "$ref": "#/$defs/summary"
+        },
+        "catalogState": {
+          "enum": [
+            "available",
+            "comingSoon"
+          ]
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "moduleVersionIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        },
+        "firstLessonVersionID": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/versionID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "catalogState": {
+                "const": "available"
+              }
+            },
+            "required": [
+              "catalogState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "moduleVersionIDs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "firstLessonVersionID": {
+                "$ref": "#/$defs/versionID"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "moduleVersionIDs": {
+                "type": "array",
+                "maxItems": 0,
+                "uniqueItems": true
+              },
+              "firstLessonVersionID": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "moduleVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moduleVersionID",
+        "moduleID",
+        "programID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "summary",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "lessonVersionIDs"
+      ],
+      "properties": {
+        "moduleVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "moduleID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "lessonVersionIDs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        }
+      }
+    },
+    "completionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "requiredBlockIDs",
+        "minimumCorrectCount",
+        "allowsRevision"
+      ],
+      "properties": {
+        "kind": {
+          "const": "requiredBlocksCorrect"
+        },
+        "requiredBlockIDs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableID"
+          }
+        },
+        "minimumCorrectCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "allowsRevision": {
+          "type": "boolean"
+        }
+      }
+    },
+    "questionOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "optionID",
+        "text"
+      ],
+      "properties": {
+        "optionID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "text": {
+          "$ref": "#/$defs/questionOptionText"
+        }
+      }
+    },
+    "conceptTextBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockID",
+        "type",
+        "order",
+        "body"
+      ],
+      "properties": {
+        "blockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "type": {
+          "const": "conceptText"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 39
+        },
+        "heading": {
+          "$ref": "#/$defs/title"
+        },
+        "body": {
+          "$ref": "#/$defs/conceptBody"
+        }
+      }
+    },
+    "stillDiagramBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockID",
+        "type",
+        "order",
+        "title",
+        "assetVersionID"
+      ],
+      "properties": {
+        "blockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "type": {
+          "const": "stillDiagram"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 39
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "assetVersionID": {
+          "$ref": "#/$defs/versionID"
+        }
+      }
+    },
+    "singleAnswerQuestionBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockID",
+        "type",
+        "order",
+        "prompt",
+        "options"
+      ],
+      "properties": {
+        "blockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "type": {
+          "const": "singleAnswerQuestion"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 39
+        },
+        "prompt": {
+          "$ref": "#/$defs/questionPrompt"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/questionOption"
+          }
+        }
+      }
+    },
+    "contentBlock": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/conceptTextBlock"
+        },
+        {
+          "$ref": "#/$defs/stillDiagramBlock"
+        },
+        {
+          "$ref": "#/$defs/singleAnswerQuestionBlock"
+        }
+      ]
+    },
+    "lessonVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lessonVersionID",
+        "lessonID",
+        "programID",
+        "moduleID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "objective",
+        "expectedDurationMinutes",
+        "prerequisiteLessonIDs",
+        "completionRule",
+        "blocks",
+        "rubricVersionID",
+        "assetVersionIDs",
+        "schemaVersion",
+        "minimumClientSchemaVersion"
+      ],
+      "properties": {
+        "lessonVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "lessonID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "moduleID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "objective": {
+          "$ref": "#/$defs/summary"
+        },
+        "expectedDurationMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 180
+        },
+        "prerequisiteLessonIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableID"
+          }
+        },
+        "completionRule": {
+          "$ref": "#/$defs/completionRule"
+        },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 40,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/contentBlock"
+          }
+        },
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "assetVersionIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterionID",
+        "title",
+        "description",
+        "maxScore"
+      ],
+      "properties": {
+        "criterionID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "description": {
+          "$ref": "#/$defs/criterionDescription"
+        },
+        "maxScore": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "clientScoringContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "questionBlockID",
+        "correctOptionID",
+        "correctFeedback",
+        "incorrectFeedback"
+      ],
+      "properties": {
+        "kind": {
+          "const": "singleAnswer"
+        },
+        "questionBlockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "correctOptionID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "correctFeedback": {
+          "$ref": "#/$defs/feedback"
+        },
+        "incorrectFeedback": {
+          "$ref": "#/$defs/feedback"
+        }
+      }
+    },
+    "rubricVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rubricVersionID",
+        "rubricID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "criteria",
+        "clientScoringContract",
+        "evaluationContractVersionID",
+        "schemaVersion",
+        "minimumClientSchemaVersion"
+      ],
+      "properties": {
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "rubricID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "kind": {
+          "const": "deterministic"
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          }
+        },
+        "clientScoringContract": {
+          "$ref": "#/$defs/clientScoringContract"
+        },
+        "evaluationContractVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "evaluationContractVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluationContractVersionID",
+        "evaluationContractID",
+        "rubricVersionID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "questionBlockID",
+        "correctOptionID",
+        "schemaVersion"
+      ],
+      "properties": {
+        "evaluationContractVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "evaluationContractID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "kind": {
+          "const": "singleAnswer"
+        },
+        "questionBlockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "correctOptionID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "schemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "diagramNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeID",
+        "label",
+        "emphasis"
+      ],
+      "properties": {
+        "nodeID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "label": {
+          "$ref": "#/$defs/title"
+        },
+        "emphasis": {
+          "enum": [
+            "normal",
+            "accent"
+          ]
+        }
+      }
+    },
+    "diagramConnector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectorID",
+        "fromNodeID",
+        "toNodeID",
+        "label"
+      ],
+      "properties": {
+        "connectorID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "fromNodeID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "toNodeID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "label": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/title"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "diagramAssetPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "connectors"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/diagramNode"
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/diagramConnector"
+          }
+        }
+      }
+    },
+    "rightsMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "creator",
+        "sourceURL",
+        "license"
+      ],
+      "properties": {
+        "origin": {
+          "enum": [
+            "original",
+            "licensed"
+          ]
+        },
+        "creator": {
+          "$ref": "#/$defs/shortMetadata"
+        },
+        "sourceURL": {
+          "oneOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/nonControlString"
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "format": "uri",
+                  "pattern": "^https://[^\\s]+$"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "license": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shortMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "licensed"
+              }
+            },
+            "required": [
+              "origin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sourceURL": {
+                "type": "string"
+              },
+              "license": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "assetVersionDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetVersionID",
+        "assetID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "mimeType",
+        "payload",
+        "accessibilityDescription",
+        "rights",
+        "schemaVersion",
+        "minimumClientSchemaVersion"
+      ],
+      "properties": {
+        "assetVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "assetID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "draft"
+        },
+        "kind": {
+          "const": "diagramData"
+        },
+        "mimeType": {
+          "const": "application/vnd.syntholo.diagram+json"
+        },
+        "payload": {
+          "$ref": "#/$defs/diagramAssetPayload"
+        },
+        "accessibilityDescription": {
+          "$ref": "#/$defs/accessibilityDescription"
+        },
+        "rights": {
+          "$ref": "#/$defs/rightsMetadata"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "sha256Digest": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "localeToken": {
+      "type": "string",
+      "const": "en-us"
+    },
+    "catalogVersionPublishedWrite": {
+      "$comment": "Exact generated catalog-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalogVersionID",
+        "version",
+        "locale",
+        "publicationState",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "programEntries",
+        "contentDigest"
+      ],
+      "properties": {
+        "catalogVersionID": {
+          "$ref": "#/$defs/catalogVersionID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "programEntries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/catalogProgramEntry"
+          }
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "programVersionPublishedWrite": {
+      "$comment": "Exact generated program-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "programVersionID",
+        "programID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "promise",
+        "catalogState",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "moduleVersionIDs",
+        "firstLessonVersionID",
+        "contentDigest"
+      ],
+      "properties": {
+        "programVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "promise": {
+          "$ref": "#/$defs/summary"
+        },
+        "catalogState": {
+          "enum": [
+            "available",
+            "comingSoon"
+          ]
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "moduleVersionIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        },
+        "firstLessonVersionID": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/versionID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "catalogState": {
+                "const": "available"
+              }
+            },
+            "required": [
+              "catalogState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "moduleVersionIDs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "firstLessonVersionID": {
+                "$ref": "#/$defs/versionID"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "moduleVersionIDs": {
+                "type": "array",
+                "maxItems": 0,
+                "uniqueItems": true
+              },
+              "firstLessonVersionID": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "moduleVersionPublishedWrite": {
+      "$comment": "Exact generated module-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moduleVersionID",
+        "moduleID",
+        "programID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "summary",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "lessonVersionIDs",
+        "contentDigest"
+      ],
+      "properties": {
+        "moduleVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "moduleID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "lessonVersionIDs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "lessonVersionPublishedWrite": {
+      "$comment": "Exact generated lesson-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lessonVersionID",
+        "lessonID",
+        "programID",
+        "moduleID",
+        "version",
+        "locale",
+        "publicationState",
+        "title",
+        "objective",
+        "expectedDurationMinutes",
+        "prerequisiteLessonIDs",
+        "completionRule",
+        "blocks",
+        "rubricVersionID",
+        "assetVersionIDs",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "contentDigest"
+      ],
+      "properties": {
+        "lessonVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "lessonID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "moduleID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "title": {
+          "$ref": "#/$defs/title"
+        },
+        "objective": {
+          "$ref": "#/$defs/summary"
+        },
+        "expectedDurationMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 180
+        },
+        "prerequisiteLessonIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableID"
+          }
+        },
+        "completionRule": {
+          "$ref": "#/$defs/completionRule"
+        },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 40,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/contentBlock"
+          }
+        },
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "assetVersionIDs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/versionID"
+          }
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "rubricVersionPublishedWrite": {
+      "$comment": "Exact generated rubric-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rubricVersionID",
+        "rubricID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "criteria",
+        "clientScoringContract",
+        "evaluationContractVersionID",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "contentDigest"
+      ],
+      "properties": {
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "rubricID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "kind": {
+          "const": "deterministic"
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          }
+        },
+        "clientScoringContract": {
+          "$ref": "#/$defs/clientScoringContract"
+        },
+        "evaluationContractVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "evaluationContractVersionPublishedWrite": {
+      "$comment": "Exact generated protected evaluation-contract data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluationContractVersionID",
+        "evaluationContractID",
+        "rubricVersionID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "questionBlockID",
+        "correctOptionID",
+        "schemaVersion",
+        "contentDigest"
+      ],
+      "properties": {
+        "evaluationContractVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "evaluationContractID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "rubricVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "kind": {
+          "const": "singleAnswer"
+        },
+        "questionBlockID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "correctOptionID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "assetVersionPublishedWrite": {
+      "$comment": "Exact generated asset-version data before the transaction adds native Firestore Timestamp field publishedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetVersionID",
+        "assetID",
+        "version",
+        "locale",
+        "publicationState",
+        "kind",
+        "mimeType",
+        "byteCount",
+        "payloadDigest",
+        "payload",
+        "accessibilityDescription",
+        "rights",
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "contentDigest"
+      ],
+      "properties": {
+        "assetVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "assetID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publicationState": {
+          "const": "published"
+        },
+        "kind": {
+          "const": "diagramData"
+        },
+        "mimeType": {
+          "const": "application/vnd.syntholo.diagram+json"
+        },
+        "byteCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 131072
+        },
+        "payloadDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "payload": {
+          "$ref": "#/$defs/diagramAssetPayload"
+        },
+        "accessibilityDescription": {
+          "$ref": "#/$defs/accessibilityDescription"
+        },
+        "rights": {
+          "$ref": "#/$defs/rightsMetadata"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "const": 1
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    },
+    "catalogPointerWrite": {
+      "$comment": "Exact derived catalog-pointer data before the transaction adds native Firestore Timestamp field updatedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "publishedCatalogVersionID",
+        "schemaVersion",
+        "minimumClientSchemaVersion"
+      ],
+      "properties": {
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publishedCatalogVersionID": {
+          "$ref": "#/$defs/catalogVersionID"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "$ref": "#/$defs/version"
+        }
+      }
+    },
+    "programPointerWrite": {
+      "$comment": "Exact derived program-pointer data before the transaction adds native Firestore Timestamp field updatedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "programPointerID",
+        "programID",
+        "locale",
+        "publishedVersionID",
+        "schemaVersion"
+      ],
+      "properties": {
+        "programPointerID": {
+          "$ref": "#/$defs/programPointerID"
+        },
+        "programID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "publishedVersionID": {
+          "$ref": "#/$defs/versionID"
+        },
+        "schemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "featureConfigurationWrite": {
+      "$comment": "Exact derived curriculum configuration data before the transaction adds native Firestore Timestamp field updatedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "minimumClientSchemaVersion",
+        "defaultLocale",
+        "supportedLocales",
+        "catalogPointerIDs"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "minimumClientSchemaVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "defaultLocale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "supportedLocales": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/launchLocale"
+          }
+        },
+        "catalogPointerIDs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/localeToken"
+          }
+        }
+      }
+    },
+    "versionHeadKind": {
+      "enum": [
+        "catalog",
+        "program",
+        "module",
+        "lesson",
+        "rubric",
+        "evaluation-contract",
+        "asset"
+      ]
+    },
+    "versionHeadID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^(?:catalog|program|module|lesson|rubric|evaluation-contract|asset)--[a-z0-9]+(?:-[a-z0-9]+)*--en-us$"
+        }
+      ]
+    },
+    "contentVersionHeadWrite": {
+      "$comment": "Exact derived private version-head data before the transaction adds native Firestore Timestamp field updatedAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "versionHeadID",
+        "kind",
+        "stableID",
+        "locale",
+        "maxPublishedVersion",
+        "schemaVersion"
+      ],
+      "properties": {
+        "versionHeadID": {
+          "$ref": "#/$defs/versionHeadID"
+        },
+        "kind": {
+          "$ref": "#/$defs/versionHeadKind"
+        },
+        "stableID": {
+          "$ref": "#/$defs/stableID"
+        },
+        "locale": {
+          "$ref": "#/$defs/launchLocale"
+        },
+        "maxPublishedVersion": {
+          "$ref": "#/$defs/version"
+        },
+        "schemaVersion": {
+          "const": 1
+        }
+      }
+    },
+    "programSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "programPointerID",
+        "fromProgramVersionID",
+        "toProgramVersionID"
+      ],
+      "properties": {
+        "programPointerID": {
+          "$ref": "#/$defs/programPointerID"
+        },
+        "fromProgramVersionID": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/versionID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toProgramVersionID": {
+          "$ref": "#/$defs/versionID"
+        }
+      }
+    },
+    "operationID": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        }
+      ]
+    },
+    "nonEmpty120": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      ]
+    },
+    "nonEmpty320": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 320
+        }
+      ]
+    },
+    "bounded320": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/nonControlString"
+        },
+        {
+          "type": "string",
+          "maxLength": 320
+        }
+      ]
+    },
+    "contentPublicationAuditWrite": {
+      "$comment": "Exact derived private audit data before the transaction adds native Firestore Timestamp field occurredAt.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operationID",
+        "requestDigest",
+        "action",
+        "outcome",
+        "environment",
+        "projectID",
+        "projectNumber",
+        "credentialPrincipal",
+        "requestedBy",
+        "catalogPointerID",
+        "fromCatalogVersionID",
+        "toCatalogVersionID",
+        "programSelections",
+        "publicationDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "operationID": {
+          "$ref": "#/$defs/operationID"
+        },
+        "requestDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "action": {
+          "enum": [
+            "publish",
+            "rollback"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "applied",
+            "noOp"
+          ]
+        },
+        "environment": {
+          "enum": [
+            "emulator",
+            "staging",
+            "production"
+          ]
+        },
+        "projectID": {
+          "$ref": "#/$defs/nonEmpty120"
+        },
+        "projectNumber": {
+          "$ref": "#/$defs/nonEmpty120"
+        },
+        "credentialPrincipal": {
+          "$ref": "#/$defs/nonEmpty320"
+        },
+        "requestedBy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/bounded320"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogPointerID": {
+          "$ref": "#/$defs/localeToken"
+        },
+        "fromCatalogVersionID": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/catalogVersionID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toCatalogVersionID": {
+          "$ref": "#/$defs/catalogVersionID"
+        },
+        "programSelections": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/programSelection"
+          }
+        },
+        "publicationDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        }
+      }
+    }
+  }
+}

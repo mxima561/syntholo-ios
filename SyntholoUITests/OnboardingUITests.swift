@@ -143,13 +143,85 @@ final class OnboardingUITests: XCTestCase {
         assertNoEarlyInterruption(in: relaunchedApp)
     }
 
+    func testLocalSaveFailureRetainsStepAndRetrySurvivesRelaunch() {
+        let storageKey = "persistence-retry-\(UUID().uuidString)"
+        let app = launchOnboarding(
+            storageKey: storageKey,
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-save",
+            ]
+        )
+
+        app.buttons["Start learning"].tap()
+
+        let retry = app.buttons["onboarding.persistence.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["I’m 18 or older"].exists)
+        XCTAssertFalse(app.buttons["Start learning"].exists)
+
+        retry.tap()
+        XCTAssertTrue(retry.waitForNonExistence(timeout: 2))
+        app.terminate()
+
+        let relaunchedApp = launchOnboarding(
+            reset: false,
+            storageKey: storageKey
+        )
+        XCTAssertTrue(
+            relaunchedApp.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertFalse(relaunchedApp.buttons["Start learning"].exists)
+    }
+
+    func testLocalLoadFailurePausesRestoreUntilRetryWithoutLosingDraft() {
+        let storageKey = "load-retry-\(UUID().uuidString)"
+        let app = launchOnboarding(storageKey: storageKey)
+        app.buttons["Start learning"].tap()
+        XCTAssertTrue(app.buttons["I’m 18 or older"].waitForExistence(timeout: 2))
+        app.terminate()
+
+        let relaunchedApp = launchOnboarding(
+            reset: false,
+            storageKey: storageKey,
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-load",
+            ]
+        )
+
+        let retry = relaunchedApp.buttons["onboarding.persistence.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 3))
+        XCTAssertTrue(relaunchedApp.staticTexts["Loading Syntholo…"].exists)
+        XCTAssertFalse(relaunchedApp.buttons["Start learning"].exists)
+        XCTAssertFalse(relaunchedApp.buttons["I’m 18 or older"].exists)
+
+        retry.tap()
+
+        XCTAssertTrue(
+            relaunchedApp.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertTrue(retry.waitForNonExistence(timeout: 2))
+        relaunchedApp.terminate()
+
+        let verifiedRelaunch = launchOnboarding(
+            reset: false,
+            storageKey: storageKey
+        )
+        XCTAssertTrue(
+            verifiedRelaunch.buttons["I’m 18 or older"]
+                .waitForExistence(timeout: 3)
+        )
+        XCTAssertFalse(verifiedRelaunch.buttons["Start learning"].exists)
+    }
+
     func testCompletedProfileRestoresDirectlyToLearn() {
         let app = launchSession(arguments: [])
 
         XCTAssertTrue(app.tabBars.buttons["Learn"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.navigationBars["Learn"].exists)
         XCTAssertFalse(app.buttons["Start learning"].exists)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists)
+        XCTAssertFalse(app.buttons["Preview the first lesson"].exists)
     }
 
     func testNoPaywallSocialCatalogOrNotificationAppearsBeforeHandoff() {
@@ -355,7 +427,7 @@ final class OnboardingUITests: XCTestCase {
         )
         assertAllProvidersAreAvailable(in: app, file: file, line: line)
         XCTAssertFalse(app.staticTexts["onboarding.auth.error"].exists, file: file, line: line)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists, file: file, line: line)
+        XCTAssertFalse(app.buttons["Preview the first lesson"].exists, file: file, line: line)
         assertNoEarlyInterruption(in: app, file: file, line: line)
     }
 
@@ -365,7 +437,7 @@ final class OnboardingUITests: XCTestCase {
         line: UInt = #line
     ) {
         XCTAssertTrue(
-            app.buttons["Start the first lesson"].waitForExistence(timeout: 3),
+            app.buttons["Preview the first lesson"].waitForExistence(timeout: 3),
             file: file,
             line: line
         )
@@ -377,14 +449,81 @@ final class OnboardingUITests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        app.buttons["Start the first lesson"].tap()
+        assertNoEarlyInterruption(in: app, file: file, line: line)
+        app.buttons["Preview the first lesson"].tap()
+
+        let lessonPreview = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview")
+            .firstMatch
         XCTAssertTrue(
-            app.tabBars.buttons["Learn"].waitForExistence(timeout: 3),
+            lessonPreview.waitForExistence(timeout: 3),
             file: file,
             line: line
         )
-        XCTAssertTrue(app.navigationBars["Learn"].exists, file: file, line: line)
-        XCTAssertFalse(app.buttons["Start the first lesson"].exists, file: file, line: line)
+        let lessonTitle = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview.title")
+            .firstMatch
+        XCTAssertTrue(
+            lessonTitle.waitForExistence(timeout: 2),
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            lessonTitle.label,
+            "Synthetic contract lesson",
+            file: file,
+            line: line
+        )
+        let lessonObjective = app.descendants(matching: .any)
+            .matching(identifier: "curriculum.lesson.preview.objective")
+            .firstMatch
+        XCTAssertTrue(
+            lessonObjective.exists,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            lessonObjective.label,
+            "Validate a synthetic placeholder graph without supplying editorial curriculum.",
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.tabBars.buttons["Learn"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["curriculum.catalog"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.tabBars.buttons["Social"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertTrue(
+            app.buttons["Back"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(app.buttons["View plans"].exists, file: file, line: line)
+        XCTAssertFalse(
+            app.buttons["Upgrade to Pro"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.buttons["Turn on notifications"].exists,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(
+            app.buttons["Preview the first lesson"].exists,
+            file: file,
+            line: line
+        )
     }
 
     private func assertProviderCancellationAttempt(
@@ -417,6 +556,11 @@ final class OnboardingUITests: XCTestCase {
         line: UInt = #line
     ) {
         XCTAssertFalse(app.tabBars.buttons["Social"].exists, file: file, line: line)
+        XCTAssertFalse(
+            app.descendants(matching: .any)["curriculum.catalog"].exists,
+            file: file,
+            line: line
+        )
         XCTAssertFalse(app.buttons["Browse programs"].exists, file: file, line: line)
         XCTAssertFalse(app.buttons["View catalog"].exists, file: file, line: line)
         XCTAssertFalse(app.buttons["View plans"].exists, file: file, line: line)
@@ -560,7 +704,7 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         reachAccountCreation(in: app)
         app.buttons["onboarding.auth.apple.fixture"].tap()
 
-        try audit(app, waitingFor: app.buttons["Start the first lesson"])
+        try audit(app, waitingFor: app.buttons["Preview the first lesson"])
     }
 
     func testSessionLoadingLayoutPassesAccessibilityAudits() throws {
@@ -569,6 +713,20 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         )
 
         try audit(app, waitingFor: app.staticTexts["Loading Syntholo…"])
+    }
+
+    func testPersistenceRecoveryLayoutPassesAccessibilityAudits() throws {
+        let app = launchOnboarding(
+            extraArguments: [
+                "--onboarding-persistence-fixture=fail-first-save",
+            ]
+        )
+        app.buttons["Start learning"].tap()
+
+        try audit(
+            app,
+            waitingFor: app.buttons["onboarding.persistence.retry"]
+        )
     }
 
     private func reachAccountCreation(in app: XCUIApplication) {

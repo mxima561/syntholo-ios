@@ -28,7 +28,7 @@ struct PathRecommendationView: View {
 
     private var content: some View {
         OnboardingPage(
-            eyebrow: "Your route",
+            eyebrow: "YOUR ROUTE",
             progress: nil,
             title: "Start with Foundations",
             introduction: "Build core prompting and checking skills, then apply them to your goal.",
@@ -115,18 +115,17 @@ struct PathRecommendationView: View {
                     id: path,
                     title: path.title,
                     detail: path.detail,
-                    systemImage: path.systemImage
+                    systemImage: path.systemImage,
+                    accessibilityIdentifier: path.accessibilityIdentifier
                 )
             }
     }
 
-    private var pathTitle: LocalizedStringKey {
-        LocalizedStringKey(recommendedPath.title)
-    }
-    private var pathDetail: LocalizedStringKey { recommendedPath.detail }
-    private var pathRouteLabel: LocalizedStringKey { recommendedPath.routeLabel }
+    private var pathTitle: LocalizedStringResource { recommendedPath.title }
+    private var pathDetail: LocalizedStringResource { recommendedPath.detail }
+    private var pathRouteLabel: LocalizedStringResource { recommendedPath.routeLabel }
 
-    private var choosePathTitle: LocalizedStringKey {
+    private var choosePathTitle: LocalizedStringResource {
         switch recommendedPath {
         case .school: "Choose AI for School"
         case .work: "Choose AI for Work"
@@ -145,8 +144,8 @@ struct PathRecommendationView: View {
     }
 }
 
-private extension LearningPath {
-    var title: String {
+extension LearningPath {
+    var title: LocalizedStringResource {
         switch self {
         case .school: "AI for School"
         case .work: "AI for Work"
@@ -155,7 +154,7 @@ private extension LearningPath {
         }
     }
 
-    var routeLabel: LocalizedStringKey {
+    var routeLabel: LocalizedStringResource {
         switch self {
         case .school: "AI FOR SCHOOL"
         case .work: "AI FOR WORK"
@@ -164,7 +163,7 @@ private extension LearningPath {
         }
     }
 
-    var detail: LocalizedStringKey {
+    var detail: LocalizedStringResource {
         switch self {
         case .school: "Use AI for research, study plans, and checked explanations."
         case .work: "Use AI for drafts, summaries, and repeatable workflows."
@@ -179,6 +178,15 @@ private extension LearningPath {
         case .work: "briefcase"
         case .creation: "paintbrush"
         case .build: "hammer"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        switch self {
+        case .school: "AI for School"
+        case .work: "AI for Work"
+        case .creation: "AI for Creation"
+        case .build: "Build with AI"
         }
     }
 }

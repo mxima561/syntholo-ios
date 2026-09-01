@@ -29,6 +29,8 @@ final class OnboardingCoordinator {
     private var isSavingProfile = false
     @ObservationIgnored
     private var restorationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var isRetryingOnboardingPersistence = false
 
     init(
         session: AppSession,
@@ -70,6 +72,13 @@ final class OnboardingCoordinator {
 
     private func performRestore() async {
         await onboardingStore.restore()
+        guard onboardingStore.persistenceFailure != .load else {
+            return
+        }
+        await restoreSessionAfterDraftRecovery()
+    }
+
+    private func restoreSessionAfterDraftRecovery() async {
         guard let user = await authClient.restoreSession() else {
             session.transition(
                 to: onboardingStore.step == .welcome
@@ -80,6 +89,21 @@ final class OnboardingCoordinator {
         }
 
         await resolveRestoredProfile(for: user)
+    }
+
+    func retryOnboardingPersistence() async {
+        guard !isRetryingOnboardingPersistence else {
+            return
+        }
+        isRetryingOnboardingPersistence = true
+        defer { isRetryingOnboardingPersistence = false }
+
+        onboardingStore.retryPersistence()
+        guard onboardingStore.persistenceFailure == nil,
+              session.state == .loading else {
+            return
+        }
+        await restoreSessionAfterDraftRecovery()
     }
 
     func authenticated(
@@ -98,7 +122,7 @@ final class OnboardingCoordinator {
     }
 
     func startOnboarding() {
-        guard onboardingStore.step == .welcome else {
+        guard onboardingStore.canAdvance else {
             return
         }
         onboardingStore.advance()
@@ -186,6 +210,7 @@ final class OnboardingCoordinator {
         guard session.state == .firstLessonHandoff else {
             return
         }
+        onboardingStore.retryPersistence()
         session.transition(to: .signedIn)
     }
 
@@ -237,6 +262,7 @@ final class OnboardingCoordinator {
             if try await profileRepository.load(userID: user.id) != nil {
                 pendingUser = nil
                 profileRecoveryKind = nil
+                onboardingStore.reset()
                 analytics.log(.loginCompleted(restoredSession: true))
                 session.transition(to: .signedIn)
                 return

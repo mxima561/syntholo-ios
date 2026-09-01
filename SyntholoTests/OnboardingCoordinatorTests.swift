@@ -113,17 +113,19 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(snapshot.savedProfiles[user.id]?.coachMode, .socratic)
     }
 
-    func testRestoredCompleteProfileBypassesOnboarding() async {
+    func testRestoredCompleteProfileBypassesOnboardingAndClearsDraft() async throws {
         let profile = LearnerProfile.make(
             user: user,
             draft: completeDraft,
             now: now
         )
+        let draftRepository = try repositoryAtAccount()
         let fixture = makeCoordinator(
             restoredUser: user,
             profileRepository: CoordinatorProfileRepository(
                 loadedProfile: profile
-            )
+            ),
+            draftRepository: draftRepository
         )
 
         await fixture.coordinator.restore()
@@ -133,6 +135,27 @@ final class OnboardingCoordinatorTests: XCTestCase {
             fixture.analytics.events,
             [.loginCompleted(restoredSession: true)]
         )
+        XCTAssertNil(try draftRepository.load())
+    }
+
+    func testCompletingHandoffRetriesTransientDraftClearFailure() async throws {
+        let storage = CoordinatorDraftStorage(clearFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let fixture = makeCoordinator(draftRepository: draftRepository)
+        await fixture.store.restore()
+
+        await fixture.coordinator.authenticated(user, provider: .password)
+
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertEqual(fixture.store.persistenceFailure, .clear)
+        XCTAssertNotNil(try draftRepository.load())
+
+        fixture.coordinator.completeFirstLessonHandoff()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertNil(fixture.store.persistenceFailure)
+        XCTAssertNil(try draftRepository.load())
     }
 
     func testConcurrentCompleteProfileRestorationRunsOneFlight() async {
@@ -229,6 +252,82 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(snapshot.attemptedProfiles.first?.selectedPath, .school)
     }
 
+    func testDraftLoadFailurePausesAuthenticatedRestoreUntilRetry() async throws {
+        let storage = CoordinatorDraftStorage(loadFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let authClient = CoordinatorAuthClient(restoredUser: user)
+        let profileRepository = CoordinatorProfileRepository(loadedProfile: nil)
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+
+        await fixture.coordinator.restore()
+
+        XCTAssertEqual(fixture.session.state, .loading)
+        XCTAssertEqual(fixture.store.persistenceFailure, .load)
+        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        var authSnapshot = await authClient.snapshot()
+        var profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(authSnapshot.restoreCount, 0)
+        XCTAssertEqual(authSnapshot.signOutCount, 0)
+        XCTAssertEqual(profileSnapshot.loadCount, 0)
+        XCTAssertTrue(profileSnapshot.attemptedProfiles.isEmpty)
+
+        await fixture.coordinator.retryOnboardingPersistence()
+
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertNil(fixture.store.persistenceFailure)
+        authSnapshot = await authClient.snapshot()
+        profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(authSnapshot.signOutCount, 0)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(profileSnapshot.attemptedUserIDs, [user.id])
+        XCTAssertNil(try draftRepository.load())
+    }
+
+    func testConcurrentDraftLoadRetriesResumeOneSessionRestoration() async throws {
+        let storage = CoordinatorDraftStorage(loadFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            restoreDelayNanoseconds: 50_000_000
+        )
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: profile
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+        await fixture.coordinator.restore()
+
+        async let first: Void = fixture.coordinator.retryOnboardingPersistence()
+        async let second: Void = fixture.coordinator.retryOnboardingPersistence()
+        _ = await (first, second)
+
+        let authSnapshot = await authClient.snapshot()
+        let profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+        XCTAssertNil(try draftRepository.load())
+    }
+
     func testRestoredAuthenticatedUserMissingProfileAndDraftSignsOutSafely() async {
         let authClient = CoordinatorAuthClient(restoredUser: user)
         let profileRepository = CoordinatorProfileRepository(loadedProfile: nil)
@@ -277,7 +376,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
     }
 
-    func testProfileCheckRetryFindsExistingProfileWithoutSavingDraft() async throws {
+    func testProfileCheckRetryFindsExistingProfileAndClearsDraftWithoutSaving() async throws {
         let draftRepository = try repositoryAtAccount()
         let existingProfile = LearnerProfile.make(
             user: user,
@@ -305,7 +404,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
         let snapshot = await profileRepository.snapshot()
         XCTAssertEqual(snapshot.loadCount, 2)
         XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
-        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        XCTAssertNil(try draftRepository.load())
         XCTAssertEqual(
             fixture.analytics.events,
             [.loginCompleted(restoredSession: true)]
@@ -428,6 +527,46 @@ private struct CoordinatorFixture {
 
 private enum CoordinatorTestError: Error {
     case profileSaveFailed
+    case draftLoadFailed
+    case draftClearFailed
+}
+
+private final class CoordinatorDraftStorage: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data: Data?
+    private var loadFailuresRemaining: Int
+    private var clearFailuresRemaining: Int
+
+    init(
+        loadFailuresRemaining: Int = 0,
+        clearFailuresRemaining: Int = 0
+    ) {
+        self.loadFailuresRemaining = loadFailuresRemaining
+        self.clearFailuresRemaining = clearFailuresRemaining
+    }
+
+    var repository: OnboardingDraftRepository {
+        OnboardingDraftRepository(
+            readData: { [self] in
+                try lock.withLock {
+                    if loadFailuresRemaining > 0 {
+                        loadFailuresRemaining -= 1
+                        throw CoordinatorTestError.draftLoadFailed
+                    }
+                    return data
+                }
+            },
+            writeData: { [self] newData in
+                try lock.withLock {
+                    if newData == nil, clearFailuresRemaining > 0 {
+                        clearFailuresRemaining -= 1
+                        throw CoordinatorTestError.draftClearFailed
+                    }
+                    data = newData
+                }
+            }
+        )
+    }
 }
 
 private enum CoordinatorProfileLoadResult: Sendable {
