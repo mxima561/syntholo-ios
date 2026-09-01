@@ -190,7 +190,7 @@ echo "Running unit tests."
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 232 unit-tests
+assert_test_result "$unit_result" 233 unit-tests
 
 functional_ui_result="$result_directory/FunctionalUI.xcresult"
 echo "Running functional UI tests."
@@ -212,7 +212,7 @@ functional_ui_command_status=0
 
 functional_ui_assertion_status=0
 if [[ -d "$functional_ui_result" ]]; then
-  assert_test_result "$functional_ui_result" 28 functional-ui-tests 1 \
+  assert_test_result "$functional_ui_result" 29 functional-ui-tests 1 \
     || functional_ui_assertion_status=$?
 else
   echo "functional-ui-tests did not produce an xcresult bundle." >&2
@@ -323,7 +323,7 @@ else
       CODE_SIGNING_ALLOWED=NO \
       -resultBundlePath "$onboarding_accessibility_result" \
       -only-testing:SyntholoUITests/OnboardingAccessibilityAuditUITests
-  assert_test_result "$onboarding_accessibility_result" 11 onboarding-accessibility-tests
+  assert_test_result "$onboarding_accessibility_result" 12 onboarding-accessibility-tests
 fi
 
 ./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh

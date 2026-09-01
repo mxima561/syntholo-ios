@@ -6,6 +6,8 @@ enum ProfileRecoveryKind: Equatable {
     case profileCheckFailed
     case savingProfile
     case profileSaveFailed
+    case signingOut
+    case signOutFailed
 }
 
 @MainActor
@@ -197,7 +199,9 @@ final class OnboardingCoordinator {
             await resolveRestoredProfile(for: pendingUser)
         case .profileSaveFailed:
             await retryProfileSave()
-        case .checkingProfile, .savingProfile, nil:
+        case .signOutFailed:
+            await abandonUnrecoverableProfile(user: pendingUser)
+        case .checkingProfile, .savingProfile, .signingOut, nil:
             return
         }
     }
@@ -278,7 +282,6 @@ final class OnboardingCoordinator {
         guard onboardingStore.draft.isReadyForAccount,
               onboardingStore.step == .account
                 || onboardingStore.step == .savingProfile else {
-            profileRecoveryKind = nil
             await abandonUnrecoverableProfile(user: user)
             return
         }
@@ -287,12 +290,23 @@ final class OnboardingCoordinator {
     }
 
     private func abandonUnrecoverableProfile(
-        user _: AuthenticatedUser
+        user: AuthenticatedUser
     ) async {
-        pendingUser = nil
-        profileRecoveryKind = nil
-        onboardingStore.reset()
-        try? await authClient.signOut()
-        session.transition(to: .signedOut)
+        guard pendingUser?.id == user.id else {
+            return
+        }
+
+        profileRecoveryKind = .signingOut
+        session.transition(to: .accountPendingProfile(userID: user.id))
+
+        do {
+            try await authClient.signOut()
+            pendingUser = nil
+            profileRecoveryKind = nil
+            onboardingStore.reset()
+            session.transition(to: .signedOut)
+        } catch {
+            profileRecoveryKind = .signOutFailed
+        }
     }
 }

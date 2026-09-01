@@ -26,7 +26,8 @@ struct OnboardingRootView: View {
         NavigationStack {
             currentStep
                 .toolbar {
-                    if store.canGoBack {
+                    if store.canGoBack,
+                       coordinator.profileRecoveryKind == nil {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("Back", systemImage: "chevron.left") {
                                 store.goBack()
@@ -109,6 +110,24 @@ struct OnboardingRootView: View {
     private func recoveryView(
         for kind: ProfileRecoveryKind
     ) -> some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains(
+            "--profile-recovery-state-proof"
+        ) {
+            recoveryContent(for: kind)
+                .accessibilityValue(profileRecoveryStateProof)
+        } else {
+            recoveryContent(for: kind)
+        }
+        #else
+        recoveryContent(for: kind)
+        #endif
+    }
+
+    @ViewBuilder
+    private func recoveryContent(
+        for kind: ProfileRecoveryKind
+    ) -> some View {
         switch kind {
         case .checkingProfile:
             checkingProfileView
@@ -126,8 +145,42 @@ struct OnboardingRootView: View {
                     await coordinator.retryProfileRecovery()
                 }
             }
+        case .signingOut:
+            signingOutView
+        case .signOutFailed:
+            SignOutRetryView {
+                Task { @MainActor in
+                    await coordinator.retryProfileRecovery()
+                }
+            }
         }
     }
+
+    #if DEBUG
+    private var profileRecoveryStateProof: String {
+        let draft = store.draft
+        return "session=\(profileRecoverySessionState);step=\(store.step.rawValue);draft=ageBand=\(draft.ageBand?.rawValue ?? "nil");goal=\(draft.goal?.rawValue ?? "nil");experience=\(draft.experience?.rawValue ?? "nil");path=\(draft.path?.rawValue ?? "nil");coachMode=\(draft.coachMode.rawValue)"
+    }
+
+    private var profileRecoverySessionState: String {
+        switch coordinator.session.state {
+        case .loading:
+            return "loading"
+        case .signedOut:
+            return "signedOut"
+        case .onboarding:
+            return "onboarding"
+        case .accountPendingProfile:
+            return "accountPendingProfile"
+        case .firstLessonHandoff:
+            return "firstLessonHandoff"
+        case .signedIn:
+            return "signedIn"
+        case .configurationRequired:
+            return "configurationRequired"
+        }
+    }
+    #endif
 
     private var goalView: some View {
         OnboardingPage(
@@ -242,6 +295,19 @@ struct OnboardingRootView: View {
         }
     }
 
+    private var signingOutView: some View {
+        OnboardingPage(
+            eyebrow: "ACCOUNT RECOVERY",
+            progress: 6,
+            title: "Signing out safely",
+            introduction: "Keeping your saved choices until sign out finishes.",
+            accessibilityIdentifier: "onboarding.signing-out"
+        ) {
+            ProgressView("Signing out…")
+                .frame(maxWidth: .infinity, minHeight: 88)
+        }
+    }
+
     private func finishAuthentication(
         _ user: AuthenticatedUser,
         provider: AuthenticationProvider
@@ -304,6 +370,31 @@ private struct ProfileCheckRetryView: View {
                 action: onRetry
             )
             .accessibilityIdentifier("onboarding.profile-check-retry-button")
+        }
+    }
+}
+
+private struct SignOutRetryView: View {
+    let onRetry: () -> Void
+
+    var body: some View {
+        OnboardingPage(
+            eyebrow: "ACCOUNT RECOVERY",
+            progress: 6,
+            title: "We couldn’t finish signing out",
+            introduction: "Your account is still signed in on this device. Try again before continuing.",
+            accessibilityIdentifier: "onboarding.sign-out-retry"
+        ) {
+            Label(
+                "Your learning choices are still safe on this device.",
+                systemImage: "arrow.clockwise.circle"
+            )
+            .font(.body)
+            .foregroundStyle(OnboardingPalette.academicInk)
+            .fixedSize(horizontal: false, vertical: true)
+
+            PrimaryButton(title: "Retry sign out", action: onRetry)
+                .accessibilityIdentifier("onboarding.sign-out-retry-button")
         }
     }
 }
