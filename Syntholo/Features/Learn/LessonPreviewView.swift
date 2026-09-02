@@ -281,12 +281,16 @@ struct LessonPreviewView: View {
 
     @ViewBuilder
     private var previewScroll: some View {
+#if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             scrollContent
                 .scrollEdgeEffectHidden(true, for: .all)
         } else {
             scrollContent
         }
+#else
+        scrollContent
+#endif
     }
 
     private var scrollContent: some View {

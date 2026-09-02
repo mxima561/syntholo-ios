@@ -17,12 +17,22 @@ job_block() {
 assert_job_contract() {
   local job_name=$1
   local block
+  local timeout_minutes
 
   block=$(job_block "$job_name")
   [[ -n "$block" ]] || {
     echo "Missing CI job: $job_name" >&2
     exit 1
   }
+
+  timeout_minutes=$(
+    awk '/^    timeout-minutes:[[:space:]]*[0-9]+[[:space:]]*$/ { print $2 }' <<< "$block"
+  )
+  if [[ ! "$timeout_minutes" =~ ^[0-9]+$ ]] \
+    || (( timeout_minutes < 60 )); then
+    echo "$job_name must allow at least 60 minutes for the canonical gate." >&2
+    exit 1
+  fi
 
   for expected_line in \
     'java-version: "21.0.12+8.0.LTS"' \
