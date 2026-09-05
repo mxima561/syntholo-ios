@@ -441,7 +441,11 @@ final class CurriculumAccessibilityAuditUITests: XCTestCase {
                 file: file,
                 line: line
             )
-            try app.performAccessibilityAudit(for: auditType)
+            try performLoggedAccessibilityAudit(
+                for: auditType,
+                in: app,
+                context: "\(identifier):fully-visible"
+            )
             return
         }
 
@@ -457,7 +461,11 @@ final class CurriculumAccessibilityAuditUITests: XCTestCase {
             file: file,
             line: line
         )
-        try app.performAccessibilityAudit(for: auditType)
+        try performLoggedAccessibilityAudit(
+            for: auditType,
+            in: app,
+            context: "\(identifier):top"
+        )
 
         position(target, at: .bottom, in: viewport, app: app)
         Thread.sleep(forTimeInterval: 0.25)
@@ -471,7 +479,44 @@ final class CurriculumAccessibilityAuditUITests: XCTestCase {
             file: file,
             line: line
         )
-        try app.performAccessibilityAudit(for: auditType)
+        try performLoggedAccessibilityAudit(
+            for: auditType,
+            in: app,
+            context: "\(identifier):bottom"
+        )
+    }
+
+    private func performLoggedAccessibilityAudit(
+        for auditType: XCUIAccessibilityAuditType,
+        in app: XCUIApplication,
+        context: String
+    ) throws {
+        try app.performAccessibilityAudit(for: auditType) { issue in
+            let element = issue.element
+            let details = """
+            Preview accessibility audit issue
+            context=\(context)
+            auditType=\(issue.auditType)
+            compact=\(issue.compactDescription)
+            detailed=\(issue.detailedDescription)
+            identifier=\(element?.identifier ?? "<none>")
+            label=\(element?.label ?? "<none>")
+            frame=\(String(describing: element?.frame))
+            """
+
+            let detailsAttachment = XCTAttachment(string: details)
+            detailsAttachment.name = "Accessibility Audit Issue - \(context)"
+            detailsAttachment.lifetime = .keepAlways
+            self.add(detailsAttachment)
+
+            let screenshot = XCTAttachment(screenshot: app.screenshot())
+            screenshot.name = "UI Snapshot - \(context)"
+            screenshot.lifetime = .keepAlways
+            self.add(screenshot)
+
+            print(details)
+            return false
+        }
     }
 
     private func position(
