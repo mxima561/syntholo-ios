@@ -13,13 +13,16 @@ ui_audit_destination="platform=iOS Simulator,id=00000000-0000-0000-0000-00000000
 ui_audit_simulator_udid="00000000-0000-0000-0000-000000000000"
 
 helper_source=$(sed -n \
-  '/^run_accessibility_audit_with_retry() {$/,/^}$/p' \
+  '/^run_ui_test_with_retry() {$/,/^}$/p' \
   scripts/test.sh)
 reboot_source=$(sed -n \
   '/^reboot_ui_audit_simulator() {$/,/^}$/p' \
   scripts/test.sh)
-if [[ -z "$helper_source" || -z "$reboot_source" ]]; then
-  echo "Could not load the accessibility retry functions from scripts/test.sh." >&2
+report_source=$(sed -n \
+  '/^report_ui_test_failure() {$/,/^}$/p' \
+  scripts/test.sh)
+if [[ -z "$helper_source" || -z "$reboot_source" || -z "$report_source" ]]; then
+  echo "Could not load the UI test retry functions from scripts/test.sh." >&2
   exit 1
 fi
 eval "$reboot_source"
@@ -44,6 +47,10 @@ set -e
 runner_call_count=0
 reboot_call_count=0
 reboot_status=0
+failure_report_call_count=0
+failure_report_result=""
+failure_report_expected_count=""
+failure_report_label=""
 create_partial_on_first_timeout=0
 require_partial_removed_before_retry=0
 active_result_bundle=""
@@ -76,10 +83,21 @@ reboot_ui_audit_simulator() {
   return "$reboot_status"
 }
 
+report_ui_test_failure() {
+  failure_report_call_count=$((failure_report_call_count + 1))
+  failure_report_result=$1
+  failure_report_expected_count=$2
+  failure_report_label=$3
+}
+
 reset_mocks() {
   runner_call_count=0
   reboot_call_count=0
   reboot_status=0
+  failure_report_call_count=0
+  failure_report_result=""
+  failure_report_expected_count=""
+  failure_report_label=""
   create_partial_on_first_timeout=0
   require_partial_removed_before_retry=0
   active_result_bundle=$1
@@ -87,8 +105,18 @@ reset_mocks() {
   runner_statuses=("$@")
 }
 
+assert_equal() {
+  local expected=$1
+  local actual=$2
+  local message=$3
+  if [[ "$actual" != "$expected" ]]; then
+    echo "$message: expected '$expected', got '$actual'." >&2
+    exit 1
+  fi
+}
+
 capture_helper_status() {
-  run_accessibility_audit_with_retry \
+  run_ui_test_with_retry \
     1 \
     "$active_result_bundle" \
     SyntholoUITests/AccessibilityAuditUITests/testSyntheticAudit
@@ -96,7 +124,7 @@ capture_helper_status() {
 
 direct_result="$result_directory/Direct.xcresult"
 reset_mocks "$direct_result" 0
-run_accessibility_audit_with_retry \
+run_ui_test_with_retry \
   1 \
   "$direct_result" \
   SyntholoUITests/AccessibilityAuditUITests/testSyntheticAudit
@@ -110,12 +138,16 @@ failure_status=$?
 set -e
 [[ "$failure_status" -eq 65 ]]
 [[ "$runner_call_count" -eq 1 && "$reboot_call_count" -eq 0 ]]
+assert_equal 1 "$failure_report_call_count" "Direct failure report count"
+assert_equal "$failure_result" "$failure_report_result" "Direct failure result"
+assert_equal 1 "$failure_report_expected_count" "Direct failure expected count"
+assert_equal Failure "$failure_report_label" "Direct failure label"
 
 retry_result="$result_directory/Retry.xcresult"
 reset_mocks "$retry_result" 124 0
 create_partial_on_first_timeout=1
 require_partial_removed_before_retry=1
-run_accessibility_audit_with_retry \
+run_ui_test_with_retry \
   1 \
   "$retry_result" \
   SyntholoUITests/AccessibilityAuditUITests/testSyntheticAudit
@@ -139,6 +171,47 @@ retry_failure_status=$?
 set -e
 [[ "$retry_failure_status" -eq 65 ]]
 [[ "$runner_call_count" -eq 2 && "$reboot_call_count" -eq 1 ]]
+assert_equal 1 "$failure_report_call_count" "Retry failure report count"
+assert_equal "$retry_failure_result" "$failure_report_result" "Retry failure result"
+assert_equal 1 "$failure_report_expected_count" "Retry failure expected count"
+assert_equal RetryFailure "$failure_report_label" "Retry failure label"
+
+assertion_call_count=0
+assertion_result=""
+assertion_expected_count=""
+assertion_label=""
+assertion_diagnostics=""
+assert_test_result() {
+  assertion_call_count=$((assertion_call_count + 1))
+  assertion_result=$1
+  assertion_expected_count=$2
+  assertion_label=$3
+  assertion_diagnostics=$4
+  return 1
+}
+eval "$report_source"
+
+readable_failure_result="$result_directory/ReadableFailure.xcresult"
+mkdir -p "$readable_failure_result"
+touch "$readable_failure_result/Info.plist"
+report_ui_test_failure "$readable_failure_result" 10 functional-CurriculumUITests
+assert_equal 1 "$assertion_call_count" "Readable failure assertion count"
+assert_equal "$readable_failure_result" "$assertion_result" "Readable failure result"
+assert_equal 10 "$assertion_expected_count" "Readable failure expected count"
+assert_equal functional-CurriculumUITests "$assertion_label" "Readable failure label"
+assert_equal 1 "$assertion_diagnostics" "Readable failure diagnostics flag"
+
+incomplete_failure_result="$result_directory/IncompleteFailure.xcresult"
+mkdir -p "$incomplete_failure_result"
+incomplete_message=$(report_ui_test_failure \
+  "$incomplete_failure_result" \
+  1 \
+  IncompleteFailure 2>&1)
+assert_equal 1 "$assertion_call_count" "Incomplete failure assertion count"
+assert_equal \
+  "IncompleteFailure failed without a readable xcresult bundle." \
+  "$incomplete_message" \
+  "Incomplete failure message"
 
 reboot_failure_result="$result_directory/RebootFailure.xcresult"
 reset_mocks "$reboot_failure_result" 124 0
@@ -168,4 +241,4 @@ set -e
 [[ "$nested_status" -eq 64 ]]
 [[ "$runner_call_count" -eq 0 && "$reboot_call_count" -eq 0 ]]
 
-echo "accessibility-retry-tests: timeout-only retry, reboot, cleanup, and path guards passed."
+echo "ui-test-retry-tests: timeout-only retry, diagnostics, reboot, cleanup, and path guards passed."

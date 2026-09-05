@@ -3,6 +3,8 @@ set -euo pipefail
 
 repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workflow="$repository_root/.github/workflows/ios.yml"
+test_script="$repository_root/scripts/test.sh"
+minimum_timeout_minutes=90
 
 job_block() {
   local job_name=$1
@@ -29,8 +31,8 @@ assert_job_contract() {
     awk '/^    timeout-minutes:[[:space:]]*[0-9]+[[:space:]]*$/ { print $2 }' <<< "$block"
   )
   if [[ ! "$timeout_minutes" =~ ^[0-9]+$ ]] \
-    || (( timeout_minutes < 60 )); then
-    echo "$job_name must allow at least 60 minutes for the canonical gate." >&2
+    || (( timeout_minutes < minimum_timeout_minutes )); then
+    echo "$job_name must allow at least $minimum_timeout_minutes minutes for the canonical gate." >&2
     exit 1
   fi
 
@@ -54,4 +56,14 @@ assert_job_contract() {
 assert_job_contract test
 assert_job_contract test-ios-17
 
-echo "ci-configuration-tests: both jobs use available exact toolchains and the canonical gate."
+for functional_group in \
+  'AppShellUITests:2' \
+  'CurriculumUITests:10' \
+  'OnboardingUITests:16'; do
+  if ! grep -Fq -- "\"$functional_group\"" "$test_script"; then
+    echo "The canonical gate is missing functional UI partition: $functional_group" >&2
+    exit 1
+  fi
+done
+
+echo "ci-configuration-tests: both jobs use available exact toolchains and the partitioned canonical gate."
