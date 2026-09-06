@@ -99,6 +99,7 @@ struct PathRecommendationView: View {
                     .padding(.leading, 4)
                 Text(pathRouteLabel)
                     .font(.system(.caption, design: .monospaced, weight: .bold))
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 20)
             }
         }
