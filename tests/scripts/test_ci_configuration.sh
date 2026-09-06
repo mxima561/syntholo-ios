@@ -20,6 +20,8 @@ assert_job_contract() {
   local job_name=$1
   local block
   local timeout_minutes
+  local permissions
+  local checkout
 
   block=$(job_block "$job_name")
   [[ -n "$block" ]] || {
@@ -36,10 +38,50 @@ assert_job_contract() {
     exit 1
   fi
 
+  permissions=$(
+    awk '
+      /^    [^[:space:]]/ {
+        in_permissions = /^    permissions:[[:space:]]*$/
+        if (in_permissions) { print "permissions:" }
+        next
+      }
+      in_permissions && !/^[[:space:]]*(#|$)/ {
+        sub(/^[[:space:]]+/, "")
+        sub(/[[:space:]]+$/, "")
+        print
+      }
+    ' <<< "$block"
+  )
+  if [[ "$permissions" != $'permissions:\ncontents: read' ]]; then
+    echo "$job_name must explicitly grant only contents: read to GITHUB_TOKEN." >&2
+    exit 1
+  fi
+
+  checkout=$(
+    awk '
+      /^      - / {
+        in_checkout = /^      - uses: actions\/checkout@v5[[:space:]]*$/
+        in_with = 0
+        if (in_checkout) { print "checkout:" }
+      }
+      in_checkout && /^        [^[:space:]]/ {
+        in_with = /^        with:[[:space:]]*$/
+      }
+      in_checkout && in_with && /^          (fetch-depth|persist-credentials):/ {
+        sub(/^[[:space:]]+/, "")
+        sub(/[[:space:]]+$/, "")
+        print
+      }
+    ' <<< "$block" | LC_ALL=C sort
+  )
+  if [[ "$checkout" != $'checkout:\nfetch-depth: 0\npersist-credentials: false' ]]; then
+    echo "$job_name must use one checkout with full history and persist-credentials: false." >&2
+    exit 1
+  fi
+
   for expected_line in \
     'java-version: "21.0.12+8.0.LTS"' \
     'uses: actions/checkout@v5' \
-    'fetch-depth: 0' \
     'uses: actions/setup-node@v5' \
     'node-version: 22.22.2' \
     'uses: actions/setup-java@v5' \
@@ -66,4 +108,4 @@ for functional_group in \
   fi
 done
 
-echo "ci-configuration-tests: both jobs use available exact toolchains and the partitioned canonical gate."
+echo "ci-configuration-tests: both jobs restrict checkout credentials and use available exact toolchains and the partitioned canonical gate."
