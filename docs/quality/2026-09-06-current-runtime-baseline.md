@@ -6,6 +6,8 @@
 
 **Outcome:** The full current-runtime canonical invocation passed 487/487 with exit 0, zero failed/skipped/cancelled tests, and no actual runtime retry. Required remote CI, Phase 1/2 exits, and all four launch gates remain open.
 
+**Later follow-up:** A fresh automated review found a real runner cancellation defect after this historical invocation. The [cancellation checkpoint](2026-09-06-test-runner-cancellation.md) records its correction, two honestly retained preflight failures, and a new full 487/487 pass at `c25791f`. Use that checkpoint for the updated runner evidence; this page continues to describe `4aea165`.
+
 ## Exact source and runtime
 
 The command started at clean baseline revision `4aea165f4af2747e060a0fc9db5431f2746ccaca` in PR #3. The difference from the September 5 minimum-runtime-tested application/runner revision `a2b2867adf6d1d0dc3576b2a260afcf145117137` is documentation only. Application, tests, runner, and configuration are unchanged during this invocation; this checkpoint document was drafted while it ran.
