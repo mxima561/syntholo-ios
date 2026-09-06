@@ -136,7 +136,13 @@ run_case() {
       EVIDENCE_SIGNAL="$signal" \
       EVIDENCE_CLOSE_STDERR="$close_stderr" \
       SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1 \
-      bash -c '
+      perl -e '
+        # The harness may itself run under an asynchronous watchdog. Restore
+        # foreground Ctrl-C semantics before Bash installs the runner trap.
+        $SIG{INT} = "DEFAULT";
+        exec @ARGV;
+        die "exec failed: $!\n";
+      ' -- bash -c '
         if [[ "${EVIDENCE_CLOSE_STDERR:-0}" == 1 ]]; then exec 2>&-; fi
         exec bash "$1"
       ' _ "$repository_root/scripts/test.sh" > "$case_root/output.log" 2>&1
