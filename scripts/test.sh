@@ -12,11 +12,27 @@ cd "$repository_root"
 ./tests/scripts/test_accessibility_audit_retry.sh
 ./tests/scripts/test_result_assertions.sh
 ./tests/scripts/test_ci_configuration.sh
+./tests/scripts/test_failure_evidence.sh
 ./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
 
 destination=${SYNTHOLO_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}
 result_directory=$(mktemp -d "${TMPDIR:-/tmp}/syntholo-test-results.XXXXXX")
-trap 'rm -rf "$result_directory"' EXIT
+# Default signal termination can enter EXIT with status zero before the shell
+# reports its signal status. Clean only after the final gate actually completed.
+test_run_completed=0
+finish_test_run() {
+  local exit_status=$?
+  trap - EXIT
+  if [[ "$exit_status" -eq 0 && "$test_run_completed" -eq 1 ]]; then
+    if ! rm -rf -- "$result_directory"; then
+      echo "Could not clean successful test results: $result_directory" >&2 || true
+    fi
+  else
+    echo "Test run did not complete successfully. Retained XCTest results: $result_directory" >&2 || true
+  fi
+  return "$exit_status"
+}
+trap finish_test_run EXIT
 
 simulator_udid_from_result_bundle() {
   local result_bundle=$1
@@ -348,3 +364,4 @@ else
 fi
 
 ./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh
+test_run_completed=1
