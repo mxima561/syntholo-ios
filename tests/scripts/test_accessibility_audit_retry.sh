@@ -31,7 +31,7 @@ eval "$helper_source"
 reboot_runner_call_count=0
 reboot_runner_statuses=(0 73 0)
 
-function ./scripts/run_with_timeout.sh {
+run_timed_command() {
   local status=${reboot_runner_statuses[$reboot_runner_call_count]}
   reboot_runner_call_count=$((reboot_runner_call_count + 1))
   return "$status"
@@ -56,7 +56,7 @@ require_partial_removed_before_retry=0
 active_result_bundle=""
 runner_statuses=()
 
-function ./scripts/run_with_timeout.sh {
+run_timed_command() {
   local status_index=$runner_call_count
   local status=${runner_statuses[$status_index]}
   runner_call_count=$((runner_call_count + 1))

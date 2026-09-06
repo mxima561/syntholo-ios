@@ -5,7 +5,11 @@ repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/syntholo-failure-evidence-tests.XXXXXX")
 active_runner_pid=""
 active_child_pid=""
+active_timeout_pid=""
 cleanup_fixture() {
+  if [[ -n "$active_timeout_pid" ]]; then
+    kill -TERM "$active_timeout_pid" 2>/dev/null || true
+  fi
   if [[ -n "$active_child_pid" ]]; then
     kill -TERM "$active_child_pid" 2>/dev/null || true
   fi
@@ -53,11 +57,9 @@ xcodebuild() {
   printf '%s\n' "${result_bundle%/*}" > "$EVIDENCE_RESULT_PATH"
   if [[ "$result_bundle" == */Unit.xcresult ]]; then
     if [[ -n "${EVIDENCE_CHILD_PID:-}" ]]; then
+      printf '%s\n' "$PPID" > "$EVIDENCE_TIMEOUT_PID"
       /bin/sh -c 'printf "%s\n" "$$" > "$EVIDENCE_CHILD_PID"; exec /bin/sleep 15'
       return
-    fi
-    if [[ "${EVIDENCE_CLOSE_STDERR:-0}" == 1 ]]; then
-      exec 2>&-
     fi
     if [[ -n "${EVIDENCE_SIGNAL:-}" ]]; then
       kill -s "$EVIDENCE_SIGNAL" "$$"
@@ -80,13 +82,35 @@ xcrun() {
     "$count" "$count"
 }
 
-declare -f ./scripts/test_content.sh ./scripts/test_content_publication.sh \
+{
+  declare -f ./scripts/test_content.sh ./scripts/test_content_publication.sh \
   ./scripts/bootstrap.sh ./tests/scripts/test_run_with_timeout.sh \
   ./tests/scripts/test_accessibility_audit_retry.sh \
   ./tests/scripts/test_result_assertions.sh ./tests/scripts/test_ci_configuration.sh \
   ./tests/scripts/test_failure_evidence.sh ./scripts/test_environment_configuration.sh \
-  ./scripts/test_firebase_rules.sh ./scripts/run_with_timeout.sh xcodebuild xcrun \
-  > "$test_root/tool-doubles.sh"
+  ./scripts/test_firebase_rules.sh ./scripts/run_with_timeout.sh xcodebuild xcrun
+  # The cancellation case keeps the real watchdog/process-group boundary.
+  # Only its slow commands are doubled.
+  printf '%s\n' \
+    'if [[ -n "${EVIDENCE_TIMEOUT_RUNNER:-}" ]]; then' \
+    '  unset -f ./scripts/run_with_timeout.sh' \
+    '  if [[ "${EVIDENCE_CANCELLATION_STAGE:-}" == preflight ]]; then' \
+    '    unset -f ./scripts/test_content.sh' \
+    '  fi' \
+    'fi'
+} > "$test_root/tool-doubles.sh"
+mkdir -p "$test_root/bin"
+{
+  printf '#!/usr/bin/env bash\n'
+  declare -f xcodebuild
+  printf 'xcodebuild "$@"\n'
+} > "$test_root/bin/xcodebuild"
+chmod +x "$test_root/bin/xcodebuild"
+printf '%s\n' '#!/bin/sh' \
+  'printf "%s\n" "$PPID" > "$EVIDENCE_TIMEOUT_PID"' \
+  'printf "%s\n" "$$" > "$EVIDENCE_CHILD_PID"' \
+  'exec /bin/sleep 15' > "$test_root/bin/blocking-command"
+chmod +x "$test_root/bin/blocking-command"
 
 run_case() {
   local name=$1
@@ -112,7 +136,10 @@ run_case() {
       EVIDENCE_SIGNAL="$signal" \
       EVIDENCE_CLOSE_STDERR="$close_stderr" \
       SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1 \
-      bash "$repository_root/scripts/test.sh" > "$case_root/output.log" 2>&1
+      bash -c '
+        if [[ "${EVIDENCE_CLOSE_STDERR:-0}" == 1 ]]; then exec 2>&-; fi
+        exec bash "$1"
+      ' _ "$repository_root/scripts/test.sh" > "$case_root/output.log" 2>&1
     actual_status=$?
   } 2>> "$case_root/output.log"
   set -e
@@ -162,51 +189,109 @@ run_case closed_stderr 65 0 "" 65 1 1
 
 # Exercise real asynchronous cancellation while an external child is active.
 # Installing TERM traps on the runner can defer its exit until that child ends.
-case_root="$test_root/active_child"
-mkdir -p "$case_root/tmp"
-TMPDIR="$case_root/tmp" \
-  BASH_ENV="$test_root/tool-doubles.sh" \
-  EVIDENCE_RESULT_PATH="$case_root/result-path" \
-  EVIDENCE_CHILD_PID="$case_root/child-pid" \
-  SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1 \
-  bash "$repository_root/scripts/test.sh" > "$case_root/output.log" 2>&1 &
-active_runner_pid=$!
-for attempt in {1..150}; do
-  [[ -s "$case_root/child-pid" ]] && break
-  /bin/sleep 0.02
-done
-[[ -s "$case_root/child-pid" ]] || {
-  echo "The cancellation fixture did not start its external child." >&2
-  exit 1
-}
-IFS= read -r active_child_pid < "$case_root/child-pid"
-kill -0 "$active_child_pid"
-{
-  kill -TERM "$active_runner_pid"
+for cancellation_case in unit:HUP:129 unit:INT:130 unit:TERM:143 preflight:TERM:143; do
+  IFS=: read -r cancellation_stage cancellation_signal expected_cancellation_status \
+    <<< "$cancellation_case"
+  case_root="$test_root/active_child_${cancellation_stage}_$cancellation_signal"
+  mkdir -p "$case_root/tmp" "$case_root/repository/scripts" \
+    "$case_root/repository/tests/scripts"
+  # Use the unchanged real runner in an isolated fixture checkout. Timed setup
+  # commands are harmless executables; the timeout wrapper itself remains real.
+  cp "$repository_root/scripts/test.sh" "$case_root/repository/scripts/test.sh"
+  ln -s "$repository_root/scripts/run_with_timeout.sh" \
+    "$case_root/repository/scripts/run_with_timeout.sh"
+  for setup_command in scripts/test_content.sh scripts/test_content_publication.sh \
+    scripts/bootstrap.sh scripts/test_environment_configuration.sh \
+    tests/scripts/test_run_with_timeout.sh tests/scripts/test_accessibility_audit_retry.sh \
+    tests/scripts/test_result_assertions.sh tests/scripts/test_ci_configuration.sh \
+    tests/scripts/test_failure_evidence.sh; do
+    if [[ "$cancellation_stage" == preflight && "$setup_command" == scripts/test_content.sh ]]; then
+      ln -s "$test_root/bin/blocking-command" "$case_root/repository/$setup_command"
+    else
+      ln -s /usr/bin/true "$case_root/repository/$setup_command"
+    fi
+  done
+  TMPDIR="$case_root/tmp" \
+    BASH_ENV="$test_root/tool-doubles.sh" \
+    EVIDENCE_RESULT_PATH="$case_root/result-path" \
+    EVIDENCE_CHILD_PID="$case_root/child-pid" \
+    EVIDENCE_CANCELLATION_STAGE="$cancellation_stage" \
+    EVIDENCE_TIMEOUT_RUNNER="$repository_root/scripts/run_with_timeout.sh" \
+    EVIDENCE_TIMEOUT_PID="$case_root/timeout-pid" \
+    PATH="$test_root/bin:$PATH" \
+    SYNTHOLO_TIMEOUT_INTERRUPT_GRACE_SECONDS=0.1 \
+    SYNTHOLO_TIMEOUT_TERMINATE_GRACE_SECONDS=0.1 \
+    SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT=1 \
+    perl -e '
+      $SIG{INT} = "DEFAULT";
+      exec @ARGV;
+      die "exec failed: $!\n";
+    ' -- bash "$case_root/repository/scripts/test.sh" \
+      > "$case_root/output.log" 2>&1 &
+  active_runner_pid=$!
   for attempt in {1..150}; do
-    kill -0 "$active_runner_pid" 2>/dev/null || break
+    [[ -s "$case_root/child-pid" ]] && break
     /bin/sleep 0.02
   done
-} 2>> "$case_root/output.log"
-if kill -0 "$active_runner_pid" 2>/dev/null; then
-  echo "Runner TERM handling waited for the active child instead of terminating." >&2
-  exit 1
-fi
-set +e
-wait "$active_runner_pid" 2>/dev/null
-actual_status=$?
-set -e
-active_runner_pid=""
-[[ "$actual_status" -eq 143 ]] || {
-  echo "Active-child cancellation changed TERM status to $actual_status." >&2
-  exit 1
-}
-IFS= read -r results < "$case_root/result-path"
-[[ -f "$results/Unit.xcresult/Info.plist" ]] || {
-  echo "Active-child cancellation deleted XCTest evidence." >&2
-  exit 1
-}
-grep -Fq -- "$results" "$case_root/output.log"
-kill -TERM "$active_child_pid" 2>/dev/null || true
-active_child_pid=""
-echo "failure-evidence-tests: active-child cancellation passed."
+  [[ -s "$case_root/child-pid" ]] || {
+    echo "The cancellation fixture did not start its external child." >&2
+    sed -n 'p' "$case_root/output.log" >&2
+    exit 1
+  }
+  IFS= read -r active_child_pid < "$case_root/child-pid"
+  IFS= read -r active_timeout_pid < "$case_root/timeout-pid"
+  [[ "$active_child_pid" =~ ^[1-9][0-9]*$ \
+    && "$active_timeout_pid" =~ ^[1-9][0-9]*$ ]] || {
+    echo "The cancellation fixture did not record real process IDs." >&2
+    exit 1
+  }
+  kill -0 "$active_child_pid"
+  {
+    kill -s "$cancellation_signal" "$active_runner_pid"
+    for attempt in {1..150}; do
+      kill -0 "$active_runner_pid" 2>/dev/null || break
+      /bin/sleep 0.02
+    done
+  } 2>> "$case_root/output.log"
+  if kill -0 "$active_runner_pid" 2>/dev/null; then
+    echo "Runner $cancellation_signal handling waited for the active child instead of terminating." >&2
+    exit 1
+  fi
+  set +e
+  wait "$active_runner_pid" 2>/dev/null
+  actual_status=$?
+  set -e
+  active_runner_pid=""
+  [[ "$actual_status" -eq "$expected_cancellation_status" ]] || {
+    echo "Active-child cancellation changed $cancellation_signal status to $actual_status." >&2
+    exit 1
+  }
+  if [[ "$cancellation_stage" == unit ]]; then
+    IFS= read -r results < "$case_root/result-path"
+    [[ -f "$results/Unit.xcresult/Info.plist" ]] || {
+      echo "Active-child cancellation deleted XCTest evidence." >&2
+      exit 1
+    }
+    grep -Fq -- "$results" "$case_root/output.log"
+  else
+    [[ ! -e "$case_root/result-path" ]] || {
+      echo "Preflight cancellation continued into XCTest execution." >&2
+      exit 1
+    }
+  fi
+  for attempt in {1..150}; do
+    kill -0 "$active_child_pid" 2>/dev/null || break
+    /bin/sleep 0.02
+  done
+  if kill -0 "$active_child_pid" 2>/dev/null; then
+    echo "Runner cancellation left its active child running." >&2
+    exit 1
+  fi
+  if kill -0 "$active_timeout_pid" 2>/dev/null; then
+    echo "Runner cancellation left its timeout wrapper running." >&2
+    exit 1
+  fi
+  active_child_pid=""
+  active_timeout_pid=""
+  echo "failure-evidence-tests: $cancellation_stage active-child $cancellation_signal cancellation passed."
+done

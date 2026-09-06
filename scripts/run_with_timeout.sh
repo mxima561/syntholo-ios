@@ -38,10 +38,13 @@ terminate_process_group() {
 
 handle_signal() {
   local exit_status=$1
-  trap - INT TERM HUP
+  # A forwarded signal can follow a signal delivered to the whole group.
+  # Cleanup must finish even when cancellation is requested more than once.
+  trap '' INT TERM HUP
 
   if [[ -n "$command_pid" ]]; then
     terminate_process_group "$command_pid"
+    wait "$command_pid" 2>/dev/null || true
   fi
   if [[ -n "$watchdog_pid" ]]; then
     /bin/kill -TERM "$watchdog_pid" 2>/dev/null || true
@@ -82,13 +85,27 @@ if [[ "$process_group_ready" -ne 1 ]]; then
 fi
 
 (
+  poll_pid=""
+  stop_watchdog() {
+    trap '' INT TERM HUP
+    if [[ -n "$poll_pid" ]]; then
+      /bin/kill -TERM "$poll_pid" 2>/dev/null || true
+      wait "$poll_pid" 2>/dev/null || true
+    fi
+    exit 0
+  }
+  trap stop_watchdog INT TERM HUP
+
   while process_group_exists "$command_pid"; do
     if (( $(date +%s) >= deadline_epoch )); then
       echo "Command timed out after ${timeout_seconds}s (process group ${command_pid})." >&2
       terminate_process_group "$command_pid"
       exit 124
     fi
-    sleep "$poll_interval"
+    sleep "$poll_interval" &
+    poll_pid=$!
+    wait "$poll_pid"
+    poll_pid=""
   done
   exit 0
 ) &

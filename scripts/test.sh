@@ -5,20 +5,64 @@ script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repository_root=$(cd "$script_directory/.." && pwd)
 cd "$repository_root"
 
-./scripts/test_content.sh
-./scripts/run_with_timeout.sh 300 ./scripts/test_content_publication.sh
-./scripts/bootstrap.sh
-./tests/scripts/test_run_with_timeout.sh
-./tests/scripts/test_accessibility_audit_retry.sh
-./tests/scripts/test_result_assertions.sh
-./tests/scripts/test_ci_configuration.sh
-./tests/scripts/test_failure_evidence.sh
-./scripts/run_with_timeout.sh 600 ./scripts/test_environment_configuration.sh
+active_timed_command_pid=""
+timed_command_starting=0
+pending_cancellation_status=0
+
+cancel_test_run() {
+  local exit_status=$1
+  if [[ "$timed_command_starting" -eq 1 ]]; then
+    if [[ "$pending_cancellation_status" -eq 0 ]]; then
+      pending_cancellation_status=$exit_status
+    fi
+    return
+  fi
+  trap '' INT TERM HUP
+  if [[ -n "$active_timed_command_pid" ]]; then
+    # The wrapper owns its isolated command group. Signal only this child;
+    # a background shell can inherit ignored INT, so forward TERM instead.
+    kill -TERM "$active_timed_command_pid" 2>/dev/null || true
+    wait "$active_timed_command_pid" 2>/dev/null || true
+  fi
+  exit "$exit_status"
+}
+
+run_timed_command() {
+  local command_status
+  timed_command_starting=1
+  ./scripts/run_with_timeout.sh "$@" &
+  active_timed_command_pid=$!
+  timed_command_starting=0
+  if [[ "$pending_cancellation_status" -ne 0 ]]; then
+    cancel_test_run "$pending_cancellation_status"
+  fi
+  # A builtin wait lets the signal trap run promptly while the child is busy.
+  if wait "$active_timed_command_pid"; then
+    command_status=0
+  else
+    command_status=$?
+  fi
+  active_timed_command_pid=""
+  return "$command_status"
+}
+
+trap 'cancel_test_run 130' INT
+trap 'cancel_test_run 143' TERM
+trap 'cancel_test_run 129' HUP
+
+run_timed_command 600 ./scripts/test_content.sh
+run_timed_command 300 ./scripts/test_content_publication.sh
+run_timed_command 600 ./scripts/bootstrap.sh
+run_timed_command 600 ./tests/scripts/test_run_with_timeout.sh
+run_timed_command 600 ./tests/scripts/test_accessibility_audit_retry.sh
+run_timed_command 600 ./tests/scripts/test_result_assertions.sh
+run_timed_command 600 ./tests/scripts/test_ci_configuration.sh
+run_timed_command 600 ./tests/scripts/test_failure_evidence.sh
+run_timed_command 600 ./scripts/test_environment_configuration.sh
 
 destination=${SYNTHOLO_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro}
 result_directory=$(mktemp -d "${TMPDIR:-/tmp}/syntholo-test-results.XXXXXX")
-# Default signal termination can enter EXIT with status zero before the shell
-# reports its signal status. Clean only after the final gate actually completed.
+# Clean only after the final gate actually completed successfully.
 test_run_completed=0
 finish_test_run() {
   local exit_status=$?
@@ -61,13 +105,13 @@ simulator_udid_from_result_bundle() {
 reboot_ui_audit_simulator() {
   local simulator_udid=$1
   echo "Rebooting simulator $simulator_udid before the next accessibility audit group."
-  ./scripts/run_with_timeout.sh 120 \
+  run_timed_command 120 \
     xcrun simctl bootstatus "$simulator_udid" -b >/dev/null \
     || return $?
-  ./scripts/run_with_timeout.sh 60 \
+  run_timed_command 60 \
     xcrun simctl shutdown "$simulator_udid" >/dev/null \
     || return $?
-  ./scripts/run_with_timeout.sh 120 \
+  run_timed_command 120 \
     xcrun simctl bootstatus "$simulator_udid" -b >/dev/null \
     || return $?
 }
@@ -100,7 +144,7 @@ run_ui_test_with_retry() {
   fi
 
   for attempt in 1 2; do
-    if ./scripts/run_with_timeout.sh "$timeout_seconds" \
+    if run_timed_command "$timeout_seconds" \
       xcodebuild -quiet test-without-building \
         -project Syntholo.xcodeproj \
         -scheme Syntholo \
@@ -212,7 +256,7 @@ report_ui_test_failure() {
 }
 
 echo "Building all test targets for $destination."
-./scripts/run_with_timeout.sh 600 \
+run_timed_command 600 \
   xcodebuild -quiet build-for-testing \
     -project Syntholo.xcodeproj \
     -scheme Syntholo \
@@ -222,7 +266,7 @@ echo "Building all test targets for $destination."
 
 unit_result="$result_directory/Unit.xcresult"
 echo "Running unit tests."
-./scripts/run_with_timeout.sh 600 \
+run_timed_command 600 \
   xcodebuild -quiet test-without-building \
     -project Syntholo.xcodeproj \
     -scheme Syntholo \
@@ -363,5 +407,5 @@ else
   assert_test_result "$onboarding_accessibility_result" 11 onboarding-accessibility-tests
 fi
 
-./scripts/run_with_timeout.sh 300 ./scripts/test_firebase_rules.sh
+run_timed_command 300 ./scripts/test_firebase_rules.sh
 test_run_completed=1
