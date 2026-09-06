@@ -104,9 +104,10 @@ assert_signal_cleanup() {
     return 1
   }
   for attempt in {1..150}; do
+    # Consume all ps output: early awk exit can SIGPIPE ps under pipefail.
     watchdog_pid=$(ps -axo pid=,ppid=,comm= | awk \
       -v owner="$wrapper_pid" -v command="$command_pid" \
-      '$2 == owner && $1 != command && $3 ~ /bash$/ { print $1; exit }')
+      '!found && $2 == owner && $1 != command && $3 ~ /bash$/ { print $1; found = 1 }')
     [[ -n "$watchdog_pid" ]] && break
     sleep 0.02
   done
