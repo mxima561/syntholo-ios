@@ -69,11 +69,11 @@ These are product or operational inputs, not implementation details. Assign an o
 #### Step 0.1 — Establish source-control provenance
 
 - [x] Initialize the local Git repository without overwriting audited files.
-- [ ] Confirm and configure the intended remote and default remote branch; no remote is currently configured.
+- [x] Confirm and configure the intended remote `https://github.com/mxima561/syntholo-ios.git` and default remote branch `main`. The audited baseline is preserved in PR #3; merging remains subject to its checks.
 - [x] Confirm ignore rules exclude the known local Firebase configuration files from tracking.
 - [x] Adopt and enforce the history/worktree/generated-output/app-bundle secret-scanning policy.
 - [x] Preserve the audited baseline in local commit `b0ce17d` before feature work.
-- [ ] Protect CI-required branches and require the canonical gate.
+- [x] Protect `main` and require the canonical `test` and `test-ios-17` checks from GitHub Actions, including administrators and up-to-date branches. Force pushes and deletion are denied; merge commits remain allowed. September 5 API read-back evidence is recorded in `docs/quality/2026-09-05-baseline-ci-verification.md`.
 
 **Proof:** A clean, traceable baseline exists and secrets are not tracked.
 
@@ -81,7 +81,7 @@ These are product or operational inputs, not implementation details. Assign an o
 
 - [x] Preserve the historical Task 9 baseline: 73 curriculum-content, 32 operator-identity, 38 publication/rollback, 216 unit, 18 functional UI, 28 AppShell accessibility, 11 onboarding accessibility, and 31 Firestore Rules tests—447 total. One final August 30 Task 9 invocation passed uninterrupted on iPhone 17 Pro / iOS 26.5. Task 10 later raised the enforced canonical total to 479: 224 unit, 28 functional UI, and 14 new curriculum accessibility methods alongside the unchanged groups. One uninterrupted Task 10 invocation passed all 479 with zero failure, skip, or cancellation. Task 11 raised the enforced total to 487 by increasing the complete Swift unit target to 232; one uninterrupted invocation on the dedicated iPhone 17 Pro / iOS 26.5 simulator passed all 487 and used no retry. On August 31, exact HEAD `f9d0cb9` passed the same 487/487 current-runtime gate under Xcode 26.6 and iOS 26.5 with zero failure, skip, cancellation, or retry, proving the installed Homebrew/Node 22/Java 21 toolchain as one integrated run. Continue running each AppShell and curriculum accessibility method in its own Xcode session/result bundle with the canonical timeout. The runner may retry only watchdog exit 124 once after a successful reboot; non-timeout failures and a second timeout remain terminal, and no failure, skip, cancellation, retry, or accessibility opt-out may be masked.
 - [x] Run the suite on the current iOS simulator.
-- [ ] Run the suite on the minimum iOS 17 simulator in CI; that runtime is not installed locally.
+- [ ] Run the suite on the minimum iOS 17 simulator in CI. The official iOS 17.5 runtime is now installed locally; after correcting two onboarding large-text defects, September 5 application/runner commit `a2b2867` passed all 487 canonical tests with zero failure, skip, cancellation, or runtime retry. GitHub Actions remains blocked before execution by account billing, so CI's separate Xcode 16.2 lane is still open. See `docs/quality/2026-09-05-baseline-ci-verification.md` for exact evidence scope.
 - [x] Record the Xcode debugger warning as tooling noise only while tests remain unskipped and passing.
 - [x] Review the nine current moderate npm development-tool vulnerabilities without using a forced incompatible downgrade; production dependencies report zero vulnerabilities.
 

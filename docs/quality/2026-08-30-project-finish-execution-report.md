@@ -2,7 +2,7 @@
 
 **Prepared:** August 30, 2026
 
-**Revalidated:** August 31, 2026
+**Revalidated:** August 31, 2026; source-control and minimum-runtime setup updated September 5 in the [baseline verification checkpoint](2026-09-05-baseline-ci-verification.md).
 
 **Product authority:** [`2026-08-25-syntholo-product-bible.md`](../superpowers/specs/2026-08-25-syntholo-product-bible.md)
 
@@ -57,14 +57,14 @@ No Product Bible release gate is currently passed. `GATE-ALPHA`, `GATE-TF-CLOSED
 
 | Dependency | Current status | Required action |
 | --- | --- | --- |
-| Xcode / Swift | Xcode 26.6, Swift 6.3.3, and iOS 26.5 simulator runtime are installed and working | Keep this toolchain for current-OS evidence. Add the CI-pinned Xcode 16.2 / iOS 17.5 lane locally or run it on a configured remote CI host for minimum-OS proof. |
+| Xcode / Swift | Xcode 26.6 and both iOS 26.5 and iOS 17.5 simulator runtimes are installed and working | Local iOS 17.5 tests use Xcode 26.6; the separate CI-pinned Xcode 16.2 / iOS 17.5 lane must still pass. See the dated checkpoint for verification scope. |
 | Homebrew / project tools | Homebrew 6.0.20, XcodeGen 2.46.0, and Gitleaks 8.30.1 are installed | No install required. Use a login shell or explicit Homebrew `PATH` because a bare non-login environment does not expose every Homebrew binary. |
 | Node / npm | Node 22.23.2 and npm 10.9.8 satisfy the repository's Node 22 requirement | No install or upgrade required for this repository. |
 | Java / Firebase emulator | Homebrew OpenJDK 21.0.12.1, Firebase CLI 15.28.1, and Firestore emulator 1.22.0 are installed and the Rules suite passes | No Java install required. The macOS system `java` launcher is not linked, but repository scripts already locate Homebrew Java. |
 | Dependency manager | The app uses Swift Package Manager | CocoaPods is absent and is not required. |
 | Apple execution/signing | No physical iPhone, Apple signing identity, or provisioning profile was detected | Connect a test iPhone and provide the Apple Developer team/signing/provisioning access before physical-device, provider, archive, or TestFlight proof. |
 | Firebase environments | Only emulator-safe configuration is present | Provide separate development and staging Firebase app configuration, approved principals, and provider setup without committing credentials. |
-| Source-control delivery | No Git remote is configured | Provide the repository remote/default branch, then enable protected CI and the required minimum-iOS lane. |
+| Source-control delivery | `origin` is `mxima561/syntholo-ios`; the remote default branch is `main`. Both canonical CI checks are now required by branch protection | Restore GitHub Actions billing, pass all checks, then merge baseline PR #3 with a merge commit and integrate recovery PR #4. |
 
 ## 3. Non-engineering inputs that must be supplied
 
@@ -76,7 +76,7 @@ These inputs can be worked on in parallel, but the associated implementation mus
 4. **Provide Firebase environments.** Supply separate development, staging, and production project IDs/numbers, app records, allowed keyless impersonated publisher principals, App Check setup, provider configuration, and least-privilege access.
 5. **Provide Apple access.** Apple Developer team, signing, App ID/capabilities, Sign in with Apple, App Store Connect record, subscription products, and sandbox testers are required.
 6. **Provide Google auth setup.** Supply the production iOS OAuth client and approved callback/configuration.
-7. **Configure source-control operations.** Choose the Git remote/default branch, configure it, protect release/CI branches, and require the canonical gate.
+7. **Restore CI execution.** The Git remote/default branch and canonical branch protection are configured. GitHub Actions currently rejects jobs before execution because of failed payments or a spending limit. Restore billing, then pass and merge the preserved baseline and recovery work.
 8. **Approve the AI policy.** Name the primary/fallback models, timeout and rate limits, evaluation thresholds, retention rules, and change-control owner before Phase 4 exits.
 9. **Approve privacy/legal/support policy.** Record data-retention and deletion periods, privacy policy, terms, support URL/email, subscription language, AI disclosure, age-rating answers, and vendor data-use restrictions.
 10. **Name launch owners.** Assign product, engineering, curriculum, privacy, accessibility, support, monitoring, content rollback, backend rollback, and app-release rollback owners.
@@ -344,7 +344,7 @@ Stop before original content or staging writes unless all four items are complet
 
 1. Obtain and track all four mandatory content-load inputs: Product's dated specialization, its exact derivative decision file, the owner-supplied staging project/principal allowlist, and dated Product/curriculum authorization.
 2. Product records the complete daily-goal value, assignment-source lifecycle, achievement/counting applicability, DEC-9 edit-effective-time, product-use, allowance, onboarding, legacy, and copy contract; then engineering implements the linked test-first settings plan with no analytics event.
-3. Configure the Git remote/branch protection and minimum-iOS CI runtime; finish non-content development/staging Firebase access without inventing the gated publisher identities.
+3. Restore GitHub Actions billing and obtain both required CI passes, then merge baseline PR #3 and integrate recovery PR #4. The remote, default branch, branch protection, and local iOS 17.5 runtime are configured. Finish non-content development/staging Firebase access without inventing the gated publisher identities.
 4. Complete the remaining Phase 1 live-provider device and physical VoiceOver evidence.
 5. Obtain the six-owner Phase 2 contract approval.
 6. Only after action 1 passes, enable and prove the approved keyless staging operator path.
