@@ -6,6 +6,8 @@
 
 **Outcome:** The final local iOS 17.5 canonical run passed all 487 counted tests without failure, skip, cancellation, or runtime retry. The complete onboarding accessibility class also passed 11/11 on iOS 26.5. Required remote CI and launch gates remain open.
 
+**Subsequent checkpoint:** [September 6 current-runtime verification](2026-09-06-current-runtime-baseline.md) records a new full 487/487 iOS 26.5 invocation at the same executable source. The historical scope of this September 5 report is unchanged.
+
 ## Scope and source
 
 The baseline is preserved in [PR #3](https://github.com/mxima561/syntholo-ios/pull/3), branch `codex/baseline/launch-readiness-reconciliation`. The original full-run application and UI-test source was `f83eb0da9e87f08bfcdfaa036b00cdf819d0cf47`; subsequent onboarding corrections are described below. [PR #4](https://github.com/mxima561/syntholo-ios/pull/4) separately preserves restored-session sign-out recovery at `a8cb4c0a9a8ec1eb983dc4e391725ddf7ab1da54`.
