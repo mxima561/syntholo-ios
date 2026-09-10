@@ -121,6 +121,15 @@ final class OnboardingCoordinator {
         await savePendingProfile()
     }
 
+    /// Entry point for a returning learner who signed in with email, rather
+    /// than one whose credentials were still on the device. The profile lookup
+    /// is the same; only the analytics reporting and the empty-profile
+    /// messaging differ.
+    func signedInToExistingAccount(_ user: AuthenticatedUser) async {
+        authenticationError = nil
+        await resolveRestoredProfile(for: user, restoredSession: false)
+    }
+
     func startOnboarding() {
         guard onboardingStore.canAdvance else {
             return
@@ -253,7 +262,8 @@ final class OnboardingCoordinator {
     }
 
     private func resolveRestoredProfile(
-        for user: AuthenticatedUser
+        for user: AuthenticatedUser,
+        restoredSession: Bool = true
     ) async {
         pendingUser = user
         profileRecoveryKind = .checkingProfile
@@ -263,7 +273,9 @@ final class OnboardingCoordinator {
                 pendingUser = nil
                 profileRecoveryKind = nil
                 onboardingStore.reset()
-                analytics.log(.loginCompleted(restoredSession: true))
+                analytics.log(
+                    .loginCompleted(restoredSession: restoredSession)
+                )
                 session.transition(to: .signedIn)
                 return
             }
@@ -279,7 +291,9 @@ final class OnboardingCoordinator {
               onboardingStore.step == .account
                 || onboardingStore.step == .savingProfile else {
             profileRecoveryKind = nil
-            await abandonUnrecoverableProfile(user: user)
+            await abandonUnrecoverableProfile(
+                explainToLearner: !restoredSession
+            )
             return
         }
 
@@ -287,12 +301,15 @@ final class OnboardingCoordinator {
     }
 
     private func abandonUnrecoverableProfile(
-        user _: AuthenticatedUser
+        explainToLearner: Bool = false
     ) async {
         pendingUser = nil
         profileRecoveryKind = nil
         onboardingStore.reset()
         try? await authClient.signOut()
+        // A learner who just tapped "Sign in" and landed back on the welcome
+        // screen needs to know why. A silently restored session does not.
+        authenticationError = explainToLearner ? .profileSetupRequired : nil
         session.transition(to: .signedOut)
     }
 }

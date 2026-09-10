@@ -370,6 +370,17 @@ private struct UnavailableAuthClient: AuthClient {
         throw AuthError.providerNotConfigured
     }
 
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        throw AuthError.providerNotConfigured
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        throw AuthError.providerNotConfigured
+    }
+
     func signInWithApple(
         idToken: String,
         rawNonce: String,
@@ -425,6 +436,18 @@ private actor UITestAuthClient: AuthClient {
         }
         return authenticatedUser
     }
+
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        if shouldCancelAuthentication {
+            throw AuthError.cancelled
+        }
+        return authenticatedUser
+    }
+
+    func sendPasswordReset(email: String) async throws {}
 
     func signInWithApple(
         idToken: String,

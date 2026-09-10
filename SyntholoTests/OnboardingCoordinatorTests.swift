@@ -486,6 +486,62 @@ final class OnboardingCoordinatorTests: XCTestCase {
         return repository
     }
 
+    func testReturningEmailSignInWithSavedProfileEntersAppAsFreshLogin() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertNil(fixture.coordinator.authenticationError)
+        // restoredSession is false: the learner typed credentials, they were
+        // not revived from the keychain.
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: false)]
+        )
+    }
+
+    func testReturningEmailSignInWithoutProfileExplainsWhyItReturnedToWelcome() async {
+        let authClient = CoordinatorAuthClient(restoredUser: nil)
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+        let signOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(signOutCount, 1)
+    }
+
+    func testSilentRestoreWithoutProfileStaysQuietUnlikeExplicitSignIn() async {
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.restore()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        // No learner action to explain, so no message.
+        XCTAssertNil(fixture.coordinator.authenticationError)
+    }
+
     private func makeCoordinator(
         restoredUser: AuthenticatedUser? = nil,
         authClient: CoordinatorAuthClient? = nil,
@@ -581,15 +637,19 @@ private actor CoordinatorAuthClient: AuthClient {
     }
 
     let restoredUser: AuthenticatedUser?
+    let emailSignInUser: AuthenticatedUser?
     private let restoreDelayNanoseconds: UInt64
     private(set) var restoreCount = 0
     private(set) var signOutCount = 0
+    private(set) var passwordResetCount = 0
 
     init(
         restoredUser: AuthenticatedUser?,
+        emailSignInUser: AuthenticatedUser? = nil,
         restoreDelayNanoseconds: UInt64 = 0
     ) {
         self.restoredUser = restoredUser
+        self.emailSignInUser = emailSignInUser
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
     }
 
@@ -598,6 +658,20 @@ private actor CoordinatorAuthClient: AuthClient {
         password: String
     ) async throws -> AuthenticatedUser {
         throw AuthError.providerUnavailable
+    }
+
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        guard let emailSignInUser else {
+            throw AuthError.invalidCredential
+        }
+        return emailSignInUser
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        passwordResetCount += 1
     }
 
     func signInWithApple(
@@ -629,6 +703,10 @@ private actor CoordinatorAuthClient: AuthClient {
 
     func currentSignOutCount() -> Int {
         signOutCount
+    }
+
+    func currentPasswordResetCount() -> Int {
+        passwordResetCount
     }
 
     func snapshot() -> Snapshot {

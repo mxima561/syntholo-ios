@@ -3,6 +3,10 @@ import SwiftUI
 struct WelcomeView: View {
     let isStartEnabled: Bool
     let onStart: () -> Void
+    /// A returning learner reinstalling the app lands here, not on the account
+    /// step, so sign-in has to be reachable from the very first screen.
+    let onSignIn: () -> Void
+    var notice: AuthError?
 
     var body: some View {
         ScrollView {
@@ -29,9 +33,31 @@ struct WelcomeView: View {
 
                 Spacer(minLength: Space.lg)
 
-                PrimaryButton(title: "Start learning", action: onStart)
-                    .disabled(!isStartEnabled)
-                    .accessibilityIdentifier("onboarding.start")
+                VStack(spacing: Space.sm) {
+                    if let notice, notice.shouldPresentMessage {
+                        Label {
+                            Text(notice.message)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } icon: {
+                            Image(systemName: "info.circle")
+                                .accessibilityHidden(true)
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(OnboardingPalette.correctionCoral)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("onboarding.welcome.notice")
+                    }
+
+                    PrimaryButton(title: "Start learning", action: onStart)
+                        .disabled(!isStartEnabled)
+                        .accessibilityIdentifier("onboarding.start")
+
+                    Button("I already have an account", action: onSignIn)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(OnboardingPalette.lectureBlue)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .accessibilityIdentifier("onboarding.sign-in")
+                }
             }
             .frame(maxWidth: 560, minHeight: 620, alignment: .topLeading)
             .padding(.horizontal, Layout.pageInset)

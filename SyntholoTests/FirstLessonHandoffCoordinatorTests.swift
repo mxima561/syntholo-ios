@@ -382,6 +382,15 @@ private actor ReturningLearnerAuthClient: AuthClient {
         user
     }
 
+    func signInWithEmail(
+        email _: String,
+        password _: String
+    ) async throws -> AuthenticatedUser {
+        user
+    }
+
+    func sendPasswordReset(email _: String) async throws {}
+
     func signInWithApple(
         idToken _: String,
         rawNonce _: String,

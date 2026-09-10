@@ -8,6 +8,7 @@ struct OnboardingRootView: View {
     let onPreviewFirstLesson: () -> Void
 
     @State private var isEmailAuthPresented = false
+    @State private var isEmailSignInPresented = false
 
     init(
         coordinator: OnboardingCoordinator,
@@ -43,10 +44,21 @@ struct OnboardingRootView: View {
         .preferredColorScheme(.light)
         .sheet(isPresented: $isEmailAuthPresented) {
             EmailAuthView(
+                mode: .createAccount,
                 authClient: coordinator.authClient,
                 onAuthenticated: { user in
                     isEmailAuthPresented = false
                     finishAuthentication(user, provider: .password)
+                }
+            )
+        }
+        .sheet(isPresented: $isEmailSignInPresented) {
+            EmailAuthView(
+                mode: .signIn,
+                authClient: coordinator.authClient,
+                onAuthenticated: { user in
+                    isEmailSignInPresented = false
+                    finishSignIn(user)
                 }
             )
         }
@@ -61,7 +73,9 @@ struct OnboardingRootView: View {
             case .welcome:
                 WelcomeView(
                     isStartEnabled: store.canAdvance,
-                    onStart: coordinator.startOnboarding
+                    onStart: coordinator.startOnboarding,
+                    onSignIn: { isEmailSignInPresented = true },
+                    notice: coordinator.authenticationError
                 )
             case .age:
                 AgeConfirmationView(
@@ -92,7 +106,8 @@ struct OnboardingRootView: View {
                     onAuthenticated: finishAuthentication,
                     onContinueWithEmail: {
                         isEmailAuthPresented = true
-                    }
+                    },
+                    onSignIn: { isEmailSignInPresented = true }
                 )
             case .savingProfile:
                 savingProfileView
@@ -248,6 +263,12 @@ struct OnboardingRootView: View {
     ) {
         Task { @MainActor in
             await coordinator.authenticated(user, provider: provider)
+        }
+    }
+
+    private func finishSignIn(_ user: AuthenticatedUser) {
+        Task { @MainActor in
+            await coordinator.signedInToExistingAccount(user)
         }
     }
 }

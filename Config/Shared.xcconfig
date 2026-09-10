@@ -4,4 +4,10 @@ SWIFT_STRICT_CONCURRENCY = complete
 GOOGLE_CLIENT_ID = syntholo-google-signin-not-configured
 GOOGLE_REVERSED_CLIENT_SCHEME = syntholo-google-signin-not-configured
 
+// Apple Developer Team ID used to sign device and archive builds. Left empty so
+// simulator builds and CI keep working without an Apple account. Set it in the
+// ignored Config/Signing.local.xcconfig - see Config/Signing.example.xcconfig.
+SYNTHOLO_DEVELOPMENT_TEAM =
+
 #include? "Firebase.local.xcconfig"
+#include? "Signing.local.xcconfig"

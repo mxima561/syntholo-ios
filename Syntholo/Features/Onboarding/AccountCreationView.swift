@@ -7,6 +7,7 @@ struct AccountCreationView: View {
         AuthenticationProvider
     ) -> Void
     let onContinueWithEmail: () -> Void
+    let onSignIn: () -> Void
 
     @State private var appleCoordinator: AppleSignInCoordinator
     @State private var googleCoordinator: GoogleSignInCoordinator
@@ -25,10 +26,12 @@ struct AccountCreationView: View {
             AuthenticatedUser,
             AuthenticationProvider
         ) -> Void,
-        onContinueWithEmail: @escaping () -> Void
+        onContinueWithEmail: @escaping () -> Void,
+        onSignIn: @escaping () -> Void
     ) {
         self.onAuthenticated = onAuthenticated
         self.onContinueWithEmail = onContinueWithEmail
+        self.onSignIn = onSignIn
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         uiTestAuthClient = arguments.contains("--ui-testing")
@@ -120,6 +123,12 @@ struct AccountCreationView: View {
                     .accessibilityIdentifier("onboarding.auth.error")
                 }
             }
+
+            Button("Already have an account? Sign in", action: onSignIn)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(OnboardingPalette.lectureBlue)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityIdentifier("onboarding.account.sign-in")
 
             Text("Your account stores your learning choices and progress.")
                 .font(.footnote)

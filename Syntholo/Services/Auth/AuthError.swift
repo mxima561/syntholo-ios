@@ -9,6 +9,9 @@ enum AuthError: Error, Equatable, Sendable {
     case accountDisabled
     case invalidCredential
     case networkUnavailable
+    case tooManyRequests
+    /// Signed in successfully, but the account has no learner profile yet.
+    case profileSetupRequired
     case providerNotConfigured
     case providerUnavailable
     case unknown
@@ -33,6 +36,10 @@ enum AuthError: Error, Equatable, Sendable {
             "auth_error_invalid_credential"
         case .networkUnavailable:
             "auth_error_network"
+        case .tooManyRequests:
+            "auth_error_too_many_requests"
+        case .profileSetupRequired:
+            "auth_error_profile_setup_required"
         case .providerNotConfigured:
             "auth_error_provider_not_configured"
         case .providerUnavailable:
@@ -66,8 +73,12 @@ enum AuthError: Error, Equatable, Sendable {
         }
 
         return switch error.code {
-        case 17004, 17009, 17094:
+        // 17011 is "user not found". It maps to the same generic message as a
+        // wrong password so sign-in cannot reveal which emails are registered.
+        case 17004, 17009, 17011, 17094:
             .invalidCredential
+        case 17010:
+            .tooManyRequests
         case 17005:
             .accountDisabled
         case 17006, 17028:
