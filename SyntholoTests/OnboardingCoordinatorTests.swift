@@ -542,6 +542,58 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertNil(fixture.coordinator.authenticationError)
     }
 
+    func testSignOutReturnsToWelcomeOnlyAfterTheBackendConfirms() async throws {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+        await fixture.coordinator.restore()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+
+        try await fixture.coordinator.signOut()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+    }
+
+    func testFailedSignOutKeepsTheLearnerSignedInRatherThanFakingIt() async throws {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            signOutFails: true
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+        await fixture.coordinator.restore()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+
+        do {
+            try await fixture.coordinator.signOut()
+            XCTFail("Expected sign-out to propagate the backend failure")
+        } catch {
+            XCTAssertEqual(AuthError.map(error), .networkUnavailable)
+        }
+
+        // Credentials are still live, so the app must not present itself as
+        // signed out.
+        XCTAssertEqual(fixture.session.state, .signedIn)
+    }
+
     private func makeCoordinator(
         restoredUser: AuthenticatedUser? = nil,
         authClient: CoordinatorAuthClient? = nil,
@@ -638,6 +690,7 @@ private actor CoordinatorAuthClient: AuthClient {
 
     let restoredUser: AuthenticatedUser?
     let emailSignInUser: AuthenticatedUser?
+    private let signOutFails: Bool
     private let restoreDelayNanoseconds: UInt64
     private(set) var restoreCount = 0
     private(set) var signOutCount = 0
@@ -646,10 +699,12 @@ private actor CoordinatorAuthClient: AuthClient {
     init(
         restoredUser: AuthenticatedUser?,
         emailSignInUser: AuthenticatedUser? = nil,
+        signOutFails: Bool = false,
         restoreDelayNanoseconds: UInt64 = 0
     ) {
         self.restoredUser = restoredUser
         self.emailSignInUser = emailSignInUser
+        self.signOutFails = signOutFails
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
     }
 
@@ -699,6 +754,9 @@ private actor CoordinatorAuthClient: AuthClient {
 
     func signOut() async throws {
         signOutCount += 1
+        if signOutFails {
+            throw AuthError.networkUnavailable
+        }
     }
 
     func currentSignOutCount() -> Int {

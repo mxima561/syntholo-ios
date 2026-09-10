@@ -130,6 +130,25 @@ final class OnboardingCoordinator {
         await resolveRestoredProfile(for: user, restoredSession: false)
     }
 
+    /// Signs the learner out from inside the app.
+    ///
+    /// Local state is cleared only after the backend confirms the sign-out. If
+    /// it fails, the session stays signed in and the error is rethrown, rather
+    /// than presenting a signed-out app that still holds live credentials.
+    func signOut() async throws {
+        try await authClient.signOut()
+        pendingUser = nil
+        profileRecoveryKind = nil
+        authenticationError = nil
+        onboardingStore.reset()
+        session.transition(to: .signedOut)
+    }
+
+    /// The address on the current credential, for display on Profile.
+    func currentAccountEmail() async -> String? {
+        await authClient.restoreSession()?.email
+    }
+
     func startOnboarding() {
         guard onboardingStore.canAdvance else {
             return

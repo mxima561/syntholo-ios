@@ -103,7 +103,9 @@ struct RootView: View {
             SocialHomeView()
                 .tabItem { Label("Social", systemImage: "person.2.fill") }
                 .tag(AppRoute.social)
-            ProfileHomeView()
+            ProfileHomeView(
+                coordinator: dependencies.onboardingCoordinator
+            )
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(AppRoute.profile)
         }
