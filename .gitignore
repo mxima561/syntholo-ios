@@ -10,3 +10,5 @@ Config/Secrets.xcconfig
 GoogleService-Info.plist
 Config/Firebase.local.xcconfig
 *.firebase.plist
+Config/Signing.local.xcconfig
+build/

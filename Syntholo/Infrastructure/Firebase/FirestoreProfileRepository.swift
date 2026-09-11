@@ -319,11 +319,11 @@ struct FirestoreProfileRepository: ProfileRepository {
     }
 }
 
-private enum FirestoreProfileDocumentStoreError: Error {
+enum FirestoreProfileDocumentStoreError: Error {
     case unsupportedValue
 }
 
-private final class FirestoreProfileDocumentStore: ProfileDocumentStore,
+final class FirestoreProfileDocumentStore: ProfileDocumentStore,
     @unchecked Sendable {
     private let firestore: Firestore
 
@@ -352,12 +352,9 @@ private final class FirestoreProfileDocumentStore: ProfileDocumentStore,
         try await batch.commit()
     }
 
-    private static func decode(_ value: Any) throws -> ProfileDocumentValue {
+    static func decode(_ value: Any) throws -> ProfileDocumentValue {
         if value is NSNull {
             return .null
-        }
-        if let value = value as? Bool {
-            return .bool(value)
         }
         if let value = value as? String {
             return .string(value)
@@ -368,8 +365,18 @@ private final class FirestoreProfileDocumentStore: ProfileDocumentStore,
         if let value = value as? Timestamp {
             return .timestamp(value.dateValue())
         }
-        if let value = value as? NSNumber {
-            return .integer(value.intValue)
+        // Firestore returns booleans and integers alike as NSNumber, and
+        // `NSNumber(1) as? Bool` succeeds in Swift. Testing for Bool first
+        // therefore decoded schemaVersion: 1 as .bool(true), so every profile
+        // load failed its `.integer` guard with malformedProfileDocuments.
+        // Discriminate on the CoreFoundation type instead.
+        if let number = value as? NSNumber {
+            return CFGetTypeID(number) == CFBooleanGetTypeID()
+                ? .bool(number.boolValue)
+                : .integer(number.intValue)
+        }
+        if let value = value as? Bool {
+            return .bool(value)
         }
         throw FirestoreProfileDocumentStoreError.unsupportedValue
     }

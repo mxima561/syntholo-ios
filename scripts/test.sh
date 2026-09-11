@@ -276,7 +276,7 @@ run_timed_command 600 \
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 232 unit-tests
+assert_test_result "$unit_result" 248 unit-tests
 
 ui_audit_simulator_udid=$(simulator_udid_from_result_bundle "$unit_result")
 ui_audit_destination="platform=iOS Simulator,id=$ui_audit_simulator_udid"
@@ -284,7 +284,7 @@ ui_audit_destination="platform=iOS Simulator,id=$ui_audit_simulator_udid"
 functional_ui_groups=(
   "AppShellUITests:2"
   "CurriculumUITests:10"
-  "OnboardingUITests:16"
+  "OnboardingUITests:17"
 )
 functional_ui_total=0
 echo "Running functional UI tests in isolated class sessions."
@@ -307,11 +307,11 @@ for functional_ui_group in "${functional_ui_groups[@]}"; do
     1
   functional_ui_total=$((functional_ui_total + functional_ui_expected_count))
 done
-if [[ "$functional_ui_total" -ne 28 ]]; then
-  echo "Functional UI partition expected 28 tests, found $functional_ui_total." >&2
+if [[ "$functional_ui_total" -ne 29 ]]; then
+  echo "Functional UI partition expected 29 tests, found $functional_ui_total." >&2
   exit 1
 fi
-echo "functional-ui-tests: 28 passed, 0 failed, 0 skipped."
+echo "functional-ui-tests: 29 passed, 0 failed, 0 skipped."
 
 if [[ "${SYNTHOLO_SKIP_ACCESSIBILITY_AUDIT:-0}" == "1" ]]; then
   echo "Skipping accessibility audits by explicit diagnostic request."
@@ -402,9 +402,9 @@ else
     420 \
     "$onboarding_accessibility_result" \
     SyntholoUITests/OnboardingAccessibilityAuditUITests \
-    11 \
+    12 \
     onboarding-accessibility-tests
-  assert_test_result "$onboarding_accessibility_result" 11 onboarding-accessibility-tests
+  assert_test_result "$onboarding_accessibility_result" 12 onboarding-accessibility-tests
 fi
 
 run_timed_command 300 ./scripts/test_firebase_rules.sh

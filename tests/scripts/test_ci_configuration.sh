@@ -101,7 +101,7 @@ assert_job_contract test-ios-17
 for functional_group in \
   'AppShellUITests:2' \
   'CurriculumUITests:10' \
-  'OnboardingUITests:16'; do
+  'OnboardingUITests:17'; do
   if ! grep -Fq -- "\"$functional_group\"" "$test_script"; then
     echo "The canonical gate is missing functional UI partition: $functional_group" >&2
     exit 1

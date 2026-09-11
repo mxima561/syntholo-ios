@@ -247,7 +247,11 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testUnconfiguredGooglePresentsSetupMessageAndKeepsProvidersVisible() {
-        let app = launchOnboarding()
+        // Forced, so the result does not depend on whether this machine has a
+        // real Config/Firebase.local.xcconfig.
+        let app = launchOnboarding(
+            extraArguments: ["--google-fixture=unconfigured"]
+        )
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
 
         app.buttons["Continue with Google"].tap()
@@ -288,6 +292,28 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["Retry checking profile"].tap()
 
         XCTAssertTrue(app.tabBars.buttons["Learn"].waitForExistence(timeout: 3))
+    }
+
+    func testMissingProfileSignOutFailureRequiresSuccessfulRetry() throws {
+        let app = launchSession(arguments: [
+            "--session-fixture=missing-profile-sign-out-fails-once",
+            "--profile-recovery-state-proof",
+        ])
+        let signingOut = app.descendants(matching: .any)["onboarding.signing-out"]
+        let retry = app.buttons["onboarding.sign-out-retry-button"]
+        let expectedRecoveryState = "session=accountPendingProfile;step=goal;draft=ageBand=18+;goal=nil;experience=nil;path=nil;coachMode=supportive"
+
+        XCTAssertTrue(signingOut.waitForExistence(timeout: 3))
+        XCTAssertEqual(signingOut.value as? String, expectedRecoveryState)
+        XCTAssertTrue(app.staticTexts["Signing out…"].exists)
+        XCTAssertFalse(app.buttons["Back"].exists)
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Start learning"].exists)
+        XCTAssertFalse(app.buttons["Back"].exists)
+        retry.tap()
+
+        XCTAssertTrue(app.buttons["Start learning"].waitForExistence(timeout: 3))
+        XCTAssertFalse(retry.exists)
     }
 
     func testLoadingSessionNeverFlashesLearnBeforeSignedOutRoute() {
@@ -697,6 +723,23 @@ final class OnboardingAccessibilityAuditUITests: XCTestCase {
         )
 
         try audit(app, waitingFor: app.buttons["Retry checking profile"])
+    }
+
+    func testSignOutRecoveryLayoutPassesAccessibilityAudits() throws {
+        let app = launchSession(arguments: [
+            "--session-fixture=missing-profile-sign-out-fails-once",
+            "--profile-recovery-state-proof",
+        ])
+        let signingOut = app.descendants(matching: .any)["onboarding.signing-out"]
+        let retry = app.buttons["onboarding.sign-out-retry-button"]
+        let expectedRecoveryState = "session=accountPendingProfile;step=goal;draft=ageBand=18+;goal=nil;experience=nil;path=nil;coachMode=supportive"
+
+        try audit(app, waitingFor: signingOut)
+        XCTAssertEqual(signingOut.value as? String, expectedRecoveryState)
+        XCTAssertTrue(app.staticTexts["Signing out…"].exists)
+        XCTAssertFalse(app.buttons["Back"].exists)
+        try audit(app, waitingFor: retry)
+        XCTAssertFalse(app.buttons["Back"].exists)
     }
 
     func testFirstLessonHandoffLayoutPassesAccessibilityAudits() throws {

@@ -1,0 +1,4 @@
+// Copy to the ignored Signing.local.xcconfig to sign device and archive builds.
+// Find the Team ID at https://developer.apple.com/account -> Membership details,
+// or in Xcode -> Settings -> Accounts -> your team. It is 10 alphanumeric chars.
+SYNTHOLO_DEVELOPMENT_TEAM = ABCDE12345

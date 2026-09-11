@@ -26,7 +26,23 @@ struct GoogleSignInConfiguration: Sendable, Equatable {
 
     @MainActor
     static var current: GoogleSignInConfiguration {
-        GoogleSignInConfiguration(
+        #if DEBUG
+        // Without this, whether the unconfigured-Google UI test passes depends
+        // on whether the developer happens to have run
+        // scripts/install_firebase_config.sh, which writes real credentials
+        // into the ignored Config/Firebase.local.xcconfig. CI has no such file
+        // and would stay green while local runs failed.
+        if ProcessInfo.processInfo.arguments.contains(
+            "--google-fixture=unconfigured"
+        ) {
+            return GoogleSignInConfiguration(
+                clientID: nil,
+                reversedClientScheme: nil
+            )
+        }
+        #endif
+
+        return GoogleSignInConfiguration(
             clientID: Bundle.main.object(
                 forInfoDictionaryKey: "GIDClientID"
             ) as? String,
