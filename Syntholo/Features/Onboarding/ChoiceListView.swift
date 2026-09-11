@@ -35,12 +35,15 @@ enum OnboardingPalette {
 
 struct ChoiceListItem<ID: Hashable>: Identifiable {
     let id: ID
-    let title: String
-    let detail: LocalizedStringKey
+    let title: LocalizedStringResource
+    let detail: LocalizedStringResource
     let systemImage: String
+    let accessibilityIdentifier: String
 }
 
 struct ChoiceListView<ID: Hashable>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let items: [ChoiceListItem<ID>]
     let selectedID: ID?
     let onSelect: (ID) -> Void
@@ -53,61 +56,84 @@ struct ChoiceListView<ID: Hashable>: View {
                 Button {
                     onSelect(item.id)
                 } label: {
-                    HStack(spacing: Space.md) {
-                        Image(systemName: item.systemImage)
-                            .font(.body.weight(.semibold))
-                            .frame(width: 24)
-                            .foregroundStyle(
-                                isSelected
-                                    ? OnboardingPalette.proofGreen
-                                    : OnboardingPalette.lectureBlue
-                            )
-                            .accessibilityHidden(true)
-
-                        VStack(alignment: .leading, spacing: Space.xs) {
-                            Text(LocalizedStringKey(item.title))
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(OnboardingPalette.academicInk)
-                            Text(item.detail)
-                                .font(.subheadline)
-                                .foregroundStyle(OnboardingPalette.academicInk.opacity(0.78))
-                                .fixedSize(horizontal: false, vertical: true)
+                    choiceContent(item, isSelected: isSelected)
+                        .multilineTextAlignment(.leading)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, minHeight: Layout.minimumControlHeight)
+                        .background(OnboardingPalette.campusPaper)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(
+                                    isSelected
+                                        ? OnboardingPalette.proofGreen
+                                        : OnboardingPalette.academicInk.opacity(0.28),
+                                    lineWidth: isSelected ? 2 : 1
+                                )
                         }
-
-                        Spacer(minLength: Space.sm)
-
-                        Image(systemName: isSelected ? "checkmark" : "chevron.right")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(
-                                isSelected
-                                    ? OnboardingPalette.proofGreen
-                                    : OnboardingPalette.academicInk.opacity(0.66)
-                            )
-                            .accessibilityHidden(true)
-                    }
-                    .multilineTextAlignment(.leading)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, minHeight: Layout.minimumControlHeight)
-                    .background(OnboardingPalette.campusPaper)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(
-                                isSelected
-                                    ? OnboardingPalette.proofGreen
-                                    : OnboardingPalette.academicInk.opacity(0.28),
-                                lineWidth: isSelected ? 2 : 1
-                            )
-                    }
-                    .contentShape(Rectangle())
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
-                .accessibilityIdentifier(item.title)
+                .accessibilityIdentifier(item.accessibilityIdentifier)
                 .accessibilityValue(isSelected ? "Selected" : "Not selected")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
         }
+    }
+
+    @ViewBuilder
+    private func choiceContent(_ item: ChoiceListItem<ID>, isSelected: Bool) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Space.sm) {
+                HStack {
+                    choiceIcon(item, isSelected: isSelected)
+                    Spacer()
+                    selectionIndicator(isSelected: isSelected)
+                }
+                choiceText(item)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            HStack(spacing: Space.md) {
+                choiceIcon(item, isSelected: isSelected)
+                    .frame(width: 24)
+                choiceText(item)
+                Spacer(minLength: Space.sm)
+                selectionIndicator(isSelected: isSelected)
+            }
+        }
+    }
+
+    private func choiceText(_ item: ChoiceListItem<ID>) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Text(item.title)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(OnboardingPalette.academicInk)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(item.detail)
+                .font(.subheadline)
+                .foregroundStyle(OnboardingPalette.academicInk.opacity(0.78))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func choiceIcon(_ item: ChoiceListItem<ID>, isSelected: Bool) -> some View {
+        Image(systemName: item.systemImage)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(
+                isSelected ? OnboardingPalette.proofGreen : OnboardingPalette.lectureBlue
+            )
+            .accessibilityHidden(true)
+    }
+
+    private func selectionIndicator(isSelected: Bool) -> some View {
+        Image(systemName: isSelected ? "checkmark" : "chevron.right")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(
+                isSelected ? OnboardingPalette.proofGreen : OnboardingPalette.academicInk.opacity(0.66)
+            )
+            .accessibilityHidden(true)
     }
 }
 
@@ -131,7 +157,6 @@ struct OnboardingPage<Content: View>: View {
                     VStack(alignment: .leading, spacing: Space.sm) {
                         Text(eyebrow)
                             .font(.system(.caption, design: .monospaced, weight: .semibold))
-                            .textCase(.uppercase)
                             .foregroundStyle(OnboardingPalette.lectureBlue)
                             .fixedSize(horizontal: false, vertical: true)
 

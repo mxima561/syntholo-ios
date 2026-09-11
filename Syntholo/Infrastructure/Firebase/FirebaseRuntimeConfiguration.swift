@@ -4,6 +4,7 @@ import Foundation
 struct FirebaseRuntimeConfiguration: Sendable, Equatable {
     let environment: AppEnvironment
     let projectID: String?
+    let projectNumber: String?
     let useEmulators: Bool
     let isConfigured: Bool
 
@@ -19,6 +20,7 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
         }
         self.environment = environment
         self.projectID = validatedOptions?.projectID
+        self.projectNumber = validatedOptions?.gcmSenderID
         self.useEmulators = useEmulators
         self.isConfigured = validatedOptions != nil
         self.options = validatedOptions
@@ -27,11 +29,13 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
     private init(
         environment: AppEnvironment,
         projectID: String?,
+        projectNumber: String?,
         useEmulators: Bool,
         isConfigured: Bool
     ) {
         self.environment = environment
         self.projectID = projectID
+        self.projectNumber = projectNumber
         self.useEmulators = useEmulators
         self.isConfigured = isConfigured
         self.options = nil
@@ -40,6 +44,7 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
     static let emulator = FirebaseRuntimeConfiguration(
         environment: .development,
         projectID: "syntholo-local",
+        projectNumber: "emulator",
         useEmulators: true,
         isConfigured: true
     )
@@ -97,6 +102,7 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
     ) -> Bool {
         lhs.environment == rhs.environment
             && lhs.projectID == rhs.projectID
+            && lhs.projectNumber == rhs.projectNumber
             && lhs.useEmulators == rhs.useEmulators
             && lhs.isConfigured == rhs.isConfigured
     }
@@ -115,7 +121,9 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
         }
         let googleAppID = options.googleAppID
         let gcmSenderID = options.gcmSenderID
-        guard !googleAppID.isEmpty, !gcmSenderID.isEmpty else {
+        guard !googleAppID.isEmpty,
+              (6...20).contains(gcmSenderID.count),
+              gcmSenderID.utf8.allSatisfy({ (48...57).contains($0) }) else {
             return false
         }
 
@@ -138,6 +146,7 @@ struct FirebaseRuntimeConfiguration: Sendable, Equatable {
         return appIDComponents.count == 4
             && Int(appIDComponents[0]) != nil
             && UInt64(appIDComponents[1]) != nil
+            && appIDComponents[1] == Substring(gcmSenderID)
             && appIDComponents[2] == "ios"
             && !appIDComponents[3].isEmpty
             && appIDComponents[3].unicodeScalars.allSatisfy(

@@ -3,6 +3,8 @@ set -euo pipefail
 
 repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 workflow="$repository_root/.github/workflows/ios.yml"
+test_script="$repository_root/scripts/test.sh"
+minimum_timeout_minutes=90
 
 job_block() {
   local job_name=$1
@@ -17,6 +19,9 @@ job_block() {
 assert_job_contract() {
   local job_name=$1
   local block
+  local timeout_minutes
+  local permissions
+  local checkout
 
   block=$(job_block "$job_name")
   [[ -n "$block" ]] || {
@@ -24,12 +29,63 @@ assert_job_contract() {
     exit 1
   }
 
+  timeout_minutes=$(
+    awk '/^    timeout-minutes:[[:space:]]*[0-9]+[[:space:]]*$/ { print $2 }' <<< "$block"
+  )
+  if [[ ! "$timeout_minutes" =~ ^[0-9]+$ ]] \
+    || (( timeout_minutes < minimum_timeout_minutes )); then
+    echo "$job_name must allow at least $minimum_timeout_minutes minutes for the canonical gate." >&2
+    exit 1
+  fi
+
+  permissions=$(
+    awk '
+      /^    [^[:space:]]/ {
+        in_permissions = /^    permissions:[[:space:]]*$/
+        if (in_permissions) { print "permissions:" }
+        next
+      }
+      in_permissions && !/^[[:space:]]*(#|$)/ {
+        sub(/^[[:space:]]+/, "")
+        sub(/[[:space:]]+$/, "")
+        print
+      }
+    ' <<< "$block"
+  )
+  if [[ "$permissions" != $'permissions:\ncontents: read' ]]; then
+    echo "$job_name must explicitly grant only contents: read to GITHUB_TOKEN." >&2
+    exit 1
+  fi
+
+  checkout=$(
+    awk '
+      /^      - / {
+        in_checkout = /^      - uses: actions\/checkout@v5[[:space:]]*$/
+        in_with = 0
+        if (in_checkout) { print "checkout:" }
+      }
+      in_checkout && /^        [^[:space:]]/ {
+        in_with = /^        with:[[:space:]]*$/
+      }
+      in_checkout && in_with && /^          (fetch-depth|persist-credentials):/ {
+        sub(/^[[:space:]]+/, "")
+        sub(/[[:space:]]+$/, "")
+        print
+      }
+    ' <<< "$block" | LC_ALL=C sort
+  )
+  if [[ "$checkout" != $'checkout:\nfetch-depth: 0\npersist-credentials: false' ]]; then
+    echo "$job_name must use one checkout with full history and persist-credentials: false." >&2
+    exit 1
+  fi
+
   for expected_line in \
     'java-version: "21.0.12+8.0.LTS"' \
     'uses: actions/checkout@v5' \
     'uses: actions/setup-node@v5' \
     'node-version: 22.22.2' \
     'uses: actions/setup-java@v5' \
+    './scripts/install_gitleaks.sh' \
     'test "$(./node_modules/.bin/firebase --version)" = "15.28.1"' \
     'run: ./scripts/test.sh'; do
     if ! grep -Fq -- "$expected_line" <<< "$block"; then
@@ -42,4 +98,14 @@ assert_job_contract() {
 assert_job_contract test
 assert_job_contract test-ios-17
 
-echo "ci-configuration-tests: both jobs use available exact toolchains and the canonical gate."
+for functional_group in \
+  'AppShellUITests:2' \
+  'CurriculumUITests:10' \
+  'OnboardingUITests:17'; do
+  if ! grep -Fq -- "\"$functional_group\"" "$test_script"; then
+    echo "The canonical gate is missing functional UI partition: $functional_group" >&2
+    exit 1
+  fi
+done
+
+echo "ci-configuration-tests: both jobs restrict checkout credentials and use available exact toolchains and the partitioned canonical gate."

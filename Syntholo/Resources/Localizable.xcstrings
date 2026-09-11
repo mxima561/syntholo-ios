@@ -1,270 +1,1976 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Account" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Account" } } } },
-    "Account saved" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Account saved" } } } },
-    "Cancel" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } } } },
-    "Checking profile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking profile" } } } },
-    "Checking your profile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking your profile" } } } },
-    "Create account" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create account" } } } },
-    "Create your account" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create your account" } } } },
-    "Creating account…" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Creating account…" } } } },
-    "Email account" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Email account" } } } },
-    "Email address" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Email address" } } } },
-    "Finish saving your route" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish saving your route" } } } },
-    "Loading Syntholo…" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading Syntholo…" } } } },
-    "Making sure your saved profile is ready." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Making sure your saved profile is ready." } } } },
-    "Not selected" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Not selected" } } } },
-    "Password" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Password" } } } },
-    "Profile check" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Profile check" } } } },
-    "Retry checking profile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry checking profile" } } } },
-    "Retry saving profile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry saving profile" } } } },
-    "Use at least 8 characters." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use at least 8 characters." } } } },
-    "Use your email to save your route and progress." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use your email to save your route and progress." } } } },
-    "We couldn’t check your profile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "We couldn’t check your profile" } } } },
-    "Your account is ready, but your learning route didn’t save." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your account is ready, but your learning route didn’t save." } } } },
-    "Your account is signed in. Check again before we save your learning route." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your account is signed in. Check again before we save your learning route." } } } },
-    "Your choices are safe on this device." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your choices are safe on this device." } } } },
-    "auth_error_account_disabled" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This account is disabled. Contact support for help." } } } },
-    "auth_error_cancelled" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sign-in was canceled." } } } },
-    "auth_error_email_in_use" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "An account already uses this email." } } } },
-    "auth_error_invalid_credential" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "We could not verify that sign-in. Try again." } } } },
-    "auth_error_invalid_email" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Enter a valid email address." } } } },
-    "auth_error_network" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Check your connection and try again." } } } },
-    "auth_error_password_too_short" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use at least 8 characters." } } } },
-    "auth_error_provider_not_configured" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Google sign-in needs local setup. See docs/setup/firebase.md." } } } },
-    "auth_error_provider_unavailable" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This sign-in option is unavailable. Try another one." } } } },
-    "auth_error_unknown" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "We could not create the account. Try again." } } } },
-    "Age requirement" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Age requirement" } } } },
-    "AI FOR CREATION" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI FOR CREATION" } } } },
-    "AI FOR SCHOOL" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI FOR SCHOOL" } } } },
-    "AI FOR WORK" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI FOR WORK" } } } },
-    "AI for Creation" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI for Creation" } } } },
-    "AI for School" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI for School" } } } },
-    "AI for Work" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "AI for Work" } } } },
-    "Back" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } } } },
-    "Beginner-friendly" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Beginner-friendly" } } } },
-    "Build core prompting and checking skills, then apply them to your goal." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Build core prompting and checking skills, then apply them to your goal." } } } },
-    "BUILD WITH AI" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "BUILD WITH AI" } } } },
-    "Build with AI" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Build with AI" } } } },
-    "Choose AI for Creation" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose AI for Creation" } } } },
-    "Choose AI for School" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose AI for School" } } } },
-    "Choose AI for Work" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose AI for Work" } } } },
-    "Choose Build with AI" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Build with AI" } } } },
-    "Choose the work you want to practice first." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose the work you want to practice first." } } } },
-    "Chill" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Chill" } } } },
-    "Close Syntholo" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Close Syntholo" } } } },
-    "Continue with Apple" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue with Apple" } } } },
-    "Continue with email" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue with email" } } } },
-    "Continue with Google" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue with Google" } } } },
-    "Continue with the learner experience." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue with the learner experience." } } } },
-    "Create an account to keep your route and lesson progress." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create an account to keep your route and lesson progress." } } } },
-    "Create with AI" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Create with AI" } } } },
-    "Draft, summarize, and build repeatable work steps." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Draft, summarize, and build repeatable work steps." } } } },
-    "Warm and positive." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Warm and positive." } } } },
-    "Focus on evaluation, automation, and building." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus on evaluation, automation, and building." } } } },
-    "FOUNDATIONS" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "FOUNDATIONS" } } } },
-    "Foundations · Lesson 1" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations · Lesson 1" } } } },
-    "Foundations starts with better prompts" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations starts with better prompts" } } } },
-    "Foundations, then AI for Creation" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations, then AI for Creation" } } } },
-    "Foundations, then AI for School" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations, then AI for School" } } } },
-    "Foundations, then AI for Work" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations, then AI for Work" } } } },
-    "Foundations, then Build with AI" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Foundations, then Build with AI" } } } },
-    "Funny" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Funny" } } } },
-    "How much AI practice have you had?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "How much AI practice have you had?" } } } },
-    "How should your coach sound?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "How should your coach sound?" } } } },
-    "Improve my workflow" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Improve my workflow" } } } },
-    "I’m 13–17" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "I’m 13–17" } } } },
-    "I’m 18 or older" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "I’m 18 or older" } } } },
-    "I’m under 13" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "I’m under 13" } } } },
-    "Calm and low-pressure." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Calm and low-pressure." } } } },
-    "Learn AI by building better judgment." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Learn AI by building better judgment." } } } },
-    "Direct and no-nonsense." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Direct and no-nonsense." } } } },
-    "Orientation · 1/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 1/6" } } } },
-    "Orientation · 2/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 2/6" } } } },
-    "Orientation · 3/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 3/6" } } } },
-    "Orientation · 4/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 4/6" } } } },
-    "Orientation · 5/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 5/6" } } } },
-    "Orientation · 6/6" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orientation · 6/6" } } } },
-    "Other paths" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Other paths" } } } },
-    "Plan and revise writing, images, and media." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Plan and revise writing, images, and media." } } } },
-    "Practice prompting, checking outputs, and responsible use before your first lesson." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Practice prompting, checking outputs, and responsible use before your first lesson." } } } },
-    "Practice stronger prompts and multi-step workflows." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Practice stronger prompts and multi-step workflows." } } } },
-    "Recommended route" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recommended route" } } } },
-    "Regular practice" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Regular practice" } } } },
-    "Research, organize notes, and check AI outputs." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Research, organize notes, and check AI outputs." } } } },
-    "Route ready" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Route ready" } } } },
-    "Save your learning route" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Save your learning route" } } } },
-    "Saving your profile…" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Saving your profile…" } } } },
-    "Saving your route" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Saving your route" } } } },
-    "Selected" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Selected" } } } },
-    "Socratic" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Socratic" } } } },
-    "Some experience" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Some experience" } } } },
-    "Start learning" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start learning" } } } },
-    "Start the first lesson" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start the first lesson" } } } },
-    "Start with Foundations" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start with Foundations" } } } },
-    "Start with prompting, checking, and responsible use." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Start with prompting, checking, and responsible use." } } } },
-    "Strict" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Strict" } } } },
-    "Study smarter" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Study smarter" } } } },
-    "Supportive" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Supportive" } } } },
-    "Syntholo is available to learners age 13 and older. No information was saved." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Syntholo is available to learners age 13 and older. No information was saved." } } } },
-    "Syntholo is for learners age 13 and older." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Syntholo is for learners age 13 and older." } } } },
-    "This changes the tone of feedback, not what gets checked." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This changes the tone of feedback, not what gets checked." } } } },
-    "This sets the starting pace for Foundations." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This sets the starting pace for Foundations." } } } },
-    "Turn an idea into a working tool or prototype." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn an idea into a working tool or prototype." } } } },
-    "Use AI for drafts, summaries, and repeatable workflows." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use AI for drafts, summaries, and repeatable workflows." } } } },
-    "Use AI for research, study plans, and checked explanations." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use AI for research, study plans, and checked explanations." } } } },
-    "Use AI to plan, create, and revise media responsibly." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use AI to plan, create, and revise media responsibly." } } } },
-    "Use AI to prototype, test, and improve working tools." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Use AI to prototype, test, and improve working tools." } } } },
-    "Playful, with light humor." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Playful, with light humor." } } } },
-    "Curious and reflective." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Curious and reflective." } } } },
-    "What do you want to use AI for?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "What do you want to use AI for?" } } } },
-    "Which age range are you in?" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Which age range are you in?" } } } },
-    "You can return when you’re 13." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "You can return when you’re 13." } } } },
-    "Your account stores your learning choices and progress." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your account stores your learning choices and progress." } } } },
-    "Your age range is used only to confirm eligibility." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your age range is used only to confirm eligibility." } } } },
-    "Your first lesson practices a clear request, useful context, and a check for weak output." : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your first lesson practices a clear request, useful context, and a check for weak output." } } } },
-    "Your route" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Your route" } } } },
-    "firebase_setup_required_message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Firebase configuration is missing. See docs/setup/firebase.md."
+  "sourceLanguage": "en",
+  "strings": {
+    "A newer app is required for the latest curriculum. Your saved curriculum remains available below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A newer app is required for the latest curriculum. Your saved curriculum remains available below."
           }
         }
       }
     },
-    "firebase_setup_required_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Setup required"
+    "A newer version of Syntholo is required to view this curriculum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A newer version of Syntholo is required to view this curriculum."
           }
         }
       }
     },
-    "Learn" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Learn"
+    "ACCOUNT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACCOUNT"
           }
         }
       }
     },
-    "Practice" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Practice"
+    "ACCOUNT RECOVERY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACCOUNT RECOVERY"
           }
         }
       }
     },
-    "Practice activities are coming in the next product slice." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Practice activities are coming in the next product slice."
+    "ACCOUNT SAVED": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACCOUNT SAVED"
           }
         }
       }
     },
-    "Practice is coming soon" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Practice is coming soon"
+    "AGE REQUIREMENT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AGE REQUIREMENT"
           }
         }
       }
     },
-    "Profile" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile"
+    "AI FOR CREATION": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI FOR CREATION"
           }
         }
       }
     },
-    "Profile is coming soon" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile is coming soon"
+    "AI FOR SCHOOL": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI FOR SCHOOL"
           }
         }
       }
     },
-    "Profile tools are coming in the next product slice." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Profile tools are coming in the next product slice."
+    "AI FOR WORK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI FOR WORK"
           }
         }
       }
     },
-    "Social" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Social"
+    "AI for Creation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI for Creation"
           }
         }
       }
     },
-    "Social is coming soon" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Social is coming soon"
+    "AI for School": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI for School"
           }
         }
       }
     },
-    "Social learning features are coming in the next product slice." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Social learning features are coming in the next product slice."
+    "AI for Work": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI for Work"
           }
         }
       }
     },
-    "Your learning campus" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your learning campus"
+    "BUILD WITH AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BUILD WITH AI"
           }
         }
       }
     },
-    "Your next lesson and path progress will appear here." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your next lesson and path progress will appear here."
+    "Back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "Beginner-friendly": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beginner-friendly"
+          }
+        }
+      }
+    },
+    "Build core prompting and checking skills, then apply them to your goal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build core prompting and checking skills, then apply them to your goal."
+          }
+        }
+      }
+    },
+    "Build with AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build with AI"
+          }
+        }
+      }
+    },
+    "Calm and low-pressure.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calm and low-pressure."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Catalog version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog version"
+          }
+        }
+      }
+    },
+    "Checking for available programs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking for available programs."
+          }
+        }
+      }
+    },
+    "Checking for updates…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking for updates…"
+          }
+        }
+      }
+    },
+    "Checking profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking profile"
+          }
+        }
+      }
+    },
+    "Checking your profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your profile"
+          }
+        }
+      }
+    },
+    "Chill": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chill"
+          }
+        }
+      }
+    },
+    "Choose AI for Creation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose AI for Creation"
+          }
+        }
+      }
+    },
+    "Choose AI for School": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose AI for School"
+          }
+        }
+      }
+    },
+    "Choose AI for Work": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose AI for Work"
+          }
+        }
+      }
+    },
+    "Choose Build with AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Build with AI"
+          }
+        }
+      }
+    },
+    "Choose an available program to preview its lessons.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an available program to preview its lessons."
+          }
+        }
+      }
+    },
+    "Choose the work you want to practice first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the work you want to practice first."
+          }
+        }
+      }
+    },
+    "Close Syntholo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close Syntholo"
+          }
+        }
+      }
+    },
+    "Concept": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concept"
+          }
+        }
+      }
+    },
+    "Continue with Apple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Apple"
+          }
+        }
+      }
+    },
+    "Continue with Google": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Google"
+          }
+        }
+      }
+    },
+    "Continue with email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with email"
+          }
+        }
+      }
+    },
+    "Continue with the learner experience.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with the learner experience."
+          }
+        }
+      }
+    },
+    "Couldn’t refresh curriculum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t refresh curriculum"
+          }
+        }
+      }
+    },
+    "Create account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create account"
+          }
+        }
+      }
+    },
+    "Create an account to keep your route and lesson progress.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create an account to keep your route and lesson progress."
+          }
+        }
+      }
+    },
+    "Create with AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create with AI"
+          }
+        }
+      }
+    },
+    "Create your account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your account"
+          }
+        }
+      }
+    },
+    "Creating account…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creating account…"
+          }
+        }
+      }
+    },
+    "Criteria": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criteria"
+          }
+        }
+      }
+    },
+    "Curious and reflective.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Curious and reflective."
+          }
+        }
+      }
+    },
+    "Curriculum catalog": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Curriculum catalog"
+          }
+        }
+      }
+    },
+    "Deterministic": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deterministic"
+          }
+        }
+      }
+    },
+    "Diagram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagram"
+          }
+        }
+      }
+    },
+    "Direct and no-nonsense.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct and no-nonsense."
+          }
+        }
+      }
+    },
+    "Draft, summarize, and build repeatable work steps.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft, summarize, and build repeatable work steps."
+          }
+        }
+      }
+    },
+    "Email account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email account"
+          }
+        }
+      }
+    },
+    "Email address": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email address"
+          }
+        }
+      }
+    },
+    "Expected duration": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected duration"
+          }
+        }
+      }
+    },
+    "FOUNDATIONS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FOUNDATIONS"
+          }
+        }
+      }
+    },
+    "Finish saving your route": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish saving your route"
+          }
+        }
+      }
+    },
+    "Focus on evaluation, automation, and building.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus on evaluation, automation, and building."
+          }
+        }
+      }
+    },
+    "Foundations, then AI for Creation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foundations, then AI for Creation"
+          }
+        }
+      }
+    },
+    "Foundations, then AI for School": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foundations, then AI for School"
+          }
+        }
+      }
+    },
+    "Foundations, then AI for Work": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foundations, then AI for Work"
+          }
+        }
+      }
+    },
+    "Foundations, then Build with AI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foundations, then Build with AI"
+          }
+        }
+      }
+    },
+    "Funny": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funny"
+          }
+        }
+      }
+    },
+    "How much AI practice have you had?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How much AI practice have you had?"
+          }
+        }
+      }
+    },
+    "How should your coach sound?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How should your coach sound?"
+          }
+        }
+      }
+    },
+    "Improve my workflow": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improve my workflow"
+          }
+        }
+      }
+    },
+    "I’m 13–17": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’m 13–17"
+          }
+        }
+      }
+    },
+    "I’m 18 or older": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’m 18 or older"
+          }
+        }
+      }
+    },
+    "I’m under 13": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I’m under 13"
+          }
+        }
+      }
+    },
+    "Keeping your saved choices until sign out finishes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeping your saved choices until sign out finishes."
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        }
+      }
+    },
+    "Learn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn"
+          }
+        }
+      }
+    },
+    "Learn AI by building better judgment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn AI by building better judgment."
+          }
+        }
+      }
+    },
+    "Learning content for this language isn’t available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning content for this language isn’t available yet."
+          }
+        }
+      }
+    },
+    "Learning content is unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning content is unavailable"
+          }
+        }
+      }
+    },
+    "Learning content isn’t available right now. Please try again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning content isn’t available right now. Please try again later."
+          }
+        }
+      }
+    },
+    "Lesson version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesson version"
+          }
+        }
+      }
+    },
+    "Lessons": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lessons"
+          }
+        }
+      }
+    },
+    "Loading Syntholo…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading Syntholo…"
+          }
+        }
+      }
+    },
+    "Loading curriculum…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading curriculum…"
+          }
+        }
+      }
+    },
+    "Making sure your saved profile is ready.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Making sure your saved profile is ready."
+          }
+        }
+      }
+    },
+    "Module version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Module version"
+          }
+        }
+      }
+    },
+    "Modules": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modules"
+          }
+        }
+      }
+    },
+    "More modules are arriving": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More modules are arriving"
+          }
+        }
+      }
+    },
+    "No curriculum is published yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No curriculum is published yet"
+          }
+        }
+      }
+    },
+    "Not selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 1/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 1/6"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 2/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 2/6"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 3/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 3/6"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 4/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 4/6"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 5/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 5/6"
+          }
+        }
+      }
+    },
+    "ORIENTATION · 6/6": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ORIENTATION · 6/6"
+          }
+        }
+      }
+    },
+    "Objective": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objective"
+          }
+        }
+      }
+    },
+    "Other paths": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other paths"
+          }
+        }
+      }
+    },
+    "PROFILE CHECK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PROFILE CHECK"
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Plan and revise writing, images, and media.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan and revise writing, images, and media."
+          }
+        }
+      }
+    },
+    "Playful, with light humor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playful, with light humor."
+          }
+        }
+      }
+    },
+    "Practice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice"
+          }
+        }
+      }
+    },
+    "Practice activities are coming in the next product slice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice activities are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Practice is coming soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice is coming soon"
+          }
+        }
+      }
+    },
+    "Practice prompting, checking outputs, and responsible use before your first lesson.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice prompting, checking outputs, and responsible use before your first lesson."
+          }
+        }
+      }
+    },
+    "Practice stronger prompts and multi-step workflows.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice stronger prompts and multi-step workflows."
+          }
+        }
+      }
+    },
+    "Preparing lesson preview…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing lesson preview…"
+          }
+        }
+      }
+    },
+    "Preview the first lesson": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview the first lesson"
+          }
+        }
+      }
+    },
+    "Preview your first lesson": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview your first lesson"
+          }
+        }
+      }
+    },
+    "Profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        }
+      }
+    },
+    "Profile is coming soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile is coming soon"
+          }
+        }
+      }
+    },
+    "Profile tools are coming in the next product slice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile tools are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Program version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Program version"
+          }
+        }
+      }
+    },
+    "Programs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programs"
+          }
+        }
+      }
+    },
+    "Question preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question preview"
+          }
+        }
+      }
+    },
+    "ROUTE READY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ROUTE READY"
+          }
+        }
+      }
+    },
+    "Read-only lesson preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only lesson preview"
+          }
+        }
+      }
+    },
+    "Read-only preview. Answers aren’t collected yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only preview. Answers aren’t collected yet."
+          }
+        }
+      }
+    },
+    "Recommended route": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommended route"
+          }
+        }
+      }
+    },
+    "Regular practice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regular practice"
+          }
+        }
+      }
+    },
+    "Research, organize notes, and check AI outputs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Research, organize notes, and check AI outputs."
+          }
+        }
+      }
+    },
+    "Retry checking profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry checking profile"
+          }
+        }
+      }
+    },
+    "Retry saving profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry saving profile"
+          }
+        }
+      }
+    },
+    "Retry sign out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry sign out"
+          }
+        }
+      }
+    },
+    "Return to Learn and choose an available curriculum item.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Learn and choose an available curriculum item."
+          }
+        }
+      }
+    },
+    "Rubric type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rubric type"
+          }
+        }
+      }
+    },
+    "Rubric version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rubric version"
+          }
+        }
+      }
+    },
+    "Save your learning route": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save your learning route"
+          }
+        }
+      }
+    },
+    "Saved curriculum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved curriculum"
+          }
+        }
+      }
+    },
+    "Saved lessons remain available while Syntholo checks for updates.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved lessons remain available while Syntholo checks for updates."
+          }
+        }
+      }
+    },
+    "Saved setup data wasn’t removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved setup data wasn’t removed"
+          }
+        }
+      }
+    },
+    "Saving your profile…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving your profile…"
+          }
+        }
+      }
+    },
+    "Saving your route": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving your route"
+          }
+        }
+      }
+    },
+    "Selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected"
+          }
+        }
+      }
+    },
+    "Signing out safely": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out safely"
+          }
+        }
+      }
+    },
+    "Signing out…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out…"
+          }
+        }
+      }
+    },
+    "Social": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Social"
+          }
+        }
+      }
+    },
+    "Social is coming soon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Social is coming soon"
+          }
+        }
+      }
+    },
+    "Social learning features are coming in the next product slice.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Social learning features are coming in the next product slice."
+          }
+        }
+      }
+    },
+    "Socratic": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Socratic"
+          }
+        }
+      }
+    },
+    "Some experience": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some experience"
+          }
+        }
+      }
+    },
+    "Start learning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start learning"
+          }
+        }
+      }
+    },
+    "Start with Foundations": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with Foundations"
+          }
+        }
+      }
+    },
+    "Start with prompting, checking, and responsible use.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with prompting, checking, and responsible use."
+          }
+        }
+      }
+    },
+    "Strict": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strict"
+          }
+        }
+      }
+    },
+    "Study smarter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study smarter"
+          }
+        }
+      }
+    },
+    "Supportive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supportive"
+          }
+        }
+      }
+    },
+    "Syntholo is available to learners age 13 and older. No information was saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Syntholo is available to learners age 13 and older. No information was saved."
+          }
+        }
+      }
+    },
+    "Syntholo is for learners age 13 and older.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Syntholo is for learners age 13 and older."
+          }
+        }
+      }
+    },
+    "Text alternative": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text alternative"
+          }
+        }
+      }
+    },
+    "These choices aren’t saved yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These choices aren’t saved yet"
+          }
+        }
+      }
+    },
+    "These read-only criteria describe what the lesson checks without showing answers.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These read-only criteria describe what the lesson checks without showing answers."
+          }
+        }
+      }
+    },
+    "This changes the tone of feedback, not what gets checked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This changes the tone of feedback, not what gets checked."
+          }
+        }
+      }
+    },
+    "This curriculum item is unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This curriculum item is unavailable"
+          }
+        }
+      }
+    },
+    "This program is in the catalog. Its learning modules are coming soon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This program is in the catalog. Its learning modules are coming soon."
+          }
+        }
+      }
+    },
+    "This sets the starting pace for Foundations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This sets the starting pace for Foundations."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Try again to recover any setup choices already stored on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again to recover any setup choices already stored on this device."
+          }
+        }
+      }
+    },
+    "Try preview again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try preview again"
+          }
+        }
+      }
+    },
+    "Turn an idea into a working tool or prototype.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn an idea into a working tool or prototype."
+          }
+        }
+      }
+    },
+    "Update Syntholo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Syntholo"
+          }
+        }
+      }
+    },
+    "Use AI for drafts, summaries, and repeatable workflows.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use AI for drafts, summaries, and repeatable workflows."
+          }
+        }
+      }
+    },
+    "Use AI for research, study plans, and checked explanations.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use AI for research, study plans, and checked explanations."
+          }
+        }
+      }
+    },
+    "Use AI to plan, create, and revise media responsibly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use AI to plan, create, and revise media responsibly."
+          }
+        }
+      }
+    },
+    "Use AI to prototype, test, and improve working tools.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use AI to prototype, test, and improve working tools."
+          }
+        }
+      }
+    },
+    "Use at least 8 characters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least 8 characters."
+          }
+        }
+      }
+    },
+    "Use your email to save your route and progress.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your email to save your route and progress."
+          }
+        }
+      }
+    },
+    "Warm and positive.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warm and positive."
+          }
+        }
+      }
+    },
+    "We couldn’t check saved choices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t check saved choices"
+          }
+        }
+      }
+    },
+    "We couldn’t check your profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t check your profile"
+          }
+        }
+      }
+    },
+    "We couldn’t finish signing out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t finish signing out"
+          }
+        }
+      }
+    },
+    "We couldn’t open the lesson preview. Your place is safe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn’t open the lesson preview. Your place is safe."
+          }
+        }
+      }
+    },
+    "We’ll resolve the exact read-only Foundations lesson version before opening Learn.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We’ll resolve the exact read-only Foundations lesson version before opening Learn."
+          }
+        }
+      }
+    },
+    "What do you want to use AI for?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do you want to use AI for?"
+          }
+        }
+      }
+    },
+    "Which age range are you in?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which age range are you in?"
+          }
+        }
+      }
+    },
+    "YOUR ROUTE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOUR ROUTE"
+          }
+        }
+      }
+    },
+    "You can return when you’re 13.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can return when you’re 13."
+          }
+        }
+      }
+    },
+    "Your account is ready, but your learning route didn’t save.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account is ready, but your learning route didn’t save."
+          }
+        }
+      }
+    },
+    "Your account is signed in. Check again before we save your learning route.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account is signed in. Check again before we save your learning route."
+          }
+        }
+      }
+    },
+    "Your account is still signed in on this device. Try again before continuing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account is still signed in on this device. Try again before continuing."
+          }
+        }
+      }
+    },
+    "Your account stores your learning choices and progress.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account stores your learning choices and progress."
+          }
+        }
+      }
+    },
+    "Your age range is used only to confirm eligibility.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your age range is used only to confirm eligibility."
+          }
+        }
+      }
+    },
+    "Your choices are safe on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your choices are safe on this device."
+          }
+        }
+      }
+    },
+    "Your current setup is safe. Try again to remove the old draft from this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current setup is safe. Try again to remove the old draft from this device."
+          }
+        }
+      }
+    },
+    "Your learning choices are still safe on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your learning choices are still safe on this device."
+          }
+        }
+      }
+    },
+    "Your place is safe. Check your connection and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your place is safe. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "Your saved lessons remain available. Try again when you’re ready.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved lessons remain available. Try again when you’re ready."
+          }
+        }
+      }
+    },
+    "Your selection is still here. Try again to keep it after you close the app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your selection is still here. Try again to keep it after you close the app."
+          }
+        }
+      }
+    },
+    "auth_error_account_disabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This account is disabled. Contact support for help."
+          }
+        }
+      }
+    },
+    "auth_error_cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in was canceled."
+          }
+        }
+      }
+    },
+    "auth_error_email_in_use": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An account already uses this email."
+          }
+        }
+      }
+    },
+    "auth_error_invalid_credential": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not verify that sign-in. Try again."
+          }
+        }
+      }
+    },
+    "auth_error_invalid_email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid email address."
+          }
+        }
+      }
+    },
+    "auth_error_network": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your connection and try again."
+          }
+        }
+      }
+    },
+    "auth_error_password_too_short": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least 8 characters."
+          }
+        }
+      }
+    },
+    "auth_error_profile_setup_required": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That account doesn’t have a learning route yet. Set one up to continue."
+          }
+        }
+      }
+    },
+    "auth_error_provider_not_configured": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google sign-in needs local setup. See docs/setup/firebase.md."
+          }
+        }
+      }
+    },
+    "auth_error_provider_unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This sign-in option is unavailable. Try another one."
+          }
+        }
+      }
+    },
+    "auth_error_too_many_requests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts. Wait a moment and try again."
+          }
+        }
+      }
+    },
+    "auth_error_unknown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not create the account. Try again."
+          }
+        }
+      }
+    },
+    "firebase_setup_required_message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firebase configuration is missing. See docs/setup/firebase.md."
+          }
+        }
+      }
+    },
+    "firebase_setup_required_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setup required"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

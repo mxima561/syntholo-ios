@@ -1,0 +1,216 @@
+{
+  "locale": "en-US",
+  "catalogPointerID": "en-us",
+  "catalogVersion": {
+    "catalogVersionID": "catalog--en-us--v1",
+    "version": 1,
+    "locale": "en-US",
+    "publicationState": "published",
+    "schemaVersion": 1,
+    "minimumClientSchemaVersion": 1,
+    "programEntries": [
+      {
+        "programPointerID": "ai-foundations--en-us",
+        "programVersionID": "ai-foundations--en-us--v1"
+      }
+    ],
+    "contentDigest": "09ee3bde8966cf57e8c06c11e70c818661a30b1344bee08044dcffcda145ac0f",
+    "publishedAt": {
+      "seconds": 1800000000,
+      "nanoseconds": 123456789
+    }
+  },
+  "programVersions": [
+    {
+      "programVersionID": "ai-foundations--en-us--v1",
+      "programID": "ai-foundations",
+      "version": 1,
+      "locale": "en-US",
+      "publicationState": "published",
+      "title": "SYNTHETIC-CONTRACT-FIXTURE-NEVER-PUBLISH",
+      "promise": "Synthetic placeholder program used only to validate the curriculum contract.",
+      "catalogState": "available",
+      "schemaVersion": 1,
+      "minimumClientSchemaVersion": 1,
+      "moduleVersionIDs": [
+        "synthetic-module--en-us--v1"
+      ],
+      "firstLessonVersionID": "synthetic-lesson--en-us--v1",
+      "contentDigest": "7da67775c59207f426fd295c3e322644eb3b39b23422aef6858871c01181c170",
+      "publishedAt": {
+        "seconds": 1800000000,
+        "nanoseconds": 123456789
+      }
+    }
+  ],
+  "moduleVersions": [
+    {
+      "moduleVersionID": "synthetic-module--en-us--v1",
+      "moduleID": "synthetic-module",
+      "programID": "ai-foundations",
+      "version": 1,
+      "locale": "en-US",
+      "publicationState": "published",
+      "title": "Synthetic contract module",
+      "summary": "Synthetic placeholder module used only for graph validation.",
+      "schemaVersion": 1,
+      "minimumClientSchemaVersion": 1,
+      "lessonVersionIDs": [
+        "synthetic-lesson--en-us--v1"
+      ],
+      "contentDigest": "fb1206946b1146077ae57ef958d56e3c1c4aefff8baece1a04af7f6802b598c6",
+      "publishedAt": {
+        "seconds": 1800000000,
+        "nanoseconds": 123456789
+      }
+    }
+  ],
+  "lessonVersions": [
+    {
+      "lessonVersionID": "synthetic-lesson--en-us--v1",
+      "lessonID": "synthetic-lesson",
+      "programID": "ai-foundations",
+      "moduleID": "synthetic-module",
+      "version": 1,
+      "locale": "en-US",
+      "publicationState": "published",
+      "title": "Synthetic contract lesson",
+      "objective": "Validate a synthetic placeholder graph without supplying editorial curriculum.",
+      "expectedDurationMinutes": 1,
+      "prerequisiteLessonIDs": [],
+      "completionRule": {
+        "kind": "requiredBlocksCorrect",
+        "requiredBlockIDs": [
+          "synthetic-question"
+        ],
+        "minimumCorrectCount": 1,
+        "allowsRevision": true
+      },
+      "blocks": [
+        {
+          "blockID": "synthetic-concept",
+          "type": "conceptText",
+          "order": 0,
+          "heading": "Synthetic placeholder concept",
+          "body": "Synthetic placeholder text for contract validation only. It contains no learner-facing curriculum content."
+        },
+        {
+          "blockID": "synthetic-diagram-block",
+          "type": "stillDiagram",
+          "order": 1,
+          "title": "Synthetic placeholder diagram",
+          "assetVersionID": "synthetic-diagram--en-us--v1"
+        },
+        {
+          "blockID": "synthetic-question",
+          "type": "singleAnswerQuestion",
+          "order": 2,
+          "prompt": "Which synthetic option is the fixture's deterministic contract sentinel?",
+          "options": [
+            {
+              "optionID": "synthetic-option-a",
+              "text": "Synthetic option A"
+            },
+            {
+              "optionID": "synthetic-option-b",
+              "text": "Synthetic option B"
+            }
+          ]
+        }
+      ],
+      "rubricVersionID": "synthetic-rubric--en-us--v1",
+      "assetVersionIDs": [
+        "synthetic-diagram--en-us--v1"
+      ],
+      "schemaVersion": 1,
+      "minimumClientSchemaVersion": 1,
+      "contentDigest": "1dcc5c24fcc01fe41912750effd9252ff956e7e396c2c2774b5223cab87cfbb8",
+      "publishedAt": {
+        "seconds": 1800000000,
+        "nanoseconds": 123456789
+      }
+    }
+  ],
+  "rubricVersions": [
+    {
+      "rubricVersionID": "synthetic-rubric--en-us--v1",
+      "rubricID": "synthetic-rubric",
+      "version": 1,
+      "locale": "en-US",
+      "publicationState": "published",
+      "kind": "deterministic",
+      "criteria": [
+        {
+          "criterionID": "synthetic-correctness",
+          "title": "Synthetic contract correctness",
+          "description": "Synthetic placeholder criterion used only to validate deterministic scoring references.",
+          "maxScore": 1
+        }
+      ],
+      "clientScoringContract": {
+        "kind": "singleAnswer",
+        "questionBlockID": "synthetic-question",
+        "correctOptionID": "synthetic-option-a",
+        "correctFeedback": "Synthetic correct-feedback placeholder.",
+        "incorrectFeedback": "Synthetic incorrect-feedback placeholder."
+      },
+      "evaluationContractVersionID": "synthetic-evaluation--en-us--v1",
+      "schemaVersion": 1,
+      "minimumClientSchemaVersion": 1,
+      "contentDigest": "955d5ffbab96e7274f64b9b8b22fb835361851975d9c916b0a2325dca1f4819d",
+      "publishedAt": {
+        "seconds": 1800000000,
+        "nanoseconds": 123456789
+      }
+    }
+  ],
+  "assetVersions": [
+    {
+      "assetVersionID": "synthetic-diagram--en-us--v1",
+      "assetID": "synthetic-diagram",
+      "version": 1,
+      "locale": "en-US",
+      "publicationState": "published",
+      "kind": "diagramData",
+      "mimeType": "application/vnd.syntholo.diagram+json",
+      "payload": {
+        "nodes": [
+          {
+            "nodeID": "synthetic-node-a",
+            "label": "Synthetic input",
+            "emphasis": "normal"
+          },
+          {
+            "nodeID": "synthetic-node-b",
+            "label": "Synthetic output",
+            "emphasis": "accent"
+          }
+        ],
+        "connectors": [
+          {
+            "connectorID": "synthetic-connector",
+            "fromNodeID": "synthetic-node-a",
+            "toNodeID": "synthetic-node-b",
+            "label": null
+          }
+        ]
+      },
+      "accessibilityDescription": "Synthetic diagram with a placeholder input connected to a placeholder output.",
+      "rights": {
+        "origin": "original",
+        "creator": "Syntholo synthetic test fixture",
+        "sourceURL": null,
+        "license": null
+      },
+      "schemaVersion": 1,
+      "minimumClientSchemaVersion": 1,
+      "byteCount": 292,
+      "payloadDigest": "69b953e837b2a1721ea158884fefc2162a65a63497e93731743ceae5f1d78018",
+      "contentDigest": "8eb3f6dfe240e7be691a74c48de572519284e29bace1ae601257bc0140d00515",
+      "publishedAt": {
+        "seconds": 1800000000,
+        "nanoseconds": 123456789
+      }
+    }
+  ]
+}

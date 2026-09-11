@@ -8,11 +8,18 @@ on:
 jobs:
   test:
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 90
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v5
-      - name: Install XcodeGen
-        run: brew bundle
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned repository tools
+        run: |
+          brew bundle
+          ./scripts/install_gitleaks.sh
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
@@ -37,11 +44,18 @@ jobs:
 
   test-ios-17:
     runs-on: macos-14
-    timeout-minutes: 30
+    timeout-minutes: 90
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v5
-      - name: Install XcodeGen
-        run: brew bundle
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned repository tools
+        run: |
+          brew bundle
+          ./scripts/install_gitleaks.sh
       - name: Set up Node
         uses: actions/setup-node@v5
         with:

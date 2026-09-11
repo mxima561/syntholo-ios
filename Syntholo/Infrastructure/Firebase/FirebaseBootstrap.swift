@@ -5,7 +5,16 @@ import Foundation
 
 @MainActor
 enum FirebaseBootstrap {
-    static func configure(_ configuration: FirebaseRuntimeConfiguration) -> Bool {
+    static func configure(
+        _ configuration: FirebaseRuntimeConfiguration,
+        arguments: [String] = ProcessInfo.processInfo.arguments
+    ) -> Bool {
+        #if DEBUG
+        guard !arguments.contains("--ui-testing") else {
+            return false
+        }
+        #endif
+
         guard configuration.isConfigured else {
             return false
         }

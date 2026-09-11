@@ -411,3 +411,32 @@ This is intentional. Before a signed deployment, follow `docs/setup/firebase.md`
 enable Apple, Google, and Email/Password in each Firebase project, install the
 ignored environment files, and run live provider smoke tests. Never copy those
 credentials into this document, source control, fixtures, logs, or CI output.
+
+## August 30 post-baseline reliability checkpoint
+
+This addendum preserves the historical Phase 1 evidence above and records the
+current local checkpoint after baseline commit `b0ce17d`. The complete
+canonical `./scripts/test.sh` gate passed on the installed current simulator
+with exactly 106 unit, 18 functional UI, 28 AppShell accessibility, 11
+onboarding accessibility, and 20 Firestore Rules tests. Every suite reported
+zero failures, skips, and cancellations. The result-assertion regression
+harness now proves those exact 106/18 XCTest boundaries and rejects 105/17,
+skipped, and failed summaries.
+
+The checkpoint closes the local Phase 1 persistence and localization debt:
+onboarding draft load, save, and clear failures are typed and recoverable;
+retry preserves the exact learner selection snapshot; a failed draft load
+blocks unsafe onboarding/session restoration until recovery; clear retry
+survives the first-lesson handoff; and the recovery action is exposed through
+an accessible root banner with an iOS 17-compatible announcement. Fixed enum
+copy now uses `LocalizedStringResource`, while intended uppercase headings are
+authored in the String Catalog instead of transformed at runtime. Coordinator
+restoration remains single-flight.
+
+This is a local engineering checkpoint, not Phase 1 exit evidence. The local
+machine has Xcode 26.6, Swift 6.3.3, and an iOS 26.5 simulator, but no iOS 17
+runtime. Minimum-iOS CI, development/staging Firebase projects, physical-device
+Apple/Google/email verification, and physical VoiceOver checks remain open.
+Daily-goal selection and its editable settings destination also remain open.
+No Git remote is configured, so remote branch protection and replacement CI
+cannot be claimed from this repository state.

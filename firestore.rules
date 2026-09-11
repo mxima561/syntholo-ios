@@ -10,6 +10,348 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userID;
     }
 
+    function hasExactKeys(data, keys) {
+      return data.keys().hasOnly(keys)
+        && data.keys().hasAll(keys);
+    }
+
+    function isBoundedString(value, minimum, maximum) {
+      return value is string
+        && value.size() >= minimum
+        && value.size() <= maximum;
+    }
+
+    function isPositiveBoundedInteger(value) {
+      return value is int
+        && value >= 1
+        && value <= 2147483647;
+    }
+
+    function isSchemaVersionOne(value) {
+      return value is int && value == 1;
+    }
+
+    function isLaunchLocale(value) {
+      return value is string && value == 'en-US';
+    }
+
+    function isLaunchLocaleToken(value) {
+      return value is string && value == 'en-us';
+    }
+
+    function isStableCurriculumID(value) {
+      return isBoundedString(value, 3, 64)
+        && value.matches('^[a-z0-9]+(?:-[a-z0-9]+)*$');
+    }
+
+    // Schema v1 is fixed to en-US/en-us. These derived maxima combine the
+    // 64-character stable-ID bound with the exact launch-locale suffix.
+    function isCurriculumPointerID(value) {
+      return isBoundedString(value, 10, 71)
+        && value.matches('^[a-z0-9]+(?:-[a-z0-9]+)*--en-us$');
+    }
+
+    function isCurriculumVersionID(value) {
+      return isBoundedString(value, 14, 84)
+        && value.matches(
+          '^[a-z0-9]+(?:-[a-z0-9]+)*--en-us--v[1-9][0-9]{0,9}$'
+        )
+        && value.matches(
+          '^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]--en-us--v[1-9][0-9]{0,9}$'
+        );
+    }
+
+    function isCatalogVersionID(value) {
+      return isCurriculumVersionID(value)
+        && value.matches('^catalog--en-us--v[1-9][0-9]{0,9}$');
+    }
+
+    function isSHA256Digest(value) {
+      return value is string
+        && value.size() == 64
+        && value.matches('^[a-f0-9]{64}$');
+    }
+
+    function isBoundedList(value, minimum, maximum) {
+      return value is list
+        && value.size() >= minimum
+        && value.size() <= maximum;
+    }
+
+    function isValidFeatureConfiguration(data) {
+      return hasExactKeys(data, [
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'defaultLocale',
+          'supportedLocales',
+          'catalogPointerIDs',
+          'updatedAt'
+        ])
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isLaunchLocale(data.defaultLocale)
+        && isBoundedList(data.supportedLocales, 1, 10)
+        && data.supportedLocales.size() == 1
+        && data.supportedLocales[0] == 'en-US'
+        && isBoundedList(data.catalogPointerIDs, 1, 10)
+        && data.catalogPointerIDs.size() == 1
+        && data.catalogPointerIDs[0] == 'en-us'
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCatalogPointer(data, localeToken) {
+      return isLaunchLocaleToken(localeToken)
+        && hasExactKeys(data, [
+          'locale',
+          'publishedCatalogVersionID',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'updatedAt'
+        ])
+        && isLaunchLocale(data.locale)
+        && isCatalogVersionID(data.publishedCatalogVersionID)
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCatalogVersion(data, catalogVersionID) {
+      return isCatalogVersionID(catalogVersionID)
+        && hasExactKeys(data, [
+          'catalogVersionID',
+          'version',
+          'locale',
+          'publicationState',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'programEntries',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.catalogVersionID == catalogVersionID
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isBoundedList(data.programEntries, 1, 5)
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
+    function isValidProgramPointer(data, programPointerID) {
+      return isCurriculumPointerID(programPointerID)
+        && hasExactKeys(data, [
+          'programPointerID',
+          'programID',
+          'locale',
+          'publishedVersionID',
+          'schemaVersion',
+          'updatedAt'
+        ])
+        && data.programPointerID == programPointerID
+        && isStableCurriculumID(data.programID)
+        && isLaunchLocale(data.locale)
+        && isCurriculumVersionID(data.publishedVersionID)
+        && isSchemaVersionOne(data.schemaVersion)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProgramVersion(data, programVersionID) {
+      return isCurriculumVersionID(programVersionID)
+        && hasExactKeys(data, [
+          'programVersionID',
+          'programID',
+          'version',
+          'locale',
+          'publicationState',
+          'title',
+          'promise',
+          'catalogState',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'moduleVersionIDs',
+          'firstLessonVersionID',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.programVersionID == programVersionID
+        && isStableCurriculumID(data.programID)
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && isBoundedString(data.title, 1, 120)
+        && isBoundedString(data.promise, 1, 500)
+        && data.catalogState in ['available', 'comingSoon']
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isBoundedList(data.moduleVersionIDs, 0, 24)
+        && (
+          (
+            data.catalogState == 'available'
+            && data.moduleVersionIDs.size() >= 1
+            && isCurriculumVersionID(data.firstLessonVersionID)
+          )
+          || (
+            data.catalogState == 'comingSoon'
+            && data.moduleVersionIDs.size() == 0
+            && data.firstLessonVersionID == null
+          )
+        )
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
+    function isValidModuleVersion(data, moduleVersionID) {
+      return isCurriculumVersionID(moduleVersionID)
+        && hasExactKeys(data, [
+          'moduleVersionID',
+          'moduleID',
+          'programID',
+          'version',
+          'locale',
+          'publicationState',
+          'title',
+          'summary',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'lessonVersionIDs',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.moduleVersionID == moduleVersionID
+        && isStableCurriculumID(data.moduleID)
+        && isStableCurriculumID(data.programID)
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && isBoundedString(data.title, 1, 120)
+        && isBoundedString(data.summary, 1, 500)
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isBoundedList(data.lessonVersionIDs, 1, 64)
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
+    function isValidLessonVersion(data, lessonVersionID) {
+      return isCurriculumVersionID(lessonVersionID)
+        && hasExactKeys(data, [
+          'lessonVersionID',
+          'lessonID',
+          'programID',
+          'moduleID',
+          'version',
+          'locale',
+          'publicationState',
+          'title',
+          'objective',
+          'expectedDurationMinutes',
+          'prerequisiteLessonIDs',
+          'completionRule',
+          'blocks',
+          'rubricVersionID',
+          'assetVersionIDs',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.lessonVersionID == lessonVersionID
+        && isStableCurriculumID(data.lessonID)
+        && isStableCurriculumID(data.programID)
+        && isStableCurriculumID(data.moduleID)
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && isBoundedString(data.title, 1, 120)
+        && isBoundedString(data.objective, 1, 500)
+        && data.expectedDurationMinutes is int
+        && data.expectedDurationMinutes >= 1
+        && data.expectedDurationMinutes <= 180
+        && isBoundedList(data.prerequisiteLessonIDs, 0, 16)
+        && data.completionRule is map
+        && isBoundedList(data.blocks, 1, 40)
+        && isCurriculumVersionID(data.rubricVersionID)
+        && isBoundedList(data.assetVersionIDs, 0, 128)
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
+    function isValidRubricVersion(data, rubricVersionID) {
+      return isCurriculumVersionID(rubricVersionID)
+        && hasExactKeys(data, [
+          'rubricVersionID',
+          'rubricID',
+          'version',
+          'locale',
+          'publicationState',
+          'kind',
+          'criteria',
+          'clientScoringContract',
+          'evaluationContractVersionID',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.rubricVersionID == rubricVersionID
+        && isStableCurriculumID(data.rubricID)
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && data.kind == 'deterministic'
+        && isBoundedList(data.criteria, 1, 12)
+        && data.clientScoringContract is map
+        && isCurriculumVersionID(data.evaluationContractVersionID)
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
+    function isValidAssetVersion(data, assetVersionID) {
+      return isCurriculumVersionID(assetVersionID)
+        && hasExactKeys(data, [
+          'assetVersionID',
+          'assetID',
+          'version',
+          'locale',
+          'publicationState',
+          'kind',
+          'mimeType',
+          'byteCount',
+          'payloadDigest',
+          'payload',
+          'accessibilityDescription',
+          'rights',
+          'schemaVersion',
+          'minimumClientSchemaVersion',
+          'contentDigest',
+          'publishedAt'
+        ])
+        && data.assetVersionID == assetVersionID
+        && isStableCurriculumID(data.assetID)
+        && isPositiveBoundedInteger(data.version)
+        && isLaunchLocale(data.locale)
+        && data.publicationState == 'published'
+        && data.kind == 'diagramData'
+        && data.mimeType == 'application/vnd.syntholo.diagram+json'
+        && data.byteCount is int
+        && data.byteCount >= 1
+        && data.byteCount <= 131072
+        && isSHA256Digest(data.payloadDigest)
+        && data.payload is map
+        && isBoundedString(data.accessibilityDescription, 1, 1000)
+        && data.rights is map
+        && isSchemaVersionOne(data.schemaVersion)
+        && isPositiveBoundedInteger(data.minimumClientSchemaVersion)
+        && isSHA256Digest(data.contentDigest)
+        && data.publishedAt is timestamp;
+    }
+
     function isValidHandle(handle) {
       return handle is string
         && handle.matches('^learner-[a-f0-9]{20}$');
@@ -325,6 +667,116 @@ service cloud.firestore {
         );
 
       allow delete: if false;
+    }
+
+    match /featureConfiguration/curriculum {
+      allow get: if isSignedIn()
+        && (
+          resource == null
+          || isValidFeatureConfiguration(resource.data)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /catalogs/{localeToken} {
+      allow get: if isSignedIn()
+        && isLaunchLocaleToken(localeToken)
+        && (
+          resource == null
+          || isValidCatalogPointer(resource.data, localeToken)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /catalogVersions/{catalogVersionID} {
+      allow get: if isSignedIn()
+        && isCatalogVersionID(catalogVersionID)
+        && (
+          resource == null
+          || isValidCatalogVersion(resource.data, catalogVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /programs/{programPointerID} {
+      allow get: if isSignedIn()
+        && isCurriculumPointerID(programPointerID)
+        && (
+          resource == null
+          || isValidProgramPointer(resource.data, programPointerID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /programVersions/{programVersionID} {
+      allow get: if isSignedIn()
+        && isCurriculumVersionID(programVersionID)
+        && (
+          resource == null
+          || isValidProgramVersion(resource.data, programVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /modules/{moduleVersionID} {
+      allow get: if isSignedIn()
+        && isCurriculumVersionID(moduleVersionID)
+        && (
+          resource == null
+          || isValidModuleVersion(resource.data, moduleVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /lessonVersions/{lessonVersionID} {
+      allow get: if isSignedIn()
+        && isCurriculumVersionID(lessonVersionID)
+        && (
+          resource == null
+          || isValidLessonVersion(resource.data, lessonVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /rubricVersions/{rubricVersionID} {
+      allow get: if isSignedIn()
+        && isCurriculumVersionID(rubricVersionID)
+        && (
+          resource == null
+          || isValidRubricVersion(resource.data, rubricVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /assetVersions/{assetVersionID} {
+      allow get: if isSignedIn()
+        && isCurriculumVersionID(assetVersionID)
+        && (
+          resource == null
+          || isValidAssetVersion(resource.data, assetVersionID)
+        );
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    match /evaluationContractVersions/{documentID} {
+      allow read, write: if false;
+    }
+
+    match /contentVersionHeads/{documentID} {
+      allow read, write: if false;
+    }
+
+    match /contentPublicationAudit/{documentID} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

@@ -3,11 +3,23 @@ import SwiftUI
 struct OnboardingRootView: View {
     @Bindable var store: OnboardingStore
     let coordinator: OnboardingCoordinator
+    let firstLessonHandoffPresentationState:
+        FirstLessonHandoffPresentationState
+    let onPreviewFirstLesson: () -> Void
 
     @State private var isEmailAuthPresented = false
+    @State private var isEmailSignInPresented = false
 
-    init(coordinator: OnboardingCoordinator) {
+    init(
+        coordinator: OnboardingCoordinator,
+        firstLessonHandoffPresentationState:
+            FirstLessonHandoffPresentationState,
+        onPreviewFirstLesson: @escaping () -> Void
+    ) {
         self.coordinator = coordinator
+        self.firstLessonHandoffPresentationState =
+            firstLessonHandoffPresentationState
+        self.onPreviewFirstLesson = onPreviewFirstLesson
         store = coordinator.onboardingStore
     }
 
@@ -15,7 +27,8 @@ struct OnboardingRootView: View {
         NavigationStack {
             currentStep
                 .toolbar {
-                    if store.canGoBack {
+                    if store.canGoBack,
+                       coordinator.profileRecoveryKind == nil {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("Back", systemImage: "chevron.left") {
                                 store.goBack()
@@ -32,10 +45,21 @@ struct OnboardingRootView: View {
         .preferredColorScheme(.light)
         .sheet(isPresented: $isEmailAuthPresented) {
             EmailAuthView(
+                mode: .createAccount,
                 authClient: coordinator.authClient,
                 onAuthenticated: { user in
                     isEmailAuthPresented = false
                     finishAuthentication(user, provider: .password)
+                }
+            )
+        }
+        .sheet(isPresented: $isEmailSignInPresented) {
+            EmailAuthView(
+                mode: .signIn,
+                authClient: coordinator.authClient,
+                onAuthenticated: { user in
+                    isEmailSignInPresented = false
+                    finishSignIn(user)
                 }
             )
         }
@@ -48,7 +72,12 @@ struct OnboardingRootView: View {
         } else {
             switch store.step {
             case .welcome:
-                WelcomeView(onStart: coordinator.startOnboarding)
+                WelcomeView(
+                    isStartEnabled: store.canAdvance,
+                    onStart: coordinator.startOnboarding,
+                    onSignIn: { isEmailSignInPresented = true },
+                    notice: coordinator.authenticationError
+                )
             case .age:
                 AgeConfirmationView(
                     selectedAgeBand: store.draft.ageBand,
@@ -78,13 +107,15 @@ struct OnboardingRootView: View {
                     onAuthenticated: finishAuthentication,
                     onContinueWithEmail: {
                         isEmailAuthPresented = true
-                    }
+                    },
+                    onSignIn: { isEmailSignInPresented = true }
                 )
             case .savingProfile:
                 savingProfileView
             case .firstLessonHandoff:
                 FirstLessonHandoffView(
-                    onStartFirstLesson: coordinator.completeFirstLessonHandoff
+                    presentationState: firstLessonHandoffPresentationState,
+                    onPreviewFirstLesson: onPreviewFirstLesson
                 )
             }
         }
@@ -92,6 +123,24 @@ struct OnboardingRootView: View {
 
     @ViewBuilder
     private func recoveryView(
+        for kind: ProfileRecoveryKind
+    ) -> some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains(
+            "--profile-recovery-state-proof"
+        ) {
+            recoveryContent(for: kind)
+                .accessibilityValue(profileRecoveryStateProof)
+        } else {
+            recoveryContent(for: kind)
+        }
+        #else
+        recoveryContent(for: kind)
+        #endif
+    }
+
+    @ViewBuilder
+    private func recoveryContent(
         for kind: ProfileRecoveryKind
     ) -> some View {
         switch kind {
@@ -111,12 +160,46 @@ struct OnboardingRootView: View {
                     await coordinator.retryProfileRecovery()
                 }
             }
+        case .signingOut:
+            signingOutView
+        case .signOutFailed:
+            SignOutRetryView {
+                Task { @MainActor in
+                    await coordinator.retryProfileRecovery()
+                }
+            }
         }
     }
 
+    #if DEBUG
+    private var profileRecoveryStateProof: String {
+        let draft = store.draft
+        return "session=\(profileRecoverySessionState);step=\(store.step.rawValue);draft=ageBand=\(draft.ageBand?.rawValue ?? "nil");goal=\(draft.goal?.rawValue ?? "nil");experience=\(draft.experience?.rawValue ?? "nil");path=\(draft.path?.rawValue ?? "nil");coachMode=\(draft.coachMode.rawValue)"
+    }
+
+    private var profileRecoverySessionState: String {
+        switch coordinator.session.state {
+        case .loading:
+            return "loading"
+        case .signedOut:
+            return "signedOut"
+        case .onboarding:
+            return "onboarding"
+        case .accountPendingProfile:
+            return "accountPendingProfile"
+        case .firstLessonHandoff:
+            return "firstLessonHandoff"
+        case .signedIn:
+            return "signedIn"
+        case .configurationRequired:
+            return "configurationRequired"
+        }
+    }
+    #endif
+
     private var goalView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 3/6",
+            eyebrow: "ORIENTATION · 3/6",
             progress: 3,
             title: "What do you want to use AI for?",
             introduction: "Choose the work you want to practice first.",
@@ -128,25 +211,29 @@ struct OnboardingRootView: View {
                         id: LearnerGoal.studySmarter,
                         title: "Study smarter",
                         detail: "Research, organize notes, and check AI outputs.",
-                        systemImage: "book.pages"
+                        systemImage: "book.pages",
+                        accessibilityIdentifier: "Study smarter"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.workProductivity,
                         title: "Improve my workflow",
                         detail: "Draft, summarize, and build repeatable work steps.",
-                        systemImage: "checklist"
+                        systemImage: "checklist",
+                        accessibilityIdentifier: "Improve my workflow"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.createContent,
                         title: "Create with AI",
                         detail: "Plan and revise writing, images, and media.",
-                        systemImage: "pencil.and.outline"
+                        systemImage: "pencil.and.outline",
+                        accessibilityIdentifier: "Create with AI"
                     ),
                     ChoiceListItem(
                         id: LearnerGoal.buildWithAI,
                         title: "Build with AI",
                         detail: "Turn an idea into a working tool or prototype.",
-                        systemImage: "hammer"
+                        systemImage: "hammer",
+                        accessibilityIdentifier: "Build with AI"
                     )
                 ],
                 selectedID: store.draft.goal,
@@ -157,7 +244,7 @@ struct OnboardingRootView: View {
 
     private var experienceView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 4/6",
+            eyebrow: "ORIENTATION · 4/6",
             progress: 4,
             title: "How much AI practice have you had?",
             introduction: "This sets the starting pace for Foundations.",
@@ -169,19 +256,22 @@ struct OnboardingRootView: View {
                         id: ExperienceLevel.beginner,
                         title: "Beginner-friendly",
                         detail: "Start with prompting, checking, and responsible use.",
-                        systemImage: "figure.walk"
+                        systemImage: "figure.walk",
+                        accessibilityIdentifier: "Beginner-friendly"
                     ),
                     ChoiceListItem(
                         id: ExperienceLevel.intermediate,
                         title: "Some experience",
                         detail: "Practice stronger prompts and multi-step workflows.",
-                        systemImage: "arrow.triangle.2.circlepath"
+                        systemImage: "arrow.triangle.2.circlepath",
+                        accessibilityIdentifier: "Some experience"
                     ),
                     ChoiceListItem(
                         id: ExperienceLevel.advanced,
                         title: "Regular practice",
                         detail: "Focus on evaluation, automation, and building.",
-                        systemImage: "wrench.and.screwdriver"
+                        systemImage: "wrench.and.screwdriver",
+                        accessibilityIdentifier: "Regular practice"
                     )
                 ],
                 selectedID: store.draft.experience,
@@ -192,7 +282,7 @@ struct OnboardingRootView: View {
 
     private var checkingProfileView: some View {
         OnboardingPage(
-            eyebrow: "Profile check",
+            eyebrow: "PROFILE CHECK",
             progress: 6,
             title: "Checking your profile",
             introduction: "Making sure your saved profile is ready.",
@@ -207,7 +297,7 @@ struct OnboardingRootView: View {
 
     private var savingProfileView: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 6/6",
+            eyebrow: "ORIENTATION · 6/6",
             progress: 6,
             title: "Saving your route",
             introduction: nil,
@@ -220,12 +310,31 @@ struct OnboardingRootView: View {
         }
     }
 
+    private var signingOutView: some View {
+        OnboardingPage(
+            eyebrow: "ACCOUNT RECOVERY",
+            progress: 6,
+            title: "Signing out safely",
+            introduction: "Keeping your saved choices until sign out finishes.",
+            accessibilityIdentifier: "onboarding.signing-out"
+        ) {
+            ProgressView("Signing out…")
+                .frame(maxWidth: .infinity, minHeight: 88)
+        }
+    }
+
     private func finishAuthentication(
         _ user: AuthenticatedUser,
         provider: AuthenticationProvider
     ) {
         Task { @MainActor in
             await coordinator.authenticated(user, provider: provider)
+        }
+    }
+
+    private func finishSignIn(_ user: AuthenticatedUser) {
+        Task { @MainActor in
+            await coordinator.signedInToExistingAccount(user)
         }
     }
 }
@@ -235,7 +344,7 @@ private struct ProfileSaveRetryView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Account saved",
+            eyebrow: "ACCOUNT SAVED",
             progress: 6,
             title: "Finish saving your route",
             introduction: "Your account is ready, but your learning route didn’t save.",
@@ -263,7 +372,7 @@ private struct ProfileCheckRetryView: View {
 
     var body: some View {
         OnboardingPage(
-            eyebrow: "Profile check",
+            eyebrow: "PROFILE CHECK",
             progress: 6,
             title: "We couldn’t check your profile",
             introduction: "Your account is signed in. Check again before we save your learning route.",
@@ -282,6 +391,31 @@ private struct ProfileCheckRetryView: View {
                 action: onRetry
             )
             .accessibilityIdentifier("onboarding.profile-check-retry-button")
+        }
+    }
+}
+
+private struct SignOutRetryView: View {
+    let onRetry: () -> Void
+
+    var body: some View {
+        OnboardingPage(
+            eyebrow: "ACCOUNT RECOVERY",
+            progress: 6,
+            title: "We couldn’t finish signing out",
+            introduction: "Your account is still signed in on this device. Try again before continuing.",
+            accessibilityIdentifier: "onboarding.sign-out-retry"
+        ) {
+            Label(
+                "Your learning choices are still safe on this device.",
+                systemImage: "arrow.clockwise.circle"
+            )
+            .font(.body)
+            .foregroundStyle(OnboardingPalette.academicInk)
+            .fixedSize(horizontal: false, vertical: true)
+
+            PrimaryButton(title: "Retry sign out", action: onRetry)
+                .accessibilityIdentifier("onboarding.sign-out-retry-button")
         }
     }
 }

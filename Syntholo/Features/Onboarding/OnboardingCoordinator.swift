@@ -6,6 +6,8 @@ enum ProfileRecoveryKind: Equatable {
     case profileCheckFailed
     case savingProfile
     case profileSaveFailed
+    case signingOut
+    case signOutFailed
 }
 
 @MainActor
@@ -29,6 +31,12 @@ final class OnboardingCoordinator {
     private var isSavingProfile = false
     @ObservationIgnored
     private var restorationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var isRetryingOnboardingPersistence = false
+    @ObservationIgnored
+    private var shouldExplainProfileSetup = false
+    @ObservationIgnored
+    private var pendingRestoredSession = true
 
     init(
         session: AppSession,
@@ -70,6 +78,13 @@ final class OnboardingCoordinator {
 
     private func performRestore() async {
         await onboardingStore.restore()
+        guard onboardingStore.persistenceFailure != .load else {
+            return
+        }
+        await restoreSessionAfterDraftRecovery()
+    }
+
+    private func restoreSessionAfterDraftRecovery() async {
         guard let user = await authClient.restoreSession() else {
             session.transition(
                 to: onboardingStore.step == .welcome
@@ -80,6 +95,21 @@ final class OnboardingCoordinator {
         }
 
         await resolveRestoredProfile(for: user)
+    }
+
+    func retryOnboardingPersistence() async {
+        guard !isRetryingOnboardingPersistence else {
+            return
+        }
+        isRetryingOnboardingPersistence = true
+        defer { isRetryingOnboardingPersistence = false }
+
+        onboardingStore.retryPersistence()
+        guard onboardingStore.persistenceFailure == nil,
+              session.state == .loading else {
+            return
+        }
+        await restoreSessionAfterDraftRecovery()
     }
 
     func authenticated(
@@ -97,8 +127,36 @@ final class OnboardingCoordinator {
         await savePendingProfile()
     }
 
+    /// Entry point for a returning learner who signed in with email, rather
+    /// than one whose credentials were still on the device. The profile lookup
+    /// is the same; only the analytics reporting and the empty-profile
+    /// messaging differ.
+    func signedInToExistingAccount(_ user: AuthenticatedUser) async {
+        authenticationError = nil
+        await resolveRestoredProfile(for: user, restoredSession: false)
+    }
+
+    /// Signs the learner out from inside the app.
+    ///
+    /// Local state is cleared only after the backend confirms the sign-out. If
+    /// it fails, the session stays signed in and the error is rethrown, rather
+    /// than presenting a signed-out app that still holds live credentials.
+    func signOut() async throws {
+        try await authClient.signOut()
+        pendingUser = nil
+        profileRecoveryKind = nil
+        authenticationError = nil
+        onboardingStore.reset()
+        session.transition(to: .signedOut)
+    }
+
+    /// The address on the current credential, for display on Profile.
+    func currentAccountEmail() async -> String? {
+        await authClient.restoreSession()?.email
+    }
+
     func startOnboarding() {
-        guard onboardingStore.step == .welcome else {
+        guard onboardingStore.canAdvance else {
             return
         }
         onboardingStore.advance()
@@ -170,10 +228,15 @@ final class OnboardingCoordinator {
 
         switch profileRecoveryKind {
         case .profileCheckFailed:
-            await resolveRestoredProfile(for: pendingUser)
+            await resolveRestoredProfile(
+                for: pendingUser,
+                restoredSession: pendingRestoredSession
+            )
         case .profileSaveFailed:
             await retryProfileSave()
-        case .checkingProfile, .savingProfile, nil:
+        case .signOutFailed:
+            await abandonUnrecoverableProfile(user: pendingUser)
+        case .checkingProfile, .savingProfile, .signingOut, nil:
             return
         }
     }
@@ -186,6 +249,7 @@ final class OnboardingCoordinator {
         guard session.state == .firstLessonHandoff else {
             return
         }
+        onboardingStore.retryPersistence()
         session.transition(to: .signedIn)
     }
 
@@ -228,16 +292,25 @@ final class OnboardingCoordinator {
     }
 
     private func resolveRestoredProfile(
-        for user: AuthenticatedUser
+        for user: AuthenticatedUser,
+        restoredSession: Bool = true
     ) async {
         pendingUser = user
+        // Remembered so a retry after a failed profile check reports the same
+        // origin. Defaulting back to true on retry would both mis-record the
+        // login and, when no profile turns up, drop an explicit sign-in back
+        // on Welcome with no explanation.
+        pendingRestoredSession = restoredSession
         profileRecoveryKind = .checkingProfile
 
         do {
             if try await profileRepository.load(userID: user.id) != nil {
                 pendingUser = nil
                 profileRecoveryKind = nil
-                analytics.log(.loginCompleted(restoredSession: true))
+                onboardingStore.reset()
+                analytics.log(
+                    .loginCompleted(restoredSession: restoredSession)
+                )
                 session.transition(to: .signedIn)
                 return
             }
@@ -252,8 +325,10 @@ final class OnboardingCoordinator {
         guard onboardingStore.draft.isReadyForAccount,
               onboardingStore.step == .account
                 || onboardingStore.step == .savingProfile else {
-            profileRecoveryKind = nil
-            await abandonUnrecoverableProfile(user: user)
+            await abandonUnrecoverableProfile(
+                user: user,
+                explainToLearner: !restoredSession
+            )
             return
         }
 
@@ -261,12 +336,37 @@ final class OnboardingCoordinator {
     }
 
     private func abandonUnrecoverableProfile(
-        user _: AuthenticatedUser
+        user: AuthenticatedUser,
+        explainToLearner: Bool = false
     ) async {
-        pendingUser = nil
-        profileRecoveryKind = nil
-        onboardingStore.reset()
-        try? await authClient.signOut()
-        session.transition(to: .signedOut)
+        guard pendingUser?.id == user.id else {
+            return
+        }
+
+        // Remembered rather than passed through, so a retry after a failed
+        // sign-out still explains itself on the welcome screen.
+        if explainToLearner {
+            shouldExplainProfileSetup = true
+        }
+
+        profileRecoveryKind = .signingOut
+        session.transition(to: .accountPendingProfile(userID: user.id))
+
+        do {
+            try await authClient.signOut()
+            pendingUser = nil
+            profileRecoveryKind = nil
+            onboardingStore.reset()
+            // A learner who just tapped "Sign in" and landed back on the
+            // welcome screen needs to know why. A silently restored session
+            // does not.
+            authenticationError = shouldExplainProfileSetup
+                ? .profileSetupRequired
+                : nil
+            shouldExplainProfileSetup = false
+            session.transition(to: .signedOut)
+        } catch {
+            profileRecoveryKind = .signOutFailed
+        }
     }
 }

@@ -3,9 +3,12 @@
 Syntholo.xcodeproj/
 DerivedData/
 node_modules/
+.tools/
 firebase-debug.log
 firestore-debug.log
 Config/Secrets.xcconfig
 GoogleService-Info.plist
 Config/Firebase.local.xcconfig
 *.firebase.plist
+Config/Signing.local.xcconfig
+build/

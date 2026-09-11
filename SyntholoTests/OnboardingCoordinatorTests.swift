@@ -113,17 +113,19 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(snapshot.savedProfiles[user.id]?.coachMode, .socratic)
     }
 
-    func testRestoredCompleteProfileBypassesOnboarding() async {
+    func testRestoredCompleteProfileBypassesOnboardingAndClearsDraft() async throws {
         let profile = LearnerProfile.make(
             user: user,
             draft: completeDraft,
             now: now
         )
+        let draftRepository = try repositoryAtAccount()
         let fixture = makeCoordinator(
             restoredUser: user,
             profileRepository: CoordinatorProfileRepository(
                 loadedProfile: profile
-            )
+            ),
+            draftRepository: draftRepository
         )
 
         await fixture.coordinator.restore()
@@ -133,6 +135,27 @@ final class OnboardingCoordinatorTests: XCTestCase {
             fixture.analytics.events,
             [.loginCompleted(restoredSession: true)]
         )
+        XCTAssertNil(try draftRepository.load())
+    }
+
+    func testCompletingHandoffRetriesTransientDraftClearFailure() async throws {
+        let storage = CoordinatorDraftStorage(clearFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let fixture = makeCoordinator(draftRepository: draftRepository)
+        await fixture.store.restore()
+
+        await fixture.coordinator.authenticated(user, provider: .password)
+
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertEqual(fixture.store.persistenceFailure, .clear)
+        XCTAssertNotNil(try draftRepository.load())
+
+        fixture.coordinator.completeFirstLessonHandoff()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertNil(fixture.store.persistenceFailure)
+        XCTAssertNil(try draftRepository.load())
     }
 
     func testConcurrentCompleteProfileRestorationRunsOneFlight() async {
@@ -229,6 +252,82 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(snapshot.attemptedProfiles.first?.selectedPath, .school)
     }
 
+    func testDraftLoadFailurePausesAuthenticatedRestoreUntilRetry() async throws {
+        let storage = CoordinatorDraftStorage(loadFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let authClient = CoordinatorAuthClient(restoredUser: user)
+        let profileRepository = CoordinatorProfileRepository(loadedProfile: nil)
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+
+        await fixture.coordinator.restore()
+
+        XCTAssertEqual(fixture.session.state, .loading)
+        XCTAssertEqual(fixture.store.persistenceFailure, .load)
+        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        var authSnapshot = await authClient.snapshot()
+        var profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(authSnapshot.restoreCount, 0)
+        XCTAssertEqual(authSnapshot.signOutCount, 0)
+        XCTAssertEqual(profileSnapshot.loadCount, 0)
+        XCTAssertTrue(profileSnapshot.attemptedProfiles.isEmpty)
+
+        await fixture.coordinator.retryOnboardingPersistence()
+
+        XCTAssertEqual(fixture.session.state, .firstLessonHandoff)
+        XCTAssertNil(fixture.store.persistenceFailure)
+        authSnapshot = await authClient.snapshot()
+        profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(authSnapshot.signOutCount, 0)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(profileSnapshot.attemptedUserIDs, [user.id])
+        XCTAssertNil(try draftRepository.load())
+    }
+
+    func testConcurrentDraftLoadRetriesResumeOneSessionRestoration() async throws {
+        let storage = CoordinatorDraftStorage(loadFailuresRemaining: 1)
+        let draftRepository = storage.repository
+        try draftRepository.save(step: .account, draft: completeDraft)
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            restoreDelayNanoseconds: 50_000_000
+        )
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let profileRepository = CoordinatorProfileRepository(
+            loadedProfile: profile
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: profileRepository,
+            draftRepository: draftRepository
+        )
+        await fixture.coordinator.restore()
+
+        async let first: Void = fixture.coordinator.retryOnboardingPersistence()
+        async let second: Void = fixture.coordinator.retryOnboardingPersistence()
+        _ = await (first, second)
+
+        let authSnapshot = await authClient.snapshot()
+        let profileSnapshot = await profileRepository.snapshot()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertEqual(authSnapshot.restoreCount, 1)
+        XCTAssertEqual(profileSnapshot.loadCount, 1)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+        XCTAssertNil(try draftRepository.load())
+    }
+
     func testRestoredAuthenticatedUserMissingProfileAndDraftSignsOutSafely() async {
         let authClient = CoordinatorAuthClient(restoredUser: user)
         let profileRepository = CoordinatorProfileRepository(loadedProfile: nil)
@@ -245,6 +344,57 @@ final class OnboardingCoordinatorTests: XCTestCase {
         let profileSnapshot = await profileRepository.snapshot()
         XCTAssertEqual(signOutCount, 1)
         XCTAssertTrue(profileSnapshot.attemptedProfiles.isEmpty)
+    }
+
+    func testMissingProfileSignOutFailureKeepsDraftUntilRetrySucceeds() async throws {
+        let draft = OnboardingDraft(ageBand: .adult)
+        let draftRepository = OnboardingDraftRepository.memory()
+        try draftRepository.save(step: .goal, draft: draft)
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            signOutFailuresRemaining: 1,
+            signOutDelayNanoseconds: 50_000_000
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil),
+            draftRepository: draftRepository
+        )
+
+        async let restoration: Void = fixture.coordinator.restore()
+        await authClient.waitForSignOutStart()
+
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signingOut)
+        XCTAssertEqual(fixture.store.step, .goal)
+        XCTAssertEqual(fixture.store.draft, draft)
+        XCTAssertEqual(try draftRepository.load()?.draft, draft)
+
+        await restoration
+
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signOutFailed)
+        XCTAssertEqual(fixture.store.step, .goal)
+        XCTAssertEqual(fixture.store.draft, draft)
+        XCTAssertEqual(try draftRepository.load()?.draft, draft)
+        let firstSignOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(firstSignOutCount, 1)
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertNil(fixture.coordinator.profileRecoveryKind)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(fixture.store.draft, OnboardingDraft())
+        XCTAssertNil(try draftRepository.load())
+        let finalSignOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(finalSignOutCount, 2)
     }
 
     func testRestoredProfileLoadFailureDoesNotSaveOrClearCanonicalDraft() async throws {
@@ -277,7 +427,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
     }
 
-    func testProfileCheckRetryFindsExistingProfileWithoutSavingDraft() async throws {
+    func testProfileCheckRetryFindsExistingProfileAndClearsDraftWithoutSaving() async throws {
         let draftRepository = try repositoryAtAccount()
         let existingProfile = LearnerProfile.make(
             user: user,
@@ -305,7 +455,7 @@ final class OnboardingCoordinatorTests: XCTestCase {
         let snapshot = await profileRepository.snapshot()
         XCTAssertEqual(snapshot.loadCount, 2)
         XCTAssertTrue(snapshot.attemptedProfiles.isEmpty)
-        XCTAssertEqual(try draftRepository.load()?.draft, completeDraft)
+        XCTAssertNil(try draftRepository.load())
         XCTAssertEqual(
             fixture.analytics.events,
             [.loginCompleted(restoredSession: true)]
@@ -387,6 +537,233 @@ final class OnboardingCoordinatorTests: XCTestCase {
         return repository
     }
 
+    func testReturningEmailSignInWithSavedProfileEntersAppAsFreshLogin() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertNil(fixture.coordinator.authenticationError)
+        // restoredSession is false: the learner typed credentials, they were
+        // not revived from the keychain.
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: false)]
+        )
+    }
+
+    func testReturningEmailSignInWithoutProfileExplainsWhyItReturnedToWelcome() async {
+        let authClient = CoordinatorAuthClient(restoredUser: nil)
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+        let signOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(signOutCount, 1)
+    }
+
+    func testSilentRestoreWithoutProfileStaysQuietUnlikeExplicitSignIn() async {
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.restore()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        // No learner action to explain, so no message.
+        XCTAssertNil(fixture.coordinator.authenticationError)
+    }
+
+    func testSignOutReturnsToWelcomeOnlyAfterTheBackendConfirms() async throws {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+        await fixture.coordinator.restore()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+
+        try await fixture.coordinator.signOut()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+    }
+
+    func testFailedSignOutKeepsTheLearnerSignedInRatherThanFakingIt() async throws {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let authClient = CoordinatorAuthClient(
+            restoredUser: user,
+            signOutFailuresRemaining: 1
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile
+            )
+        )
+        await fixture.coordinator.restore()
+        XCTAssertEqual(fixture.session.state, .signedIn)
+
+        do {
+            try await fixture.coordinator.signOut()
+            XCTFail("Expected sign-out to propagate the backend failure")
+        } catch {
+            XCTAssertEqual(AuthError.map(error), .providerUnavailable)
+        }
+
+        // Credentials are still live, so the app must not present itself as
+        // signed out.
+        XCTAssertEqual(fixture.session.state, .signedIn)
+    }
+
+    func testExplicitSignInWithoutProfileStillExplainsItselfAfterAFailedSignOut() async {
+        // Where the two recovery paths meet: an explicit email sign-in to an
+        // account with no profile, whose cleanup sign-out fails once. The
+        // learner must not be dropped on the welcome screen unexplained, and
+        // must not be shown as signed out while credentials are still live.
+        let authClient = CoordinatorAuthClient(
+            restoredUser: nil,
+            signOutFailuresRemaining: 1
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        // First attempt failed: still signed in, retry offered.
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signOutFailed)
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        // Retry succeeded, and the reason survived the failed attempt.
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+        let signOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(signOutCount, 2)
+    }
+
+    func testRetryAfterTransientCheckFailureKeepsAnExplicitSignInAsAFreshLogin() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile,
+                loadResults: [.failure, .profile(profile)]
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        // The retry must not forget that credentials were typed, not revived.
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: false)]
+        )
+    }
+
+    func testRetryAfterTransientCheckFailureStillExplainsAMissingProfile() async {
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: nil,
+                loadResults: [.failure, .profile(nil)]
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        // Without the remembered origin this retry would drop the learner on
+        // Welcome with no explanation at all.
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+    }
+
+    func testRetryAfterTransientCheckFailureKeepsASilentRestoreSilent() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile,
+                loadResults: [.failure, .profile(profile)]
+            )
+        )
+
+        await fixture.coordinator.restore()
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+    }
+
     private func makeCoordinator(
         restoredUser: AuthenticatedUser? = nil,
         authClient: CoordinatorAuthClient? = nil,
@@ -428,6 +805,46 @@ private struct CoordinatorFixture {
 
 private enum CoordinatorTestError: Error {
     case profileSaveFailed
+    case draftLoadFailed
+    case draftClearFailed
+}
+
+private final class CoordinatorDraftStorage: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data: Data?
+    private var loadFailuresRemaining: Int
+    private var clearFailuresRemaining: Int
+
+    init(
+        loadFailuresRemaining: Int = 0,
+        clearFailuresRemaining: Int = 0
+    ) {
+        self.loadFailuresRemaining = loadFailuresRemaining
+        self.clearFailuresRemaining = clearFailuresRemaining
+    }
+
+    var repository: OnboardingDraftRepository {
+        OnboardingDraftRepository(
+            readData: { [self] in
+                try lock.withLock {
+                    if loadFailuresRemaining > 0 {
+                        loadFailuresRemaining -= 1
+                        throw CoordinatorTestError.draftLoadFailed
+                    }
+                    return data
+                }
+            },
+            writeData: { [self] newData in
+                try lock.withLock {
+                    if newData == nil, clearFailuresRemaining > 0 {
+                        clearFailuresRemaining -= 1
+                        throw CoordinatorTestError.draftClearFailed
+                    }
+                    data = newData
+                }
+            }
+        )
+    }
 }
 
 private enum CoordinatorProfileLoadResult: Sendable {
@@ -442,16 +859,27 @@ private actor CoordinatorAuthClient: AuthClient {
     }
 
     let restoredUser: AuthenticatedUser?
+    let emailSignInUser: AuthenticatedUser?
     private let restoreDelayNanoseconds: UInt64
+    private let signOutDelayNanoseconds: UInt64
+    private var signOutFailuresRemaining: Int
+    private var signOutStartedContinuation: CheckedContinuation<Void, Never>?
     private(set) var restoreCount = 0
     private(set) var signOutCount = 0
+    private(set) var passwordResetCount = 0
 
     init(
         restoredUser: AuthenticatedUser?,
-        restoreDelayNanoseconds: UInt64 = 0
+        emailSignInUser: AuthenticatedUser? = nil,
+        restoreDelayNanoseconds: UInt64 = 0,
+        signOutFailuresRemaining: Int = 0,
+        signOutDelayNanoseconds: UInt64 = 0
     ) {
         self.restoredUser = restoredUser
+        self.emailSignInUser = emailSignInUser
         self.restoreDelayNanoseconds = restoreDelayNanoseconds
+        self.signOutFailuresRemaining = signOutFailuresRemaining
+        self.signOutDelayNanoseconds = signOutDelayNanoseconds
     }
 
     func createEmailAccount(
@@ -459,6 +887,20 @@ private actor CoordinatorAuthClient: AuthClient {
         password: String
     ) async throws -> AuthenticatedUser {
         throw AuthError.providerUnavailable
+    }
+
+    func signInWithEmail(
+        email: String,
+        password: String
+    ) async throws -> AuthenticatedUser {
+        guard let emailSignInUser else {
+            throw AuthError.invalidCredential
+        }
+        return emailSignInUser
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        passwordResetCount += 1
     }
 
     func signInWithApple(
@@ -486,10 +928,32 @@ private actor CoordinatorAuthClient: AuthClient {
 
     func signOut() async throws {
         signOutCount += 1
+        signOutStartedContinuation?.resume()
+        signOutStartedContinuation = nil
+        if signOutDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: signOutDelayNanoseconds)
+        }
+        if signOutFailuresRemaining > 0 {
+            signOutFailuresRemaining -= 1
+            throw AuthError.providerUnavailable
+        }
+    }
+
+    func waitForSignOutStart() async {
+        guard signOutCount == 0 else {
+            return
+        }
+        await withCheckedContinuation { continuation in
+            signOutStartedContinuation = continuation
+        }
     }
 
     func currentSignOutCount() -> Int {
         signOutCount
+    }
+
+    func currentPasswordResetCount() -> Int {
+        passwordResetCount
     }
 
     func snapshot() -> Snapshot {

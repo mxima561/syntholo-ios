@@ -7,6 +7,7 @@ struct AccountCreationView: View {
         AuthenticationProvider
     ) -> Void
     let onContinueWithEmail: () -> Void
+    let onSignIn: () -> Void
 
     @State private var appleCoordinator: AppleSignInCoordinator
     @State private var googleCoordinator: GoogleSignInCoordinator
@@ -25,10 +26,12 @@ struct AccountCreationView: View {
             AuthenticatedUser,
             AuthenticationProvider
         ) -> Void,
-        onContinueWithEmail: @escaping () -> Void
+        onContinueWithEmail: @escaping () -> Void,
+        onSignIn: @escaping () -> Void
     ) {
         self.onAuthenticated = onAuthenticated
         self.onContinueWithEmail = onContinueWithEmail
+        self.onSignIn = onSignIn
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         uiTestAuthClient = arguments.contains("--ui-testing")
@@ -63,7 +66,7 @@ struct AccountCreationView: View {
 
     private var accountPage: some View {
         OnboardingPage(
-            eyebrow: "Orientation · 6/6",
+            eyebrow: "ORIENTATION · 6/6",
             progress: 6,
             title: "Save your learning route",
             introduction: "Create an account to keep your route and lesson progress.",
@@ -108,9 +111,7 @@ struct AccountCreationView: View {
 
                 if let providerError, providerError.shouldPresentMessage {
                     Label {
-                        Text(
-                            LocalizedStringKey(providerError.localizationKey)
-                        )
+                        Text(providerError.message)
                         .fixedSize(horizontal: false, vertical: true)
                     } icon: {
                         Image(systemName: "exclamationmark.circle")
@@ -122,6 +123,12 @@ struct AccountCreationView: View {
                     .accessibilityIdentifier("onboarding.auth.error")
                 }
             }
+
+            Button("Already have an account? Sign in", action: onSignIn)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(OnboardingPalette.lectureBlue)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .accessibilityIdentifier("onboarding.account.sign-in")
 
             Text("Your account stores your learning choices and progress.")
                 .font(.footnote)

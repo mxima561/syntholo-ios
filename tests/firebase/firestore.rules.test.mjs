@@ -10,6 +10,7 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   collection,
+  deleteDoc,
   doc,
   documentId,
   getDoc,
@@ -17,10 +18,14 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
+
+import { loadMinimalDraft } from "../helpers/curriculum-publication-fixtures.mjs";
+import { buildPublicationShape } from "../../tools/content/lib/firestore-shape.mjs";
 
 const PROJECT_ID = "syntholo-local";
 const RULES_PATH = "firestore.rules";
@@ -40,6 +45,97 @@ const [host, portText] = emulatorAddress.split(":");
 const rules = existsSync(RULES_PATH)
   ? readFileSync(RULES_PATH, "utf8")
   : DENY_ALL_RULES;
+const TEST_TIMESTAMP = Timestamp.fromMillis(1_777_500_000_000);
+const LEARNER_CURRICULUM_COLLECTIONS = new Set([
+  "featureConfiguration",
+  "catalogs",
+  "catalogVersions",
+  "programs",
+  "programVersions",
+  "modules",
+  "lessonVersions",
+  "rubricVersions",
+  "assetVersions",
+]);
+const IMMUTABLE_LEARNER_COLLECTIONS = new Set([
+  "catalogVersions",
+  "programVersions",
+  "modules",
+  "lessonVersions",
+  "rubricVersions",
+  "assetVersions",
+]);
+const publicationFixture = buildPublicationShape(await loadMinimalDraft());
+const LEARNER_CURRICULUM_DOCUMENTS = [
+  publicationFixture.derivedConfiguration,
+  publicationFixture.derivedPointers.catalog,
+  ...publicationFixture.derivedPointers.programs,
+  ...publicationFixture.immutableDocuments.filter(({ path }) =>
+    LEARNER_CURRICULUM_COLLECTIONS.has(collectionForPath(path)),
+  ),
+].map(storedPublicationDocument);
+const LEARNER_CURRICULUM_BY_COLLECTION = new Map(
+  LEARNER_CURRICULUM_DOCUMENTS.map((entry) => [collectionForPath(entry.path), entry]),
+);
+const PRIVATE_CURRICULUM_DOCUMENTS = [
+  ...publicationFixture.immutableDocuments
+    .filter(({ path }) => collectionForPath(path) === "evaluationContractVersions")
+    .map(storedPublicationDocument),
+  {
+    path: "contentVersionHeads/lesson--synthetic-lesson--en-us",
+    data: {
+      versionHeadID: "lesson--synthetic-lesson--en-us",
+      kind: "lesson",
+      stableID: "synthetic-lesson",
+      locale: "en-US",
+      maxPublishedVersion: 1,
+      schemaVersion: 1,
+      updatedAt: TEST_TIMESTAMP,
+    },
+  },
+  {
+    path: "contentPublicationAudit/00000000-0000-4000-8000-000000000001",
+    data: {
+      schemaVersion: 1,
+      operationID: "00000000-0000-4000-8000-000000000001",
+      action: "publish",
+      outcome: "applied",
+      occurredAt: TEST_TIMESTAMP,
+    },
+  },
+];
+const AUTHORING_DOCUMENT = {
+  path: "contentDrafts/synthetic-authoring-record",
+  data: { publicationState: "draft", schemaVersion: 1 },
+};
+const ALLOWED_MISSING_CURRICULUM_PATHS = [
+  "featureConfiguration/curriculum",
+  "catalogs/en-us",
+  "catalogVersions/catalog--en-us--v999",
+  "programs/ai-foundations--en-us",
+  `programs/${"a".repeat(64)}--en-us`,
+  "programVersions/ai-foundations--en-us--v999",
+  `programVersions/${"a".repeat(64)}--en-us--v2147483647`,
+  "modules/synthetic-module--en-us--v999",
+  "lessonVersions/synthetic-lesson--en-us--v999",
+  "rubricVersions/synthetic-rubric--en-us--v999",
+  "assetVersions/synthetic-diagram--en-us--v999",
+];
+const INVALID_MISSING_CURRICULUM_PATHS = [
+  "featureConfiguration/not-curriculum",
+  "catalogs/fr-fr",
+  "catalogVersions/not-a-version",
+  "catalogVersions/catalog--en-us--v12345678901",
+  "programs/not-a-pointer",
+  `programs/${"a".repeat(65)}--en-us`,
+  "programVersions/not-a-version",
+  "programVersions/ai-foundations--en-us--v12345678901",
+  `programVersions/${"a".repeat(65)}--en-us--v1`,
+  "modules/not-a-version",
+  "lessonVersions/not-a-version",
+  "rubricVersions/not-a-version",
+  "assetVersions/not-a-version",
+];
 
 let testEnvironment;
 
@@ -60,6 +156,272 @@ beforeEach(async () => {
 
 after(async () => {
   await testEnvironment.cleanup();
+});
+
+test("authenticated exact gets read every valid learner curriculum document", async () => {
+  await seedRulesDocuments(LEARNER_CURRICULUM_DOCUMENTS);
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    const snapshot = await assertSucceeds(getDoc(doc(database, entry.path)));
+    assert.equal(snapshot.exists(), true, entry.path);
+  }
+});
+
+test("authenticated exact gets distinguish allowed missing curriculum paths", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const path of ALLOWED_MISSING_CURRICULUM_PATHS) {
+    const snapshot = await assertSucceeds(getDoc(doc(database, path)));
+    assert.equal(snapshot.exists(), false, path);
+  }
+  for (const path of INVALID_MISSING_CURRICULUM_PATHS) {
+    await assertFails(getDoc(doc(database, path)));
+  }
+});
+
+test("unauthenticated exact gets fail for every learner curriculum document", async () => {
+  await seedRulesDocuments(LEARNER_CURRICULUM_DOCUMENTS);
+  const database = testEnvironment.unauthenticatedContext().firestore();
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    await assertFails(getDoc(doc(database, entry.path)));
+  }
+});
+
+test("curriculum collection and document-ID queries are always denied", async () => {
+  await seedRulesDocuments(LEARNER_CURRICULUM_DOCUMENTS);
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    const collectionName = collectionForPath(entry.path);
+    const documentID = documentIDForPath(entry.path);
+    await assertFails(getDocs(collection(database, collectionName)));
+    await assertFails(
+      getDocs(
+        query(
+          collection(database, collectionName),
+          where(documentId(), "==", documentID),
+        ),
+      ),
+    );
+  }
+});
+
+test("published state is required while nested validation remains outside Rules", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS.filter(({ path }) =>
+    IMMUTABLE_LEARNER_COLLECTIONS.has(collectionForPath(path)),
+  )) {
+    const data = cloneStoredData(entry.data);
+    data.publicationState = "draft";
+    await overwriteRulesDocument({ ...entry, data });
+    await assertFails(getDoc(doc(database, entry.path)));
+  }
+
+  const shallowMutations = [
+    ["catalogVersions", (data) => { data.programEntries = [{ malformed: true }]; }],
+    ["lessonVersions", (data) => {
+      data.completionRule = { malformed: true };
+      data.blocks = [{ malformed: true }];
+      data.contentDigest = "0".repeat(64);
+    }],
+    ["rubricVersions", (data) => {
+      data.criteria = [{ malformed: true }];
+      data.clientScoringContract = { malformed: true };
+    }],
+    ["assetVersions", (data) => {
+      data.payload = { malformed: true };
+      data.rights = { malformed: true };
+    }],
+  ];
+
+  for (const [collectionName, mutate] of shallowMutations) {
+    const entry = learnerEntry(collectionName);
+    const data = cloneStoredData(entry.data);
+    mutate(data);
+    await overwriteRulesDocument({ ...entry, data });
+    await assertSucceeds(getDoc(doc(database, entry.path)));
+  }
+
+  for (const collectionName of ["featureConfiguration", "catalogs"]) {
+    const entry = learnerEntry(collectionName);
+    const data = cloneStoredData(entry.data);
+    data.minimumClientSchemaVersion = 2;
+    await overwriteRulesDocument({ ...entry, data });
+    await assertSucceeds(getDoc(doc(database, entry.path)));
+  }
+
+  const availableProgram = learnerEntry("programVersions");
+  const comingSoonData = cloneStoredData(availableProgram.data);
+  comingSoonData.programVersionID = "synthetic-shell--en-us--v1";
+  comingSoonData.programID = "synthetic-shell";
+  comingSoonData.catalogState = "comingSoon";
+  comingSoonData.moduleVersionIDs = [];
+  comingSoonData.firstLessonVersionID = null;
+  comingSoonData.contentDigest = "0".repeat(64);
+  const comingSoonEntry = {
+    path: "programVersions/synthetic-shell--en-us--v1",
+    data: comingSoonData,
+  };
+  await overwriteRulesDocument(comingSoonEntry);
+  await assertSucceeds(getDoc(doc(database, comingSoonEntry.path)));
+});
+
+test("mismatched curriculum path and document identities are denied", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    const mismatched = { ...entry, path: mismatchedPath(entry.path) };
+    await overwriteRulesDocument(mismatched);
+    await assertFails(getDoc(doc(database, mismatched.path)));
+  }
+
+  for (const [collectionName, identityField, invalidIdentity] of [
+    ["catalogVersions", "catalogVersionID", "catalog--en-us--v12345678901"],
+    [
+      "programVersions",
+      "programVersionID",
+      "ai-foundations--en-us--v12345678901",
+    ],
+  ]) {
+    const entry = learnerEntry(collectionName);
+    const data = cloneStoredData(entry.data);
+    data[identityField] = invalidIdentity;
+    const invalidEntry = { path: `${collectionName}/${invalidIdentity}`, data };
+    await overwriteRulesDocument(invalidEntry);
+    await assertFails(getDoc(doc(database, invalidEntry.path)));
+  }
+});
+
+test("unknown or missing top-level keys fail for every learner curriculum shape", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+  const requiredKeyByCollection = {
+    featureConfiguration: "defaultLocale",
+    catalogs: "locale",
+    catalogVersions: "catalogVersionID",
+    programs: "programPointerID",
+    programVersions: "programVersionID",
+    modules: "moduleVersionID",
+    lessonVersions: "lessonVersionID",
+    rubricVersions: "rubricVersionID",
+    assetVersions: "assetVersionID",
+  };
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    const extraData = cloneStoredData(entry.data);
+    extraData.unexpectedTopLevelField = true;
+    await overwriteRulesDocument({ ...entry, data: extraData });
+    await assertFails(getDoc(doc(database, entry.path)));
+
+    const missingData = cloneStoredData(entry.data);
+    delete missingData[requiredKeyByCollection[collectionForPath(entry.path)]];
+    await overwriteRulesDocument({ ...entry, data: missingData });
+    await assertFails(getDoc(doc(database, entry.path)));
+  }
+});
+
+test("unsupported schemas and wrong top-level types fail for every curriculum shape", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+  const wrongTypeMutations = {
+    featureConfiguration(data) { data.minimumClientSchemaVersion = "1"; },
+    catalogs(data) { data.publishedCatalogVersionID = []; },
+    catalogVersions(data) { data.programEntries = {}; },
+    programs(data) { data.programID = 7; },
+    programVersions(data) { data.moduleVersionIDs = {}; },
+    modules(data) { data.lessonVersionIDs = {}; },
+    lessonVersions(data) { data.blocks = {}; },
+    rubricVersions(data) { data.criteria = {}; },
+    assetVersions(data) { data.payload = []; },
+  };
+
+  for (const entry of LEARNER_CURRICULUM_DOCUMENTS) {
+    const unsupported = cloneStoredData(entry.data);
+    unsupported.schemaVersion = 2;
+    await overwriteRulesDocument({ ...entry, data: unsupported });
+    await assertFails(getDoc(doc(database, entry.path)));
+
+    const wrongType = cloneStoredData(entry.data);
+    wrongTypeMutations[collectionForPath(entry.path)](wrongType);
+    await overwriteRulesDocument({ ...entry, data: wrongType });
+    await assertFails(getDoc(doc(database, entry.path)));
+  }
+});
+
+test("simple curriculum scalar and list bounds are enforced", async () => {
+  const database = authenticatedDatabase("curriculum-reader");
+  const cases = [
+    ["featureConfiguration", (data) => { data.supportedLocales = Array(11).fill("en-US"); }],
+    ["featureConfiguration", (data) => { data.minimumClientSchemaVersion = 0; }],
+    ["catalogs", (data) => { data.minimumClientSchemaVersion = 0; }],
+    ["catalogVersions", (data) => { data.programEntries = Array(6).fill({}); }],
+    ["catalogVersions", (data) => { data.version = 2_147_483_648; }],
+    ["catalogVersions", (data) => { data.contentDigest = "A".repeat(64); }],
+    ["programs", (data) => { data.programID = "aa"; }],
+    ["programVersions", (data) => { data.title = "T".repeat(121); }],
+    ["programVersions", (data) => { data.promise = "P".repeat(501); }],
+    ["programVersions", (data) => { data.moduleVersionIDs = Array(25).fill("module"); }],
+    ["programVersions", (data) => { data.moduleVersionIDs = []; }],
+    ["programVersions", (data) => {
+      data.catalogState = "comingSoon";
+      data.moduleVersionIDs = [];
+    }],
+    ["modules", (data) => { data.title = "T".repeat(121); }],
+    ["modules", (data) => { data.summary = "S".repeat(501); }],
+    ["modules", (data) => { data.lessonVersionIDs = Array(65).fill("lesson"); }],
+    ["lessonVersions", (data) => { data.title = "T".repeat(121); }],
+    ["lessonVersions", (data) => { data.objective = "O".repeat(501); }],
+    ["lessonVersions", (data) => { data.expectedDurationMinutes = 181; }],
+    ["lessonVersions", (data) => { data.prerequisiteLessonIDs = Array(17).fill("lesson"); }],
+    ["lessonVersions", (data) => { data.blocks = Array(41).fill({}); }],
+    ["lessonVersions", (data) => { data.assetVersionIDs = Array(129).fill("asset"); }],
+    ["rubricVersions", (data) => { data.criteria = Array(13).fill({}); }],
+    ["assetVersions", (data) => { data.byteCount = 131_073; }],
+    ["assetVersions", (data) => { data.accessibilityDescription = "A".repeat(1001); }],
+    ["assetVersions", (data) => { data.payloadDigest = "f".repeat(63); }],
+  ];
+
+  for (const [collectionName, mutate] of cases) {
+    const entry = learnerEntry(collectionName);
+    const data = cloneStoredData(entry.data);
+    mutate(data);
+    await overwriteRulesDocument({ ...entry, data });
+    await assertFails(getDoc(doc(database, entry.path)));
+  }
+});
+
+test("private curriculum authoring and unknown namespaces deny reads and lists", async () => {
+  const deniedDocuments = [
+    ...PRIVATE_CURRICULUM_DOCUMENTS,
+    AUTHORING_DOCUMENT,
+    { path: "unknownCurriculumSurface/record", data: { value: true } },
+  ];
+  await seedRulesDocuments(deniedDocuments);
+  const database = authenticatedDatabase("curriculum-reader");
+
+  for (const entry of deniedDocuments) {
+    await assertFails(getDoc(doc(database, entry.path)));
+    await assertFails(getDocs(collection(database, collectionForPath(entry.path))));
+  }
+});
+
+test("clients cannot create update or delete curriculum or authoring records", async () => {
+  const deniedDocuments = [
+    ...LEARNER_CURRICULUM_DOCUMENTS,
+    ...PRIVATE_CURRICULUM_DOCUMENTS,
+    AUTHORING_DOCUMENT,
+  ];
+  const database = authenticatedDatabase("curriculum-writer");
+
+  for (const entry of deniedDocuments) {
+    await assertFails(setDoc(doc(database, entry.path), entry.data));
+    await overwriteRulesDocument(entry);
+    await assertFails(
+      updateDoc(doc(database, entry.path), { schemaVersion: 1 }),
+    );
+    await assertFails(deleteDoc(doc(database, entry.path)));
+  }
 });
 
 test("unauthenticated clients cannot access any profile surface", async () => {
@@ -449,6 +811,77 @@ test("full adapter-shaped retry remains five records and preserves creation time
     }
   });
 });
+
+function collectionForPath(path) {
+  return path.split("/", 1)[0];
+}
+
+function documentIDForPath(path) {
+  return path.slice(path.indexOf("/") + 1);
+}
+
+function storedPublicationDocument(entry) {
+  const collectionName = collectionForPath(entry.path);
+  const timestampField = [
+    "featureConfiguration",
+    "catalogs",
+    "programs",
+  ].includes(collectionName)
+    ? "updatedAt"
+    : "publishedAt";
+  return {
+    path: entry.path,
+    data: {
+      ...structuredClone(entry.data),
+      [timestampField]: TEST_TIMESTAMP,
+    },
+  };
+}
+
+function cloneStoredData(data) {
+  const clone = structuredClone(data);
+  for (const key of ["updatedAt", "publishedAt", "occurredAt"]) {
+    if (key in data) clone[key] = data[key];
+  }
+  return clone;
+}
+
+function learnerEntry(collectionName) {
+  const entry = LEARNER_CURRICULUM_BY_COLLECTION.get(collectionName);
+  assert.ok(entry, `Missing learner Rules fixture for ${collectionName}`);
+  return entry;
+}
+
+function mismatchedPath(path) {
+  const replacements = {
+    featureConfiguration: "featureConfiguration/not-curriculum",
+    catalogs: "catalogs/fr-fr",
+    catalogVersions: "catalogVersions/catalog--en-us--v2",
+    programs: "programs/alternate-program--en-us",
+    programVersions: "programVersions/alternate-program--en-us--v1",
+    modules: "modules/alternate-module--en-us--v1",
+    lessonVersions: "lessonVersions/alternate-lesson--en-us--v1",
+    rubricVersions: "rubricVersions/alternate-rubric--en-us--v1",
+    assetVersions: "assetVersions/alternate-asset--en-us--v1",
+  };
+  return replacements[collectionForPath(path)];
+}
+
+async function seedRulesDocuments(entries) {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const batch = writeBatch(context.firestore());
+    for (const entry of entries) {
+      batch.set(doc(context.firestore(), entry.path), entry.data);
+    }
+    await batch.commit();
+  });
+}
+
+async function overwriteRulesDocument(entry) {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), entry.path), entry.data);
+  });
+}
 
 function authenticatedDatabase(userID) {
   return testEnvironment.authenticatedContext(userID).firestore();
