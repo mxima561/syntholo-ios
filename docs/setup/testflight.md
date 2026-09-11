@@ -14,6 +14,7 @@ saying out loud to testers so their feedback lands on what exists.
 | Privacy manifest | Done - `Syntholo/Resources/PrivacyInfo.xcprivacy` | - |
 | Apple Developer Program membership | Needed | You |
 | Signing certificate on this Mac | Needed | You |
+| At least one registered device on the team | Needed | You |
 | `SYNTHOLO_DEVELOPMENT_TEAM` set | Needed | You |
 | Firebase iOS config installed | Needed | You |
 | App record in App Store Connect | Needed | You |
@@ -50,6 +51,35 @@ xcodegen generate
 `Config/Signing.local.xcconfig` is gitignored on purpose. The Team ID is not
 a secret, but it is per-developer, and pinning it in `project.yml` would break
 every other machine.
+
+### Register a device first, even for TestFlight
+
+A brand-new team has no registered devices, and that blocks archiving:
+
+```
+error: Communication with Apple failed: Your team has no devices from which
+to generate a provisioning profile.
+error: No profiles for 'com.syntholo.ios' were found: Xcode couldn't find any
+iOS App Development provisioning profiles matching 'com.syntholo.ios'.
+```
+
+This surprises people, because TestFlight distribution does not itself need a
+registered device. The reason is the archive step: Xcode's automatic signing
+builds the archive with a **development** identity and only re-signs for
+distribution during export. Apple will not issue that development profile to a
+team with zero devices.
+
+Fix it either way:
+
+- Connect the iPhone over USB, then Xcode -> Window -> Devices and Simulators.
+  Xcode registers it, and this is worth doing regardless since you will want
+  to run on a real device.
+- Or add a UDID by hand at
+  https://developer.apple.com/account/resources/devices/list
+
+Do not set `CODE_SIGN_IDENTITY` to `Apple Distribution` to sidestep this. With
+`CODE_SIGN_STYLE: Automatic` it fails with "conflicting provisioning
+settings" - the archive is meant to be development-signed.
 
 ## 2. Install the Firebase config
 
