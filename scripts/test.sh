@@ -276,7 +276,7 @@ run_timed_command 600 \
     CODE_SIGNING_ALLOWED=NO \
     -resultBundlePath "$unit_result" \
     -only-testing:SyntholoTests
-assert_test_result "$unit_result" 237 unit-tests
+assert_test_result "$unit_result" 243 unit-tests
 
 ui_audit_simulator_udid=$(simulator_udid_from_result_bundle "$unit_result")
 ui_audit_destination="platform=iOS Simulator,id=$ui_audit_simulator_udid"
