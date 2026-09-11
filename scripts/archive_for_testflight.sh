@@ -78,8 +78,25 @@ xcodebuild -exportArchive \
 ipa="$export_path/Syntholo.ipa"
 echo
 echo "IPA: $ipa"
-codesign -dvvv "$ipa" 2>&1 | grep -E "^Authority=Apple Distribution" \
-    || echo "note: could not read the IPA signing authority."
+
+# codesign cannot read a .ipa directly - it is a zip, not a bundle - so unpack
+# the app to confirm the export really re-signed for distribution.
+verify_root="$(mktemp -d)"
+trap 'rm -rf "$verify_root"' EXIT
+if unzip -q "$ipa" -d "$verify_root"; then
+    verify_app="$verify_root/Payload/Syntholo.app"
+    codesign -dvvv "$verify_app" 2>&1 \
+        | grep -E "^Authority=Apple Distribution" \
+        || echo "WARNING: the IPA is not signed by Apple Distribution." >&2
+    if [[ -f "$verify_app/production.firebase.plist" ]]; then
+        echo "firebase project: $(
+            /usr/libexec/PlistBuddy -c "Print :PROJECT_ID" \
+                "$verify_app/production.firebase.plist" 2>/dev/null
+        )"
+    else
+        echo "WARNING: no production.firebase.plist inside the IPA." >&2
+    fi
+fi
 echo
 echo "Remember to bump CURRENT_PROJECT_VERSION in Config/Shared.xcconfig"
 echo "before the next upload - App Store Connect rejects duplicate builds."
