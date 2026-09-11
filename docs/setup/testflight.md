@@ -12,10 +12,10 @@ saying out loud to testers so their feedback lands on what exists.
 |---|---|---|
 | App icon | Done - `Syntholo/Resources/Assets.xcassets/AppIcon.appiconset` | - |
 | Privacy manifest | Done - `Syntholo/Resources/PrivacyInfo.xcprivacy` | - |
-| Apple Developer Program membership | Needed | You |
-| Signing certificate on this Mac | Needed | You |
-| At least one registered device on the team | Needed | You |
-| `SYNTHOLO_DEVELOPMENT_TEAM` set | Needed | You |
+| Apple Developer Program membership | Done | - |
+| Signing certificate on this Mac | Done | - |
+| At least one registered device on the team | Done | - |
+| `SYNTHOLO_DEVELOPMENT_TEAM` set | Done - team 4C7T37F6FW | - |
 | Firebase iOS config installed | Needed | You |
 | App record in App Store Connect | Needed | You |
 
@@ -140,13 +140,28 @@ Bump `CURRENT_PROJECT_VERSION` in `Config/Shared.xcconfig` for every upload;
 App Store Connect rejects a duplicate build number.
 
 ```bash
-xcodebuild -project Syntholo.xcodeproj -scheme Syntholo -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath build/Syntholo.xcarchive archive
+scripts/archive_for_testflight.sh
 ```
 
-Then Xcode -> Window -> Organizer -> Archives -> Distribute App -> TestFlight
-Internal Only. The Organizer route handles upload and authentication without
-needing an App Store Connect API key.
+That archives and exports a signed App Store IPA to `build/export/Syntholo.ipa`
+and warns if the Firebase config is missing. It does not upload.
+
+To upload, open Xcode -> Window -> Organizer -> Archives -> Distribute App ->
+TestFlight Internal Only. The Organizer route handles authentication without
+an App Store Connect API key.
+
+### If code signing fails with errSecInternalComponent
+
+```
+.../Frameworks/grpcpp.framework: errSecInternalComponent
+Command CodeSign failed with a nonzero exit code
+```
+
+The keychain is refusing `codesign` access to the signing key from a
+non-interactive shell. Open Keychain Access, find the **Apple Development**
+private key, Get Info -> Access Control, and allow `codesign` (or "Allow all
+applications to access this item"). Archiving once from the Xcode GUI and
+approving the prompt has the same effect.
 
 For internal testers, no App Review is required. External testing needs
 Beta App Review plus a privacy policy URL and test notes.
