@@ -681,6 +681,89 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(signOutCount, 2)
     }
 
+    func testRetryAfterTransientCheckFailureKeepsAnExplicitSignInAsAFreshLogin() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile,
+                loadResults: [.failure, .profile(profile)]
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        // The retry must not forget that credentials were typed, not revived.
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: false)]
+        )
+    }
+
+    func testRetryAfterTransientCheckFailureStillExplainsAMissingProfile() async {
+        let fixture = makeCoordinator(
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: nil,
+                loadResults: [.failure, .profile(nil)]
+            )
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        // Without the remembered origin this retry would drop the learner on
+        // Welcome with no explanation at all.
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+    }
+
+    func testRetryAfterTransientCheckFailureKeepsASilentRestoreSilent() async {
+        let profile = LearnerProfile.make(
+            user: user,
+            draft: completeDraft,
+            now: now
+        )
+        let fixture = makeCoordinator(
+            restoredUser: user,
+            profileRepository: CoordinatorProfileRepository(
+                loadedProfile: profile,
+                loadResults: [.failure, .profile(profile)]
+            )
+        )
+
+        await fixture.coordinator.restore()
+        XCTAssertEqual(
+            fixture.coordinator.profileRecoveryKind,
+            .profileCheckFailed
+        )
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        XCTAssertEqual(fixture.session.state, .signedIn)
+        XCTAssertEqual(
+            fixture.analytics.events,
+            [.loginCompleted(restoredSession: true)]
+        )
+    }
+
     private func makeCoordinator(
         restoredUser: AuthenticatedUser? = nil,
         authClient: CoordinatorAuthClient? = nil,

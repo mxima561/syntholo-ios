@@ -69,6 +69,22 @@
             </array>
         </dict>
         <dict>
+            <!-- FirestoreProfileRepository persists the onboarding answers -
+                 ageBand, goal, experience, selectedPath and coachMode - against
+                 the learner's account. Apple has no dedicated type for learning
+                 preferences, so they fall under Other Data Types. -->
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherDataTypes</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+        <dict>
             <!-- Firebase Analytics app instance identifier. -->
             <key>NSPrivacyCollectedDataType</key>
             <string>NSPrivacyCollectedDataTypeDeviceID</string>

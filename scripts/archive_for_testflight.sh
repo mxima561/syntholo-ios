@@ -23,18 +23,28 @@ team_id="$(
 )"
 if [[ -z "$team_id" ]]; then
     echo "error: DEVELOPMENT_TEAM is empty." >&2
-    echo "       Copy Config/Signing.example.xcconfig to Signing.local.xcconfig" >&2
+    echo "       cp Config/Signing.example.xcconfig Config/Signing.local.xcconfig" >&2
     echo "       and set SYNTHOLO_DEVELOPMENT_TEAM to your Team ID." >&2
     exit 1
 fi
 
-# A build uploaded without this renders the setup-required screen for every
-# tester. It is not a build failure, so warn loudly rather than trusting it.
+# Without this the Release build cannot resolve Firebase: FirebaseBootstrap
+# returns false and every tester lands on the setup-required screen. That is
+# not a build failure, so it would archive, export and upload perfectly
+# cleanly - which is exactly why this refuses to continue rather than warn.
 if [[ ! -f "$REPO_ROOT/Syntholo/Resources/production.firebase.plist" ]]; then
-    echo "WARNING: Syntholo/Resources/production.firebase.plist is missing." >&2
-    echo "         The app will boot to \"setup required\" for every tester." >&2
-    echo "         Install it with scripts/install_firebase_config.sh first." >&2
-    echo >&2
+    if [[ "${SYNTHOLO_ALLOW_UNCONFIGURED_ARCHIVE:-0}" == "1" ]]; then
+        echo "WARNING: archiving without production.firebase.plist because" >&2
+        echo "         SYNTHOLO_ALLOW_UNCONFIGURED_ARCHIVE=1. Do not upload" >&2
+        echo "         the result to TestFlight." >&2
+        echo >&2
+    else
+        echo "error: Syntholo/Resources/production.firebase.plist is missing." >&2
+        echo "       Install it with scripts/install_firebase_config.sh first." >&2
+        echo "       To archive anyway (signing checks only, not for testers)," >&2
+        echo "       set SYNTHOLO_ALLOW_UNCONFIGURED_ARCHIVE=1." >&2
+        exit 1
+    fi
 fi
 
 echo "Archiving for team $team_id."

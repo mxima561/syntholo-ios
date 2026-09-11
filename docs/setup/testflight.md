@@ -2,8 +2,8 @@
 
 What it takes to put the current app in front of testers. This covers the
 build and upload path only. It does not claim the app is feature-complete:
-Learn is still a read-only preview, and Practice, Social, and Profile are
-"coming soon" scaffolds. That is fine for internal testing, and it is worth
+Learn is still a read-only preview, Practice and Social are "coming soon"
+scaffolds, and Profile carries only the account section. That is fine for internal testing, and it is worth
 saying out loud to testers so their feedback lands on what exists.
 
 ## What has to be true before the first upload
@@ -143,8 +143,10 @@ App Store Connect rejects a duplicate build number.
 scripts/archive_for_testflight.sh
 ```
 
-That archives and exports a signed App Store IPA to `build/export/Syntholo.ipa`
-and warns if the Firebase config is missing. It does not upload.
+That archives and exports a signed App Store IPA to `build/export/Syntholo.ipa`.
+It refuses to run when the Firebase config is missing, because such a build
+uploads cleanly and then shows every tester the setup-required screen. It does
+not upload.
 
 To upload, open Xcode -> Window -> Organizer -> Archives -> Distribute App ->
 TestFlight Internal Only. The Organizer route handles authentication without
@@ -186,5 +188,9 @@ Worth pasting into the TestFlight test notes so feedback is useful:
 - Sign back in with email, including password reset.
 - Browse programs, modules, and lesson previews.
 
-Lessons are **read-only previews** - answers are not collected yet. Practice,
-Social, and Profile are placeholders. There is no subscription flow.
+Profile shows the signed-in address and can sign out, including retrying a
+sign-out the backend refused, so that path is worth exercising too.
+
+Lessons are **read-only previews** - answers are not collected yet. Practice
+and Social are placeholders, and the rest of Profile (preferences, downloads,
+account management) is not built. There is no subscription flow.

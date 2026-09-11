@@ -35,6 +35,8 @@ final class OnboardingCoordinator {
     private var isRetryingOnboardingPersistence = false
     @ObservationIgnored
     private var shouldExplainProfileSetup = false
+    @ObservationIgnored
+    private var pendingRestoredSession = true
 
     init(
         session: AppSession,
@@ -226,7 +228,10 @@ final class OnboardingCoordinator {
 
         switch profileRecoveryKind {
         case .profileCheckFailed:
-            await resolveRestoredProfile(for: pendingUser)
+            await resolveRestoredProfile(
+                for: pendingUser,
+                restoredSession: pendingRestoredSession
+            )
         case .profileSaveFailed:
             await retryProfileSave()
         case .signOutFailed:
@@ -291,6 +296,11 @@ final class OnboardingCoordinator {
         restoredSession: Bool = true
     ) async {
         pendingUser = user
+        // Remembered so a retry after a failed profile check reports the same
+        // origin. Defaulting back to true on retry would both mis-record the
+        // login and, when no profile turns up, drop an explicit sign-in back
+        // on Welcome with no explanation.
+        pendingRestoredSession = restoredSession
         profileRecoveryKind = .checkingProfile
 
         do {
