@@ -247,7 +247,11 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testUnconfiguredGooglePresentsSetupMessageAndKeepsProvidersVisible() {
-        let app = launchOnboarding()
+        // Forced, so the result does not depend on whether this machine has a
+        // real Config/Firebase.local.xcconfig.
+        let app = launchOnboarding(
+            extraArguments: ["--google-fixture=unconfigured"]
+        )
         reachAccountCreation(in: app, ageButton: "I’m 18 or older")
 
         app.buttons["Continue with Google"].tap()

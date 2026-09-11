@@ -645,6 +645,42 @@ final class OnboardingCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.session.state, .signedIn)
     }
 
+    func testExplicitSignInWithoutProfileStillExplainsItselfAfterAFailedSignOut() async {
+        // Where the two recovery paths meet: an explicit email sign-in to an
+        // account with no profile, whose cleanup sign-out fails once. The
+        // learner must not be dropped on the welcome screen unexplained, and
+        // must not be shown as signed out while credentials are still live.
+        let authClient = CoordinatorAuthClient(
+            restoredUser: nil,
+            signOutFailuresRemaining: 1
+        )
+        let fixture = makeCoordinator(
+            authClient: authClient,
+            profileRepository: CoordinatorProfileRepository(loadedProfile: nil)
+        )
+
+        await fixture.coordinator.signedInToExistingAccount(user)
+
+        // First attempt failed: still signed in, retry offered.
+        XCTAssertEqual(
+            fixture.session.state,
+            .accountPendingProfile(userID: user.id)
+        )
+        XCTAssertEqual(fixture.coordinator.profileRecoveryKind, .signOutFailed)
+
+        await fixture.coordinator.retryProfileRecovery()
+
+        // Retry succeeded, and the reason survived the failed attempt.
+        XCTAssertEqual(fixture.session.state, .signedOut)
+        XCTAssertEqual(fixture.store.step, .welcome)
+        XCTAssertEqual(
+            fixture.coordinator.authenticationError,
+            .profileSetupRequired
+        )
+        let signOutCount = await authClient.currentSignOutCount()
+        XCTAssertEqual(signOutCount, 2)
+    }
+
     private func makeCoordinator(
         restoredUser: AuthenticatedUser? = nil,
         authClient: CoordinatorAuthClient? = nil,
